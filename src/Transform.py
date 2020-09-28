@@ -6,7 +6,6 @@ File with class for transform hours to daily report
 
 import codecs
 import datetime
-import os
 import re
 import sys
 
@@ -26,7 +25,7 @@ class Transform():
 
     Variables:
     - inputFileHours - input file tasks by hours
-    - outputFileReport - output file with result of transform. If it is skipped data prints to console
+    - date - date of report from input file
     - oneDay - array with dictionary task by hours
     - oneDayProjects - dictionaty with task by projects and sum of time for each task
     """
@@ -36,21 +35,16 @@ class Transform():
 
     DEFAULT_PROJECT = "Внутренние задачи"
 
-    def __init__(self, inputFile, outputFile=None):
+    def __init__(self, inputFile):
         if inputFile is None:
             exit("Must have input argument.")
         self.inputFileHours = codecs.open(inputFile, "r", "utf_8_sig")
-
-        if outputFile is not None:
-            self.outputFileReport = codecs.open(outputFile, "a", "utf_8_sig")
-            self.outputFileReport.seek(0)
 
         self.readOneDay()
         self.groupByProject()
 
     def __del__(self):
         self.inputFileHours.close()
-        self.outputFileReport.close()
 
     def readOneDay(self):
         """
@@ -125,17 +119,6 @@ class Transform():
                 self.oneDayProjects[project][task] += deltaTime
             else:
                 self.oneDayProjects[project][task] = deltaTime
-
-    def getReport(self):
-        """
-        Print result
-        """
-        result = ""
-        for project in self.oneDayProjects.keys():
-            result += project + ":"
-            for task in self.oneDayProjects[project].keys():
-                result += "  " + str(self.oneDayProjects[project][task]) +
-                " ч. - " + task
 
 
 if __name__ == "__main__":
