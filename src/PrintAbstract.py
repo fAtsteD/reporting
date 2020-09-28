@@ -14,14 +14,12 @@ class PrintAbstract():
     """
 
     def __init__(self, transform: Transform):
-        """
-        docstring
-        """
         self.text = transform.date.strftime("%d.%m.%Y") + "\n"
+        self.text += "Задачи за сегодня:\n"
         for project in transform.oneDayProjects.keys():
-            self.text += project + ":" + "\n"
+            self.text += "  " + project + ":" + "\n"
             for task in transform.oneDayProjects[project].keys():
-                self.text += "  " + \
+                self.text += "    " + \
                     transform.oneDayProjects[project][task] + \
                     " ч. - " + task + "\n"
 

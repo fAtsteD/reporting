@@ -6,6 +6,7 @@ import os
 import sys
 
 from src.PrintConsole import PrintConsole
+from src.PrintToFile import PrintToFile
 from src.Transform import Transform
 
 
@@ -21,7 +22,7 @@ def main():
     transform = Transform(os.path.realpath("tracking-hours.txt"))
 
     # Print transfered tasks
-    printData = PrintConsole(transform)
+    printData = PrintToFile(transform)
     printData.print()
 
 
