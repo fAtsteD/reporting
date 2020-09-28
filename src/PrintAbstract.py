@@ -17,13 +17,13 @@ class PrintAbstract():
         """
         docstring
         """
-        self.text = ""
+        self.text = transform.date.strftime("%d.%m.%Y") + "\n"
         for project in transform.oneDayProjects.keys():
             self.text += project + ":" + "\n"
             for task in transform.oneDayProjects[project].keys():
                 self.text += "  " + \
-                    str(transform.oneDayProjects[project]
-                        [task]) + " ч. - " + task + "\n"
+                    transform.oneDayProjects[project][task] + \
+                    " ч. - " + task + "\n"
 
 
 if __name__ == "__main__":

@@ -120,6 +120,29 @@ class Transform():
             else:
                 self.oneDayProjects[project][task] = deltaTime
 
+        # Transform resulting time
+        self.transformTime()
+
+    def transformTime(self):
+        """
+        Transform time [hours]:[minutes]:[seconds] to [hours].[minutes relative]
+        """
+        result = ""
+        for project in self.oneDayProjects:
+            for task in self.oneDayProjects[project]:
+                timeStr = str(self.oneDayProjects[project][task])
+                timeArr = timeStr.split(":")
+                self.oneDayProjects[project][task] = timeArr[0] + "." + \
+                    str(int(self.translate(int(timeArr[1]), 0, 60, 0, 100)))
+
+    def translate(self, value, leftMin, leftMax, rightMin, rightMax):
+        leftSpan = leftMax - leftMin
+        rightSpan = rightMax - rightMin
+
+        valueScaled = float(value - leftMin) / float(leftSpan)
+
+        return rightMin + (valueScaled * rightSpan)
+
 
 if __name__ == "__main__":
     print("Run main app.py file")
