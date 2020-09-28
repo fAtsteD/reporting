@@ -2,7 +2,7 @@
 """
 File with class for print report
 """
-import src.Transform
+from src.Transform import Transform
 
 
 class PrintAbstract():
@@ -13,17 +13,17 @@ class PrintAbstract():
     - text - resulting string
     """
 
-    def __init__(self, transform: src.Transform):
+    def __init__(self, transform: Transform):
         """
         docstring
         """
         self.text = ""
         for project in transform.oneDayProjects.keys():
-            self.text += project + ":"
+            self.text += project + ":" + "\n"
             for task in transform.oneDayProjects[project].keys():
                 self.text += "  " + \
                     str(transform.oneDayProjects[project]
-                        [task]) + " ч. - " + task
+                        [task]) + " ч. - " + task + "\n"
 
 
 if __name__ == "__main__":
