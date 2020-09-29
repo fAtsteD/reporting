@@ -19,8 +19,7 @@ class PrintToFile(PrintAbstract):
 
     def __init__(self, transform: Transform, outputFilePath="report.txt"):
         super(PrintToFile, self).__init__(transform)
-        self.outputFile = codecs.open(outputFilePath, "r+", "utf_8_sig")
-        #self.outputFile.seek(0, 0)
+        self.outputFile = codecs.open(outputFilePath, "a", "utf_8_sig")
 
     def print(self):
         """
@@ -28,3 +27,7 @@ class PrintToFile(PrintAbstract):
         """
         self.outputFile.write(self.text)
         self.outputFile.write("\n\n")
+
+
+if __name__ == "__main__":
+    print("Run main app.py file")
