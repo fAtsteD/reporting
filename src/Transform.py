@@ -43,9 +43,6 @@ class Transform():
         self.readOneDay()
         self.groupByProject()
 
-    def __del__(self):
-        self.inputFileHours.close()
-
     def readOneDay(self):
         """
         Read all tasks for one day to array

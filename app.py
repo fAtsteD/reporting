@@ -15,11 +15,12 @@ def main():
     Main function for starting program
     """
     if len(sys.argv) >= 3:
-        transform = Transform(sys.argv[1], sys.argv[2])
+        transform = Transform(os.path.realpath(
+            sys.argv[1]), os.path.realpath(sys.argv[2]))
     if len(sys.argv) >= 2:
-        transform = Transform(sys.argv[1])
-    # TODO: Delete in release
-    transform = Transform(os.path.realpath("tracking-hours.txt"))
+        transform = Transform(os.path.realpath(sys.argv[1]))
+    if len(sys.argv) < 2:
+        transform = Transform(os.path.realpath("tracking-hours.txt"))
 
     # Print transfered tasks
     printData = PrintToFile(transform)

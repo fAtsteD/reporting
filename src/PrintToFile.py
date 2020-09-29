@@ -22,13 +22,9 @@ class PrintToFile(PrintAbstract):
         self.outputFile = codecs.open(outputFilePath, "r+", "utf_8_sig")
         #self.outputFile.seek(0, 0)
 
-    def __del__(self):
-        self.outputFile.close()
-
     def print(self):
         """
         Print to file
         """
         self.outputFile.write(self.text)
         self.outputFile.write("\n\n")
-        self.outputFile.write(tempAllData)
