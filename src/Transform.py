@@ -29,6 +29,11 @@ class Transform():
     - oneDay - array with dictionary task by hours
     - oneDayProjects - dictionaty with task by projects and sum of time for each task
     """
+    SKIP_TASK = [
+        "обед",
+        "перерыв"
+    ]
+
     TIME = "time"
     TASK = "task"
     PROJECT = "project"
@@ -112,10 +117,11 @@ class Transform():
                          self.oneDay[i][self.TIME])
 
             task = self.oneDay[i][self.TASK]
-            if task in self.oneDayProjects[project].keys():
-                self.oneDayProjects[project][task] += deltaTime
-            else:
-                self.oneDayProjects[project][task] = deltaTime
+            if not task in self.SKIP_TASK:
+                if task in self.oneDayProjects[project].keys():
+                    self.oneDayProjects[project][task] += deltaTime
+                else:
+                    self.oneDayProjects[project][task] = deltaTime
 
         # Transform resulting time
         self.transformTime()
@@ -138,7 +144,16 @@ class Transform():
 
         valueScaled = float(value - leftMin) / float(leftSpan)
 
-        return rightMin + (valueScaled * rightSpan)
+        translated = rightMin + (valueScaled * rightSpan)
+
+        # Fractional part rounded to 25
+        frac = translated % 25
+        if frac > 0 and frac >= 13:
+            translated = (translated // 25 + 1) * 25
+        else:
+            translated = translated // 25 * 25
+
+        return translated
 
 
 if __name__ == "__main__":
