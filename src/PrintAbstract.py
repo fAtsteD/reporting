@@ -16,6 +16,7 @@ class PrintAbstract():
     def __init__(self, transform: Transform):
         dayTime = 0.0
         textProjects = "Задачи за сегодня:\n"
+        textDefaultProject = ""
         for project in transform.oneDayProjects.keys():
             textTasks = ""
             projectTime = 0.0
@@ -25,11 +26,18 @@ class PrintAbstract():
                     transform.oneDayProjects[project][task] + \
                     " ч. - " + task + "\n"
 
-            textProjects += "  " + project + \
-                " (" + str(projectTime) + " ч.):" + "\n"
-            textProjects += textTasks
+            if project == Transform.DEFAULT_PROJECT:
+                textDefaultProject += "  " + project + \
+                    " (" + str(projectTime) + " ч.):" + "\n"
+                textDefaultProject += textTasks
+            else:
+                textProjects += "  " + project + \
+                    " (" + str(projectTime) + " ч.):" + "\n"
+                textProjects += textTasks
 
             dayTime += projectTime
+
+        textProjects += textDefaultProject
 
         self.text = transform.date.strftime("%d.%m.%Y") + "\n"
         self.text += "За день было отработано: " + str(dayTime) + " ч.\n"
