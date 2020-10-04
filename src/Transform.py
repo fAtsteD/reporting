@@ -4,7 +4,6 @@
 File with class for transform hours to daily report
 """
 
-import codecs
 import datetime
 import re
 import sys
@@ -23,8 +22,7 @@ class Transform():
     All undefined tasks, except that is in the except task list,
     will be in the internal tasks
 
-    Variables:
-    - inputFileHours - input file tasks by hours
+    Variables:    - inputFileHours - input file tasks by hours
     - date - date of report from input file
     - oneDay - array with dictionary task by hours
     - oneDayProjects - dictionaty with task by projects and sum of time for each task
@@ -43,7 +41,7 @@ class Transform():
     def __init__(self, inputFile):
         if inputFile is None:
             exit("Must have input argument.")
-        self.inputFileHours = codecs.open(inputFile, "r", "utf_8_sig")
+        self.inputFileHours = open(inputFile, "r", encoding="utf-8")
 
         self.readOneDay()
         self.groupByProject()

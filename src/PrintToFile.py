@@ -3,8 +3,6 @@
 File with class for print report
 """
 
-import codecs
-
 from src.PrintAbstract import PrintAbstract
 from src.Transform import Transform
 
@@ -19,14 +17,17 @@ class PrintToFile(PrintAbstract):
 
     def __init__(self, transform: Transform, outputFilePath="report.txt"):
         super(PrintToFile, self).__init__(transform)
-        self.outputFile = codecs.open(outputFilePath, "a", "utf_8_sig")
+        self.outputFile = open(outputFilePath, "r+", encoding="utf-8")
 
     def print(self):
         """
         Print to file
         """
+        temp = self.outputFile.readlines()
+        self.outputFile.seek(0)
         self.outputFile.write(self.text)
         self.outputFile.write("\n\n")
+        self.outputFile.writelines(temp)
 
 
 if __name__ == "__main__":
