@@ -135,25 +135,34 @@ class Transform():
             for task in self.oneDayProjects[project]:
                 timeStr = str(self.oneDayProjects[project][task])
                 timeArr = timeStr.split(":")
-                self.oneDayProjects[project][task] = timeArr[0] + "." + \
-                    str(int(self.translate(int(timeArr[1]), 0, 60, 0, 100)))
+                timeArr = self.translate(int(timeArr[0]), int(timeArr[1]))
+                self.oneDayProjects[project][task] = str(timeArr[0]) + "." + \
+                    str(timeArr[1])
 
-    def translate(self, value, leftMin, leftMax, rightMin, rightMax):
+    def translate(self, hours, minutes):
+        leftMin = 0
+        leftMax = 60
+        rightMin = 0
+        rightMax = 100
+
         leftSpan = leftMax - leftMin
         rightSpan = rightMax - rightMin
 
-        valueScaled = float(value - leftMin) / float(leftSpan)
+        valueScaled = float(minutes - leftMin) / float(leftSpan)
 
-        translated = rightMin + (valueScaled * rightSpan)
+        minutes = rightMin + (valueScaled * rightSpan)
 
         # Fractional part rounded to 25
-        frac = translated % 25
+        frac = minutes % 25
         if frac > 0 and frac >= 13:
-            translated = (translated // 25 + 1) * 25
+            minutes = (minutes // 25 + 1) * 25
+            if minutes == 100:
+                hours += 1
+                minutes = 0
         else:
-            translated = translated // 25 * 25
+            minutes = minutes // 25 * 25
 
-        return translated
+        return [int(hours), int(minutes)]
 
 
 if __name__ == "__main__":

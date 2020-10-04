@@ -26,7 +26,7 @@ class PrintAbstract():
                     " ч. - " + task + "\n"
 
             textProjects += "  " + project + \
-                "(" + str(projectTime) + " ч.):" + "\n"
+                " (" + str(projectTime) + " ч.):" + "\n"
             textProjects += textTasks
 
             dayTime += projectTime
