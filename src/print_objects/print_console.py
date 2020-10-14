@@ -2,8 +2,8 @@
 """
 File with class for print report
 """
-
-from src.PrintAbstract import PrintAbstract
+from src.print_objects.print_abstract import PrintAbstract
+from src.transform.transform import Transform
 
 
 class PrintConsole(PrintAbstract):
@@ -11,10 +11,11 @@ class PrintConsole(PrintAbstract):
     Print result to console
     """
 
-    def print(self):
+    def print(self, transform: Transform):
         """
         Print to console
         """
+        self._parse_for_plain_print(transform)
         print(self.text)
 
 
