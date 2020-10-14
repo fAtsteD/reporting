@@ -5,6 +5,7 @@ Read config file and take config data
 import json
 from os import path
 
+import dateutil.parser
 from src.print_objects.print_console import PrintConsole
 from src.print_objects.print_to_file import PrintToFile
 
@@ -20,10 +21,14 @@ class Config():
     - outputs_day_report - where print day report ["console", "file"]
     """
 
+    # Parameters from file
     input_file_hours = ""
     output_file_day = ""
     skip_tasks = []
     outputs_day_report = []
+
+    # Parameters for program
+    work_day_hours = dateutil.parser.parse("08:00")
 
     def __init__(self):
         file_path = path.normpath(path.dirname(
