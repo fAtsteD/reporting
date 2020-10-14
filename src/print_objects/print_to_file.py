@@ -14,15 +14,14 @@ class PrintToFile(PrintAbstract):
     - output_file - file for printing result
     """
 
-    def __init__(self, config):
-        self.output_file = open(config.output_file_day,
-                                "r+", encoding="utf-8")
+    def __init__(self, output_file):
+        self.output_file = open(output_file, "r+", encoding="utf-8")
 
     def print(self, transform: Transform):
         """
         Print to file
         """
-        self._parseForPlainPrint(transform)
+        self._parse_for_plain_print(transform)
         temp = self.output_file.readlines()
         self.output_file.seek(0)
         self.output_file.write(self.text)

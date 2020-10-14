@@ -55,7 +55,7 @@ class Config():
             print("Input file is not setted in config.")
             exit()
 
-        if "day-report-path" in data["day-report-path"] != "":
+        if "day-report-path" in data and data["day-report-path"] != "":
             self.output_file_day = path.realpath(
                 path.normpath(data["day-report-path"]))
 
