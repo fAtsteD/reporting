@@ -62,11 +62,11 @@ class Config():
         if "omit-task" in data:
             self.skip_tasks = data["omit-task"]
 
-        if "output-day-report" in data:
-            if "console" in data["output-day-report"]:
+        if "outputs-day-report" in data:
+            if "console" in data["outputs-day-report"]:
                 self.outputs_day_report.append(
                     PrintConsole())
-            if "file" in data["output-day-report"] and self.output_file_day != "":
+            if "file" in data["outputs-day-report"] and self.output_file_day != "":
                 self.outputs_day_report.append(
                     PrintToFile(self.output_file_day))
         else:
