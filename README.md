@@ -19,6 +19,27 @@ Example:
 
 > !!! Program round time in the result to 0.25 hour. !!!
 
+## Config
+
+Near the project (near file app.py) has to be file config.json with settings.
+
+Setting that can be setted:
+* hour-report-path - path to file with tasks by hours
+* day-report-path - path to file where will be write tasks by project
+* omit-task - name of tasks that will be skipped
+
+Example:
+```json
+{
+    "hour-report-path": "~/example-hours.txt",
+    "day-report-path": "~/example-day-report.txt",
+    "omit-task": [
+        "lunch",
+        "break"
+    ]
+}
+```
+
 ## How it works
 
 Program find tasks and their project. Task without project get in default project.
