@@ -22,9 +22,8 @@ class Transform():
     All undefined tasks, except that is in the except task list,
     will be in the internal tasks
 
-    Variables:    - input_file_hours - input file tasks by hours
+    Variables:
     - date - date of report from input file
-    - one_day - array with dictionary task by hours
     - one_day_projects - dictionaty with task by projects and sum of time for each task
     """
 
@@ -35,8 +34,8 @@ class Transform():
     DEFAULT_PROJECT = "Внутренние задачи"
 
     def __init__(self, config):
-        self.config = config
-        self.input_file_hours = open(
+        self._config = config
+        self._input_file_hours = open(
             config.input_file_hours, "r", encoding="utf-8")
 
         self._read_one_day()
@@ -46,10 +45,10 @@ class Transform():
         """
         Read all tasks for one day to array
         """
-        self.one_day = []
+        self._one_day = []
         # Need for double new line finding
         previous_line = ""
-        for line in self.input_file_hours:
+        for line in self._input_file_hours:
             if (re.search("^[0-9]{1,2}\.[0-9]{1,2}\.([0-9]{4}|[0-9]{2})\n$", line)):
                 self.date = dateutil.parser.parse(line)
                 continue
@@ -62,7 +61,7 @@ class Transform():
             if line == "\n":
                 continue
 
-            self.one_day.append(self._parse_task(line))
+            self._one_day.append(self._parse_task(line))
 
     def _parse_task(self, task_str: str):
         """
@@ -95,16 +94,16 @@ class Transform():
         """
         self.one_day_projects = {}
         sum_time = dateutil.parser.parse("00:00")
-        num_one_day_tasks = len(self.one_day)
+        num_one_day_tasks = len(self._one_day)
         for i in range(num_one_day_tasks):
-            if (not self.TASK in self.one_day[i]) or (self.one_day[i][self.TASK] in self.config.skip_tasks):
+            if (not self.TASK in self._one_day[i]) or (self._one_day[i][self.TASK] in self._config.skip_tasks):
                 continue
 
-            task = self.one_day[i][self.TASK]
+            task = self._one_day[i][self.TASK]
 
             project = ""
-            if self.PROJECT in self.one_day[i]:
-                project = self.one_day[i][self.PROJECT]
+            if self.PROJECT in self._one_day[i]:
+                project = self._one_day[i][self.PROJECT]
             else:
                 project = self.DEFAULT_PROJECT
 
@@ -112,10 +111,10 @@ class Transform():
                 self.one_day_projects[project] = {}
 
             if i == num_one_day_tasks - 1:
-                delta_time = self.config.work_day_hours - sum_time
+                delta_time = self._config.work_day_hours - sum_time
             else:
-                delta_time = (self.one_day[i + 1][self.TIME] -
-                              self.one_day[i][self.TIME])
+                delta_time = (self._one_day[i + 1][self.TIME] -
+                              self._one_day[i][self.TIME])
 
             if task in self.one_day_projects[project].keys():
                 self.one_day_projects[project][task] += delta_time
@@ -136,11 +135,11 @@ class Transform():
             for task in self.one_day_projects[project]:
                 time_str = str(self.one_day_projects[project][task])
                 time_arr = time_str.split(":")
-                time_arr = self.translate(int(time_arr[0]), int(time_arr[1]))
+                time_arr = self._translate(int(time_arr[0]), int(time_arr[1]))
                 self.one_day_projects[project][task] = str(time_arr[0]) + "." + \
                     str(time_arr[1])
 
-    def translate(self, hours, minutes):
+    def _translate(self, hours, minutes):
         """
         Transform minutes 0 to 60 gap to 0 to 100 gap with rounding minutes to 25
         """

@@ -11,7 +11,11 @@ class PrintAbstract():
 
     Variable:
     - text - resulting string
+    - config - config of app
     """
+
+    def __init__(self, config):
+        self.config = config
 
     def _parse_for_plain_print(self, transform: Transform):
         """

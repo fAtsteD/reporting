@@ -19,6 +19,7 @@ class Config():
     - output_file_day - path to file with summary tasks by project for one day
     - skip_tasks - array of skipped tasks
     - outputs_day_report - where print day report ["console", "file"]
+    - excell_file_report - excell file for daily report
     """
 
     # Parameters from file
@@ -31,11 +32,8 @@ class Config():
     work_day_hours = dateutil.parser.parse("08:00")
 
     def __init__(self):
-        file_path = path.normpath(path.dirname(
-            __file__) + "/../../config.json")
-        if path.isfile(path.normpath(path.dirname(__file__) + "/../../config.json")):
-            self.config_file = path.normpath(
-                path.dirname(__file__) + "/../../config.json")
+        if path.isfile(path.dirname(__file__) + "/../../config.json"):
+            self.config_file = path.dirname(__file__) + "/../../config.json"
         else:
             print("Config file is not found.")
             exit()
@@ -48,30 +46,27 @@ class Config():
         """
         data = json.load(open(self.config_file, "r", encoding="utf-8"))
 
-        if "hour-report-path" in data and data["hour-report-path"] != "":
-            self.input_file_hours = path.realpath(path.normpath(
-                data["hour-report-path"]))
+        if "hour-report-path" in data and path.isfile(data["hour-report-path"]):
+            self.input_file_hours = path.normpath(data["hour-report-path"])
         else:
             print("Input file is not setted in config.")
             exit()
 
-        if "day-report-path" in data and data["day-report-path"] != "":
-            self.output_file_day = path.realpath(
-                path.normpath(data["day-report-path"]))
+        if "day-report-path" in data and path.isfile(data["day-report-path"]):
+            self.output_file_day = data["day-report-path"]
 
         if "omit-task" in data:
             self.skip_tasks = data["omit-task"]
 
         if "outputs-day-report" in data:
             if "console" in data["outputs-day-report"]:
-                self.outputs_day_report.append(
-                    PrintConsole())
+                self.outputs_day_report.append(PrintConsole(self))
             if "file" in data["outputs-day-report"] and self.output_file_day != "":
                 self.outputs_day_report.append(
-                    PrintToFile(self.output_file_day))
+                    PrintToFile(self))
         else:
             self.outputs_day_report.append(
-                PrintConsole())
+                PrintConsole(self))
 
 
 if __name__ == "__main__":

@@ -14,8 +14,10 @@ class PrintToFile(PrintAbstract):
     - output_file - file for printing result
     """
 
-    def __init__(self, output_file):
-        self.output_file = open(output_file, "r+", encoding="utf-8")
+    def __init__(self, config):
+        super(PrintToFile, self).__init__(config)
+        self.output_file = open(
+            self.config.output_file_day, "r+", encoding="utf-8")
 
     def print(self, transform: Transform):
         """
