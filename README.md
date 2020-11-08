@@ -16,6 +16,28 @@ Example:
 
 ## Result of transformation
 
+Example:
+
+Type 1:
+
+```
+01.01.2020
+  project of life (3.5 ч.):
+    1.75 ч. - 0123456: Do something
+    1.75 ч. - 0123456: Do something harder
+...
+```
+
+Type 2:
+
+```
+01.01.2020
+  project of life (3.5 ч.):
+    1.75 ч. - 0123456: Do something - project of life
+    1.75 ч. - 0123456: Do something harder - project of life
+...
+```
+
 > !!! Program round time in the result to 0.25 hour. !!!
 
 ## Config
