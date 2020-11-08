@@ -15,7 +15,10 @@ class PrintConsole(PrintAbstract):
         """
         Print to console
         """
-        self._parse_for_plain_print(transform)
+        if (self._config.console_type_print == 1):
+            self._parse_for_plain_print_1(transform)
+        if (self._config.console_type_print == 2):
+            self._parse_for_plain_print_2(transform)
         print(self.text)
 
 

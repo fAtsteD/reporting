@@ -27,6 +27,8 @@ class Config():
     output_file_day = ""
     skip_tasks = []
     outputs_day_report = []
+    file_type_print = 1
+    console_type_print = 1
 
     # Parameters for program
     work_day_hours = dateutil.parser.parse("08:00")
@@ -60,8 +62,12 @@ class Config():
 
         if "outputs-day-report" in data:
             if "console" in data["outputs-day-report"]:
+                if 1 <= data["outputs-day-report"]["console"] and data["outputs-day-report"]["console"] <= 2:
+                    self.console_type_print = data["outputs-day-report"]["console"]
                 self.outputs_day_report.append(PrintConsole(self))
             if "file" in data["outputs-day-report"] and self.output_file_day != "":
+                if 1 <= data["outputs-day-report"]["file"] and data["outputs-day-report"]["file"] <= 2:
+                    self.file_type_print = data["outputs-day-report"]["file"]
                 self.outputs_day_report.append(
                     PrintToFile(self))
         else:

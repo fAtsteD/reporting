@@ -17,13 +17,17 @@ class PrintToFile(PrintAbstract):
     def __init__(self, config):
         super(PrintToFile, self).__init__(config)
         self.output_file = open(
-            self.config.output_file_day, "r+", encoding="utf-8")
+            self._config.output_file_day, "r+", encoding="utf-8")
 
     def print(self, transform: Transform):
         """
         Print to file
         """
-        self._parse_for_plain_print(transform)
+        if (self._config.file_type_print == 1):
+            self._parse_for_plain_print_1(transform)
+        if (self._config.file_type_print == 2):
+            self._parse_for_plain_print_2(transform)
+
         temp = self.output_file.readlines()
         self.output_file.seek(0)
         self.output_file.write(self.text)
