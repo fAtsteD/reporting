@@ -50,7 +50,7 @@ class Transform():
         previous_line = ""
         for line in self._input_file_hours:
             if (re.search("^[0-9]{1,2}\.[0-9]{1,2}\.([0-9]{4}|[0-9]{2})\n$", line)):
-                self.date = dateutil.parser.parse(line)
+                self.date = dateutil.parser.parse(line, dayfirst=True)
                 continue
 
             if previous_line == "\n" and line == "\n":
