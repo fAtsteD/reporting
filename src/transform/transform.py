@@ -9,6 +9,7 @@ import re
 import sys
 
 import dateutil.parser
+from src.helpers.time import *
 
 
 class Transform():
@@ -135,29 +136,19 @@ class Transform():
             for task in self.one_day_projects[project]:
                 time_str = str(self.one_day_projects[project][task])
                 time_arr = time_str.split(":")
-                time_arr = self._translate(int(time_arr[0]), int(time_arr[1]))
+                time_arr = self._scale_time(int(time_arr[0]), int(time_arr[1]))
                 self.one_day_projects[project][task] = str(time_arr[0]) + "." + \
                     str(time_arr[1])
 
-    def _translate(self, hours, minutes):
+    def _scale_time(self, hours, minutes):
         """
         Transform minutes 0 to 60 gap to 0 to 100 gap with rounding minutes to 25
         """
-        left_min = 0
-        left_max = 60
-        right_min = 0
-        right_max = 100
-
-        left_span = left_max - left_min
-        right_span = right_max - right_min
-
-        valueScaled = float(minutes - left_min) / float(left_span)
-
-        minutes = right_min + (valueScaled * right_span)
+        minutes = remap(minutes, 0, 60, 0, 100)
 
         # Fractional part rounded to 25
         frac = minutes % 25
-        if frac > 0 and frac >= 13:
+        if frac >= 13:
             minutes = (minutes // 25 + 1) * 25
             if minutes == 100:
                 hours += 1
