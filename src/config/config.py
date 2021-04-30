@@ -39,8 +39,7 @@ class Config():
         if path.isfile(path.dirname(__file__) + "/../../config.json"):
             self.config_file = path.dirname(__file__) + "/../../config.json"
         else:
-            print("Config file is not found.")
-            exit()
+            exit("Config file is not found.")
 
         self.parse_config()
 
@@ -53,8 +52,7 @@ class Config():
         if "hour-report-path" in data and path.isfile(data["hour-report-path"]):
             self.input_file_hours = path.normpath(data["hour-report-path"])
         else:
-            print("Input file is not setted in config.")
-            exit()
+            exit("Input file is not setted in config.)
 
         if "day-report-path" in data and path.isfile(data["day-report-path"]):
             self.output_file_day = data["day-report-path"]
