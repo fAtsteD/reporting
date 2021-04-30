@@ -29,6 +29,8 @@ class Config():
     outputs_day_report = []
     file_type_print = 1
     console_type_print = 1
+    use_jira = False
+    jira = {}
 
     # Parameters for program
     work_day_hours = dateutil.parser.parse("08:00")
@@ -73,6 +75,14 @@ class Config():
         else:
             self.outputs_day_report.append(
                 PrintConsole(self))
+
+        if "jira" in data:
+            if "server" in data["jira"] and "login" in data["jira"] and "password" in data["jira"]:
+                self.jira = data["jira"]
+                self.use_jira = True
+
+            if "issue_key_base" not in data["jira"]:
+                self.jira.update({"issue_key_base": ""})
 
 
 if __name__ == "__main__":
