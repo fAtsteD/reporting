@@ -55,6 +55,7 @@ Setting that can be setted:
 -   day-report-path - path to file where will be write tasks by project
 -   omit-task - name of tasks that will be skipped
 -   output-day-report - where to print result of report, can be 2 type of print (for disabling printing not include that type)
+-   minute_round_to - for what number round minutes in the report. Default 25
 -   jira - settings related for working with Jira:
     -   server - url to the server with Jira
     -   login - user login to the account
@@ -72,6 +73,7 @@ Example:
         "console": 2,
         "file": 1
     },
+    "minute_round_to": 25,
     "jira": {
         "server": "https://jira.example.domain.com/",
         "login": "test.user",

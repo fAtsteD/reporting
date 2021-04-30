@@ -29,6 +29,7 @@ class Config():
     outputs_day_report = []
     file_type_print = 1
     console_type_print = 1
+    minute_round_to = 25
     use_jira = False
     jira = {}
 
@@ -52,7 +53,7 @@ class Config():
         if "hour-report-path" in data and path.isfile(data["hour-report-path"]):
             self.input_file_hours = path.normpath(data["hour-report-path"])
         else:
-            exit("Input file is not setted in config.)
+            exit("Input file is not setted in config.")
 
         if "day-report-path" in data and path.isfile(data["day-report-path"]):
             self.output_file_day = data["day-report-path"]
@@ -73,6 +74,9 @@ class Config():
         else:
             self.outputs_day_report.append(
                 PrintConsole(self))
+
+        if "minute_round_to" in data and isinstance(data["minute_round_to"], int):
+            self.minute_round_to = int(data["minute_round_to"])
 
         if "jira" in data:
             if "server" in data["jira"] and "login" in data["jira"] and "password" in data["jira"]:

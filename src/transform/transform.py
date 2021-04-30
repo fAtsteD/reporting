@@ -36,6 +36,7 @@ class Transform():
 
     def __init__(self, config):
         self._config = config
+        self._minute_round_to = int("25")  # config.minute_round_to
         self._input_file_hours = open(
             config.input_file_hours, "r", encoding="utf-8")
 
@@ -147,14 +148,15 @@ class Transform():
         minutes = remap(minutes, 0, 60, 0, 100)
 
         # Fractional part rounded to 25
-        frac = minutes % 25
-        if frac >= 13:
-            minutes = (minutes // 25 + 1) * 25
+        frac = minutes % self._minute_round_to
+        if frac >= int(self._minute_round_to / 2) + 1:
+            minutes = (minutes // self._minute_round_to + 1) * \
+                self._minute_round_to
             if minutes == 100:
                 hours += 1
                 minutes = 0
         else:
-            minutes = minutes // 25 * 25
+            minutes = minutes // self._minute_round_to * self._minute_round_to
 
         return [int(hours), int(minutes)]
 
