@@ -17,7 +17,7 @@ class Jira():
         if not self._config.use_jira:
             exit("Used JIRA module without required settings")
 
-        self._base = config.fira["issue_key_base"]
+        self._base = config.jira["issue_key_base"]
 
         jira_options = {
             "server": config.jira["server"]
