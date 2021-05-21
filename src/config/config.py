@@ -6,86 +6,79 @@ import json
 from os import path
 
 import dateutil.parser
-from src.print_objects.print_console import PrintConsole
-from src.print_objects.print_to_file import PrintToFile
+
+from ..print_objects import PrintConsole, PrintToFile
+
+# Parameters from file
+input_file_hours = ""
+output_file_day = ""
+skip_tasks = []
+outputs_day_report = []
+file_type_print = 1
+console_type_print = 1
+minute_round_to = 25
+use_jira = False
+jira = {}
+
+# Parameters for program
+work_day_hours = dateutil.parser.parse("08:00")
 
 
-class Config():
+def load_config():
     """
-    Config data class
-
-    Properties:
-    - input_file_hours - path to file with tasks by hours
-    - output_file_day - path to file with summary tasks by project for one day
-    - skip_tasks - array of skipped tasks
-    - outputs_day_report - where print day report ["console", "file"]
-    - excell_file_report - excell file for daily report
+    Parse config file and set settings
     """
+    config_file = _get_config_file()
 
-    # Parameters from file
-    input_file_hours = ""
-    output_file_day = ""
-    skip_tasks = []
-    outputs_day_report = []
-    file_type_print = 1
-    console_type_print = 1
-    minute_round_to = 25
-    use_jira = False
-    jira = {}
+    global input_file_hours
+    global output_file_day
+    global skip_tasks
+    global outputs_day_report
+    global file_type_print
+    global console_type_print
+    global minute_round_to
+    global use_jira
+    global jira
 
-    # Parameters for program
-    work_day_hours = dateutil.parser.parse("08:00")
+    data = json.load(open(config_file, "r", encoding="utf-8"))
 
-    def __init__(self):
-        if path.isfile(path.dirname(__file__) + "/../../config.json"):
-            self.config_file = path.dirname(__file__) + "/../../config.json"
-        else:
-            exit("Config file is not found.")
+    if "hour-report-path" in data and path.isfile(data["hour-report-path"]):
+        input_file_hours = path.normpath(data["hour-report-path"])
+    else:
+        exit("Input file is not setted in config.")
 
-        self.parse_config()
+    if "day-report-path" in data and path.isfile(data["day-report-path"]):
+        output_file_day = data["day-report-path"]
 
-    def parse_config(self):
-        """
-        Parse config file and save settings
-        """
-        data = json.load(open(self.config_file, "r", encoding="utf-8"))
+    if "omit-task" in data:
+        skip_tasks = data["omit-task"]
 
-        if "hour-report-path" in data and path.isfile(data["hour-report-path"]):
-            self.input_file_hours = path.normpath(data["hour-report-path"])
-        else:
-            exit("Input file is not setted in config.")
+    if "outputs-day-report" in data:
+        if "console" in data["outputs-day-report"]:
+            if 1 <= data["outputs-day-report"]["console"] and data["outputs-day-report"]["console"] <= 2:
+                console_type_print = data["outputs-day-report"]["console"]
+            outputs_day_report.append(PrintConsole())
+        if "file" in data["outputs-day-report"] and output_file_day != "":
+            if 1 <= data["outputs-day-report"]["file"] and data["outputs-day-report"]["file"] <= 2:
+                file_type_print = data["outputs-day-report"]["file"]
+            outputs_day_report.append(PrintToFile())
+    else:
+        outputs_day_report.append(PrintConsole())
 
-        if "day-report-path" in data and path.isfile(data["day-report-path"]):
-            self.output_file_day = data["day-report-path"]
+    if "minute_round_to" in data and isinstance(data["minute_round_to"], int):
+        minute_round_to = int(data["minute_round_to"])
 
-        if "omit-task" in data:
-            self.skip_tasks = data["omit-task"]
+    if "jira" in data:
+        if "server" in data["jira"] and "login" in data["jira"] and "password" in data["jira"]:
+            jira = data["jira"]
+            use_jira = True
 
-        if "outputs-day-report" in data:
-            if "console" in data["outputs-day-report"]:
-                if 1 <= data["outputs-day-report"]["console"] and data["outputs-day-report"]["console"] <= 2:
-                    self.console_type_print = data["outputs-day-report"]["console"]
-                self.outputs_day_report.append(PrintConsole(self))
-            if "file" in data["outputs-day-report"] and self.output_file_day != "":
-                if 1 <= data["outputs-day-report"]["file"] and data["outputs-day-report"]["file"] <= 2:
-                    self.file_type_print = data["outputs-day-report"]["file"]
-                self.outputs_day_report.append(
-                    PrintToFile(self))
-        else:
-            self.outputs_day_report.append(
-                PrintConsole(self))
-
-        if "minute_round_to" in data and isinstance(data["minute_round_to"], int):
-            self.minute_round_to = int(data["minute_round_to"])
-
-        if "jira" in data:
-            if "server" in data["jira"] and "login" in data["jira"] and "password" in data["jira"]:
-                self.jira = data["jira"]
-                self.use_jira = True
-
-            if "issue_key_base" not in data["jira"]:
-                self.jira.update({"issue_key_base": ""})
+        if "issue_key_base" not in data["jira"]:
+            jira.update({"issue_key_base": ""})
 
 
-if __name__ == "__main__":
-    print("Run main app.py file")
+def _get_config_file() -> str:
+    if path.isfile(path.dirname(__file__) + "/../../config.json"):
+        return path.dirname(__file__) + "/../../config.json"
+    else:
+        exit("Config file is not exist.")

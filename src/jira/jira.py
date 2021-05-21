@@ -1,9 +1,9 @@
 import re
 
-from src.helpers.time import *
-from src.transform.transform import Transform
-
 from jira import JIRA, JIRAError
+
+from ..helpers.time import *
+from ..transform import DayData
 
 
 class Jira():
@@ -26,7 +26,7 @@ class Jira():
         self._jira = JIRA(jira_options, basic_auth=(
             config.jira["login"], config.jira["password"]))
 
-    def set_worklog(self, transform: Transform):
+    def set_worklog(self, transform: DayData):
         """
         Set worklog time to the task
         """

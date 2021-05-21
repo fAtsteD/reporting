@@ -2,8 +2,10 @@
 """
 File with class for print report
 """
-from src.print_objects.print_abstract import PrintAbstract
-from src.transform.transform import Transform
+from ..config import config
+from src.transform.transform import DayData
+
+from .print_abstract import PrintAbstract
 
 
 class PrintConsole(PrintAbstract):
@@ -11,13 +13,13 @@ class PrintConsole(PrintAbstract):
     Print result to console
     """
 
-    def print(self, transform: Transform):
+    def print(self, transform: DayData):
         """
         Print to console
         """
-        if (self._config.console_type_print == 1):
+        if (config.console_type_print == 1):
             self._parse_for_plain_print_1(transform)
-        if (self._config.console_type_print == 2):
+        if (config.console_type_print == 2):
             self._parse_for_plain_print_2(transform)
         print(self.text)
 
