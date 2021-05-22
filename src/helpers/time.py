@@ -1,3 +1,6 @@
+from ..config_app import config
+
+
 def remap(val, oMin, oMax, nMin, nMax):
     """
     Remap value
@@ -32,3 +35,23 @@ def remap(val, oMin, oMax, nMin, nMax):
         result = newMax - portion
 
     return result
+
+
+def scale_time(hours: int, minutes: int) -> list:
+    """
+    Transform minutes 0 to 60 gap to 0 to 100 gap with rounding minutes to 25
+    """
+    minutes = remap(minutes, 0, 60, 0, 100)
+
+    # Fractional part rounded to 25
+    frac = minutes % config.minute_round_to
+    if frac >= int(config.minute_round_to / 2) + 1:
+        minutes = (minutes // config.minute_round_to + 1) * \
+            config.minute_round_to
+        if minutes == 100:
+            hours += 1
+            minutes = 0
+    else:
+        minutes = minutes // config.minute_round_to * config.minute_round_to
+
+    return [int(hours), int(minutes)]

@@ -1,3 +1,4 @@
+import datetime
 import re
 
 from jira import JIRA, JIRAError
@@ -25,18 +26,17 @@ class Jira():
         self._jira = JIRA(jira_options, basic_auth=(
             config["login"], config["password"]))
 
-    def set_worklog(self, transform: DayData):
+    def set_worklog(self, day_data: DayData):
         """
         Set worklog time to the task
         """
         regexp_compile = re.compile("^(" + self._base + "[0-9]+):.+$")
 
-        for project in transform.one_day_projects:
-            for task_name in transform.one_day_projects[project].keys():
-                task_to_jira = regexp_compile.match(task_name)
-                if task_to_jira != None:
-                    self._set_worklog_to_jira(
-                        task_to_jira.group(1), self._convert_time(transform.one_day_projects[project][task_name]))
+        for task in day_data.tasks:
+            task_to_jira = regexp_compile.match(task.name)
+            if task_to_jira != None:
+                self._set_worklog_to_jira(task_to_jira.group(
+                    1), self._convert_time(task.time))
 
     def _set_worklog_to_jira(self, issue_key: str, time: str):
         """
@@ -55,12 +55,9 @@ class Jira():
         else:
             print("[-] " + issue_key + " - " + time)
 
-    def _convert_time(self, time: str):
+    def _convert_time(self, time: datetime.datetime):
         """
         Convert time to the jira type string
         """
 
-        hours = int(float(time))
-        minutes = int(remap(int((float(time) - hours) * 100), 0, 100, 0, 60))
-
-        return str(hours) + "h " + str(minutes) + "m"
+        return str(time.hour) + "h " + str(time.hour) + "m"

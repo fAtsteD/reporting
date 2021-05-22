@@ -15,6 +15,7 @@ class config:
     file_type_print = 1
     console_type_print = 1
     output_file_day = ""
+    text_indent = "  "
 
     # Tasks
     skip_tasks = []

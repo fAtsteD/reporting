@@ -40,14 +40,17 @@ def load_config():
     else:
         config.outputs_day_report.append(PrintConsole())
 
-    if "minute_round_to" in data and isinstance(data["minute_round_to"], int):
-        config.minute_round_to = int(data["minute_round_to"])
+    if "minute-round-to" in data and isinstance(data["minute-round-to"], int):
+        config.minute_round_to = int(data["minute-round-to"])
 
     if "jira" in data:
         if "server" in data["jira"] and "login" in data["jira"] and "password" in data["jira"]:
             for param in data["jira"]:
                 config.jira[param] = data["jira"][param]
             config.jira["use_jira"] = True
+
+    if "indent" in data:
+        config.text_indent = data["indent"]
 
 
 def _get_config_file() -> str:

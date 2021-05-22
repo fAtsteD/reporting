@@ -22,6 +22,7 @@ import dateutil.parser
 from ..config_app import config
 from ..helpers.time import *
 from .day_data import DayData
+from .task import Task
 
 TIME = "time"
 TASK = "task"
@@ -37,12 +38,12 @@ def get_day_data():
     day_data = DayData()
 
     one_day_tasks = _read_one_day(day_data)
-    _group_by_project(day_data, one_day_tasks)
+    _summarize_tasks(day_data, one_day_tasks)
 
     return day_data
 
 
-def _read_one_day(data: DayData) -> DayData:
+def _read_one_day(data: DayData) -> list:
     """
     Read all tasks for one day to array
     """
@@ -64,103 +65,73 @@ def _read_one_day(data: DayData) -> DayData:
             if line == "\n":
                 continue
 
+            task = _parse_task(line)
             one_day.append(_parse_task(line))
+
+            if not task.kind in data.kinds:
+                data.kinds.append(task.kind)
+
+            if not task.project in data.projects:
+                data.projects.append(task.project)
 
     return one_day
 
 
-def _parse_task(task_str: str) -> dict:
+def _parse_task(task_str: str) -> Task:
     """
-    Parse string to array of date, name of task, name of project
+    Parse string to dict of date, name of task, kind, project
 
     Returning dictionary
     """
-    result = {}
+    result = Task()
 
     split_str = task_str.split(" - ")
 
     if (len(split_str) >= 1):
         # Parse time, date will be current, it is not right
-        result[TIME] = dateutil.parser.parse(
+        result.time_begin = dateutil.parser.parse(
             split_str[0].replace(" ", ":").strip())
 
     if (len(split_str) >= 2):
         # Parse task
-        result[TASK] = split_str[1].strip()
+        result.name = split_str[1].strip()
 
     if (len(split_str) >= 3):
         # Parse project
-        result[PROJECT] = split_str[-1].strip()
+        result.kind = split_str[2].strip()
+
+    if (len(split_str) >= 4):
+        # Parse project
+        result.project = split_str[3].strip()
 
     return result
 
 
-def _group_by_project(data: DayData, one_day: list):
+def _summarize_tasks(data: DayData, one_day: list):
     """
-    Group tasks by project
+    Summarize tasks, set their duration
     """
     sum_time = dateutil.parser.parse("00:00")
     num_one_day_tasks = len(one_day)
+
     for i in range(num_one_day_tasks):
-        if (not TASK in one_day[i]) or (one_day[i][TASK] in config.skip_tasks):
+        if (one_day[i].name == "") or (one_day[i].name in config.skip_tasks):
             continue
 
-        task = one_day[i][TASK]
-
-        project = ""
-        if PROJECT in one_day[i]:
-            project = one_day[i][PROJECT]
-        else:
-            project = DEFAULT_PROJECT
-
-        if not project in data.one_day_projects:
-            data.one_day_projects[project] = {}
+        task = one_day[i]
+        delta_time = None
 
         if i == num_one_day_tasks - 1:
             delta_time = config.work_day_hours - sum_time
         else:
-            delta_time = (one_day[i + 1][TIME] -
-                          one_day[i][TIME])
-
-        if task in data.one_day_projects[project].keys():
-            data.one_day_projects[project][task] += delta_time
-        else:
-            data.one_day_projects[project][task] = delta_time
+            delta_time = one_day[i + 1].time_begin - task.time_begin
 
         sum_time += delta_time
 
-    # Transform resulting time
-    _transform_time(data)
+        exist_task = data.get_task_by_name(task.name)
+        if exist_task is None:
+            task.time = delta_time
+            data.tasks.append(task)
+            continue
 
-
-def _transform_time(data: DayData):
-    """
-    Transform time [hours]:[minutes]:[seconds] to [hours].[minutes relative]
-    """
-    for project in data.one_day_projects:
-        for task in data.one_day_projects[project]:
-            time_str = str(data.one_day_projects[project][task])
-            time_arr = time_str.split(":")
-            time_arr = _scale_time(int(time_arr[0]), int(time_arr[1]))
-            data.one_day_projects[project][task] = str(time_arr[0]) + "." + \
-                str(time_arr[1])
-
-
-def _scale_time(hours: int, minutes: int) -> list:
-    """
-    Transform minutes 0 to 60 gap to 0 to 100 gap with rounding minutes to 25
-    """
-    minutes = remap(minutes, 0, 60, 0, 100)
-
-    # Fractional part rounded to 25
-    frac = minutes % config.minute_round_to
-    if frac >= int(config.minute_round_to / 2) + 1:
-        minutes = (minutes // config.minute_round_to + 1) * \
-            config.minute_round_to
-        if minutes == 100:
-            hours += 1
-            minutes = 0
-    else:
-        minutes = minutes // config.minute_round_to * config.minute_round_to
-
-    return [int(hours), int(minutes)]
+        exist_task.time += delta_time
