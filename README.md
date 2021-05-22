@@ -2,10 +2,10 @@
 
 ## File with report
 
-Each line has time, name of task and project they are divided by space-dash-space:
+Each line has time, name, type and project they are divided by space-dash-space:
 
 ```
-[hour] [minute] - [name of task] - [name of project]
+[hour] [minute] - [name of task] - [name of type] - [name of project]
 ```
 
 Example:
@@ -28,26 +28,14 @@ Type 1:
 ```
 01.01.2020
   project of life (3.5 ч.):
-    1.75 ч. - 0123456: Do something
-    1.75 ч. - 0123456: Do something harder
+    1.75h - 0123456: Do something
+    1.75h - 0123456: Do something harder
 ...
 ```
-
-Type 2:
-
-```
-01.01.2020
-  project of life (3.5 ч.):
-    1.75 ч. - 0123456: Do something - project of life
-    1.75 ч. - 0123456: Do something harder - project of life
-...
-```
-
-> !!! Program round time in the result to 0.25 hour. !!!
 
 ## Config
 
-Near the project (near file app.py) has to be file config.json with settings.
+Near the project (near file app.py) has to be file `config.json` with settings.
 
 Setting that can be setted:
 
@@ -61,6 +49,7 @@ Setting that can be setted:
     -   login - user login to the account
     -   password - user password to the account
     -   issue_key_base - (optional) prefix for all issue key. Default empty string
+-   text-indent - indent in the beginning of line for task, type etc
 
 Example:
 
@@ -70,10 +59,11 @@ Example:
     "day-report-path": "~/example-day-report.txt",
     "omit-task": ["lunch", "break"],
     "outputs-day-report": {
-        "console": 2,
+        "console": 1,
         "file": 1
     },
-    "minute_round_to": 25,
+    "minute-round-to": 25,
+    "text-indent": "  "
     "jira": {
         "server": "https://jira.example.domain.com/",
         "login": "test.user",
@@ -85,7 +75,7 @@ Example:
 
 ## How it works
 
-Program find tasks and their project. Task without project get in default project.
+Program find tasks, their type and project. Task without project or type get in default name.
 
 Some tasks like lunch can be ommitted. For that purpose they have to be in the config file in ommit array.
 Task that has to be ommitted can be anything and have any symbols like another.
