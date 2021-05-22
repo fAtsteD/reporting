@@ -1,5 +1,7 @@
 import dateutil.parser
 
+from .dictionary import Dictionary
+
 
 class config:
     """
@@ -12,10 +14,13 @@ class config:
 
     # Output
     outputs_day_report = []
+    output_file_day = ""
+
+    # Text
     file_type_print = 1
     console_type_print = 1
-    output_file_day = ""
     text_indent = "  "
+    dictionary = Dictionary()
 
     # Tasks
     skip_tasks = []

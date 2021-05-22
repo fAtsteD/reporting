@@ -94,15 +94,16 @@ def _parse_task(task_str: str) -> Task:
 
     if (len(split_str) >= 2):
         # Parse task
-        result.name = split_str[1].strip()
+        result.name = config.dictionary.translate_task(split_str[1].strip())
 
     if (len(split_str) >= 3):
         # Parse project
-        result.kind = split_str[2].strip()
+        result.kind = config.dictionary.translate_kind(split_str[2].strip())
 
     if (len(split_str) >= 4):
         # Parse project
-        result.project = split_str[3].strip()
+        result.project = config.dictionary.translate_project(
+            split_str[3].strip())
 
     return result
 

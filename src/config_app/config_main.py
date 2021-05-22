@@ -25,8 +25,19 @@ def load_config():
     if "day-report-path" in data and path.isfile(data["day-report-path"]):
         config.output_file_day = data["day-report-path"]
 
+    if "dictionary" in data:
+        if "task" in data["dictionary"]:
+            config.dictionary.tasks = data["dictionary"]["task"]
+        if "type" in data["dictionary"]:
+            config.dictionary.kinds = data["dictionary"]["type"]
+        if "project" in data["dictionary"]:
+            config.dictionary.projects = data["dictionary"]["project"]
+
     if "omit-task" in data:
-        config.skip_tasks = data["omit-task"]
+        skip_tasks = data["omit-task"]
+        for task_name in skip_tasks:
+            config.skip_tasks.append(
+                config.dictionary.translate_task(task_name))
 
     if "outputs-day-report" in data:
         if "console" in data["outputs-day-report"]:
