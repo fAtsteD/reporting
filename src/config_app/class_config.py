@@ -1,6 +1,7 @@
 import dateutil.parser
 
 from .dictionary import Dictionary
+from .reporting_config import ReportingConfig
 
 
 class config:
@@ -31,6 +32,9 @@ class config:
         "use_jira": False,
         "issue_key_base": ""
     }
+
+    # Reporting
+    reporting = ReportingConfig()
 
     # Parameters for program
     work_day_hours = dateutil.parser.parse("08:00")

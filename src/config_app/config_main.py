@@ -26,12 +26,7 @@ def load_config():
         config.output_file_day = data["day-report-path"]
 
     if "dictionary" in data:
-        if "task" in data["dictionary"]:
-            config.dictionary.tasks = data["dictionary"]["task"]
-        if "type" in data["dictionary"]:
-            config.dictionary.kinds = data["dictionary"]["type"]
-        if "project" in data["dictionary"]:
-            config.dictionary.projects = data["dictionary"]["project"]
+        config.dictionary.set_data(data["dictionary"])
 
     if "omit-task" in data:
         skip_tasks = data["omit-task"]
@@ -55,13 +50,16 @@ def load_config():
         config.minute_round_to = int(data["minute-round-to"])
 
     if "jira" in data:
-        if "server" in data["jira"] and "login" in data["jira"] and "password" in data["jira"]:
+        if set("server", "login", "password").issubset(data["jira"]):
             for param in data["jira"]:
                 config.jira[param] = data["jira"][param]
             config.jira["use_jira"] = True
 
     if "indent" in data:
         config.text_indent = data["indent"]
+
+    if "reporting" in data:
+        config.reporting.set_data(data["reporting"])
 
 
 def _get_config_file() -> str:

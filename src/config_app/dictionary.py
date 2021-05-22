@@ -11,6 +11,17 @@ class Dictionary:
     kinds = {}
     projects = {}
 
+    def set_data(self, data: dict):
+        """
+        Set data to the object
+        """
+        if "task" in data:
+            self.tasks = data["task"]
+        if "type" in data:
+            self.kinds = data["type"]
+        if "project" in data:
+            self.projects = data["project"]
+
     def translate_task(self, text: str) -> str:
         """
         Translate task if it sets
