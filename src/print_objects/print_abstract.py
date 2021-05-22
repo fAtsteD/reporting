@@ -10,6 +10,12 @@ class PrintAbstract():
     Abstract for printing
     """
 
+    def print(self, transform: DayData):
+        """
+        Override in inherited classes for printing
+        """
+        print("Use another any inherited object for printing")
+
     def _parse_for_plain_print_1(self, transform: DayData):
         """
         Parse data for printing type 1
