@@ -50,6 +50,10 @@ Setting that can be setted:
     -   password - user password to the account
     -   issue_key_base - (optional) prefix for all issue key. Default empty string
 -   text-indent - indent in the beginning of line for task, type etc
+-   dictionary - dictionary with shorter version of origin or reworded (can be used in omit task):
+    -   task - only use for task name
+    -   type - only use for type name
+    -   project - only use for project name
 
 Example:
 
@@ -69,6 +73,13 @@ Example:
         "login": "test.user",
         "password": "password",
         "issue_key_base": "JRA-"
+    },
+    "dictionary": {
+        "task":{
+            "l": "lunch"
+        },
+        "type": {},
+        "project":{}
     }
 }
 ```
