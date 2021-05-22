@@ -12,19 +12,18 @@ class Jira():
     """
 
     def __init__(self, config):
-        self._config = config
 
-        if not self._config.use_jira:
+        if not config["use_jira"]:
             exit("Used JIRA module without required settings")
 
-        self._base = config.jira["issue_key_base"]
+        self._base = config["issue_key_base"]
 
         jira_options = {
-            "server": config.jira["server"]
+            "server": config["server"]
         }
 
         self._jira = JIRA(jira_options, basic_auth=(
-            config.jira["login"], config.jira["password"]))
+            config["login"], config["password"]))
 
     def set_worklog(self, transform: DayData):
         """

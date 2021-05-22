@@ -2,9 +2,9 @@
 """
 File with class for print report
 """
-from ..config import config
 from src.transform.transform import DayData
 
+from ..config_app import config
 from .print_abstract import PrintAbstract
 
 

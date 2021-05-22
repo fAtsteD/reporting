@@ -4,7 +4,7 @@ File with class for print report
 """
 from src.transform.transform import DayData
 
-from ..config import config
+from ..config_app import config
 from .print_abstract import PrintAbstract
 
 

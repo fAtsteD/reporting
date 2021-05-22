@@ -15,29 +15,19 @@ Variables of DayData:
 - one_day_projects - dictionaty with task by projects and sum of time for each task
 """
 
-import datetime
 import re
-import sys
 
 import dateutil.parser
 
-from ..config import config
+from ..config_app import config
 from ..helpers.time import *
+from .day_data import DayData
 
 TIME = "time"
 TASK = "task"
 PROJECT = "project"
 
 DEFAULT_PROJECT = "Внутренние задачи"
-
-
-class DayData():
-    """
-    Hold all data for current day
-    """
-
-    date = datetime.date.today()
-    one_day_projects = {}
 
 
 def get_day_data():

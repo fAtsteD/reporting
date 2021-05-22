@@ -5,7 +5,7 @@ Begining point of program
 import os
 import sys
 
-from src.config import config
+from src.config_app import *
 from src.jira import Jira
 from src.transform import *
 
@@ -14,7 +14,7 @@ def main():
     """
     Main function for starting program
     """
-    config.load_config()
+    load_config()
     day_data = transform.get_day_data()
 
     # Pring data
@@ -22,10 +22,10 @@ def main():
         print_object.print(day_data)
 
     # # Send data to JIRA
-    if config.use_jira:
+    if config.jira["use_jira"]:
         log_work = input("Log work? (y/n)")
         if log_work == "y":
-            jira = Jira()
+            jira = Jira(config.jira)
             jira.set_worklog(day_data)
 
 
