@@ -8,6 +8,8 @@ import requests
 
 from ..config_app import config
 from ..transform import Task
+from .categories import Categories
+from .user import User
 
 
 class ReportingApi:
@@ -15,7 +17,7 @@ class ReportingApi:
     Class save connection params to reporting
     """
 
-    def __init__(self, login: str, password: str):
+    def __init__(self, login: str, password: str) -> None:
         """
         Connect to the server
         """
@@ -23,15 +25,15 @@ class ReportingApi:
         self.login = login
         self.password = password
 
-        self.last_error = ""
+        self.last_error = None
         self.base_url = config.reporting.url
         self.is_auth = False
 
-        self.user_data = {}
-        self.projects = []
-        self.categories = []
+        self.user_data: User = None
+        self.projects = None
+        self.categories: Categories = None
 
-    def _login(self):
+    def _login(self) -> None:
         """
         Auth in the reporting
         """
@@ -39,6 +41,7 @@ class ReportingApi:
             "login": self.login,
             "password": self.password
         }
+
         response = self.request_session.post(
             self.base_url + config.reporting.auth_suburl, json=data)
 
@@ -55,7 +58,7 @@ class ReportingApi:
         try:
             response_data = response.json()
         except Exception:
-            self.user_data = {}
+            self.user_data = None
             self.last_error = "Can't parse JSON response for init request"
             return False
 
@@ -63,7 +66,7 @@ class ReportingApi:
             self.last_error = response_data["errorMessage"]
             return False
 
-        self.user_data = response_data["currentUser"]["user"]
+        self.user_data = User(response_data["currentUser"]["user"])
 
         return True
 
@@ -75,9 +78,9 @@ class ReportingApi:
             self.base_url + config.reporting.categories_suburl)
 
         try:
-            response_data = self.categories = response.json()
+            response_data = response.json()
         except Exception:
-            self.categories = []
+            self.categories = None
             self.last_error = "Can't parse JSON response for categories request"
             return False
 
@@ -85,7 +88,7 @@ class ReportingApi:
             self.last_error = response_data["errorMessage"]
             return False
 
-        self.categories = response_data
+        self.categories = Categories(response_data)
 
         return True
 
@@ -97,9 +100,9 @@ class ReportingApi:
             self.base_url + config.reporting.projects_suburl)
 
         try:
-            response_data = self.projects = response.json()
+            response_data = response.json()
         except Exception:
-            self.projects = []
+            self.projects = None
             self.last_error = "Can't parse JSON response for project request"
             return False
 
@@ -116,7 +119,7 @@ class ReportingApi:
         Return report for the day
         Before the request need do init request
         """
-        if len(self.user_data) == 0:
+        if self.user_data is None:
             self.last_error = "You need do init request before"
             return False
 
@@ -127,6 +130,7 @@ class ReportingApi:
 
         response = self.request_session.get(
             self.base_url + config.reporting.suburl_get_report, params=data)
+
         try:
             response_data = response.json()
         except Exception:
@@ -145,25 +149,43 @@ class ReportingApi:
 
         Report data has to be like response in the get report
         """
-        if len(self.last_report) == 0:
+        if self.user_data is None:
+            self.last_error = "Need init request before"
             return False
+
+        if self.categories is None:
+            self.last_error = "Need load categories request before"
+            return False
+
+        if self.projects is None:
+            self.last_error = "Need load projects request before"
+            return False
+
+        category = self.categories.get_by_name(task.kind)
 
         # TODO: Set data to the request and send it
         data = {
-            "categoryId": 0,
-            "clientId": None,
-            "departmentId": 0,
-            "description": "",
-            "hours": 0,
+            "categoryId": category["id"],
+            "clientId": self.user_data.user["id"],
+            "departmentId": self.user_data.user["departmentId"],
+            "description": task.name,
+            "hours": task.get_transformed_time(),
             "invoiceHours": 0,
-            "orderNumber": 0,
+            "orderNumber": 0,  # TODO: from report
             "overrideEmployeeId": None,
             "paidEvent": None,
             "pjmApproved": False,
             "pjmHours": None,
             "pomApproved": False,
-            "projectId": 0,
-            "reportId": 0,
-            "salaryCoefficient": 0,
+            "projectId": 0,  # TODO: get from object project
+            "reportId": 0,  # TODO: from report
+            "salaryCoefficient": category["salaryCoefficient"],
             "salaryCoefficientType": 0
         }
+
+        response = self.request_session.post(
+            self.base_url + config.reporting.suburl_add_task, json=data)
+
+        # TODO: check response
+
+        return True
