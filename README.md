@@ -54,6 +54,16 @@ Setting that can be setted:
     -   task - only use for task name
     -   type - only use for type name
     -   project - only use for project name
+-   reporting - settings for reporting (have different class for them):
+    -   login - user login to the account
+    -   password - password to the account
+    -   url - main url to the reporting
+    -   suburl_auth - related suburl to the some of part
+    -   suburl_categories - related suburl to the some of part
+    -   suburl_projects - related suburl to the some of part
+    -   suburl_init - related suburl to the some of part
+    -   suburl_get_report - related suburl to the some of part
+    -   suburl_add_task - related suburl to the some of part
 
 Example:
 
@@ -66,6 +76,8 @@ Example:
         "console": 1,
         "file": 1
     },
+    "default-type": "Development",
+    "default-project": "My project",
     "minute-round-to": 25,
     "text-indent": "  "
     "jira": {
@@ -80,6 +92,17 @@ Example:
         },
         "type": {},
         "project":{}
+    },
+    "reporting": {
+        "login": "test",
+        "password": "pass",
+        "url": "https://reporting.example.com/",
+        "suburl_auth": "example/path",
+        "suburl_categories": "example/path",
+        "suburl_projects": "example/path",
+        "suburl_init": "example/path",
+        "suburl_get_report": "example/path",
+        "suburl_add_task": "example/path",
     }
 }
 ```
@@ -98,3 +121,10 @@ You must add 3 required configs for working with Jira: server, login, password.
 ### Worklog setting
 
 Issue key searches by concatenate base in the settings (default empty string) and any number before double dots. All other information for setting worklog does not need.
+
+## Reporting
+
+Add requests through API.
+Firstly do requests for data then it can do what you need.
+
+New requests can be added in the api then used in reporting.
