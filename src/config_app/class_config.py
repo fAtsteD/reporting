@@ -24,6 +24,8 @@ class config:
     dictionary = Dictionary()
 
     # Tasks
+    default_kind = "Development"
+    default_project = "Default"
     skip_tasks = []
     minute_round_to = 25
 

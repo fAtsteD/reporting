@@ -61,6 +61,12 @@ def load_config():
     if "reporting" in data:
         config.reporting.set_data(data["reporting"])
 
+    if "default-type" in data:
+        config.default_kind = data["default-type"]
+
+    if "default-project" in data:
+        config.default_project = data["default-project"]
+
 
 def _get_config_file() -> str:
     if path.isfile(path.dirname(__file__) + "/../../config.json"):

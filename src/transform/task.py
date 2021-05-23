@@ -1,5 +1,6 @@
 import datetime
 
+from ..config_app import config
 from ..helpers.time import scale_time
 
 
@@ -8,8 +9,8 @@ class Task:
     Hold all data for one task
     """
 
-    default_project = "Default"
-    default_kind = "Development"
+    default_project = config.default_project
+    default_kind = config.default_kind
 
     def __init__(self):
         self.time: datetime.datetime = None
