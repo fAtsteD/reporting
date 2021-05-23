@@ -9,6 +9,8 @@ import requests
 from ..config_app import config
 from ..transform import Task
 from .categories import Categories
+from .projects import Projects
+from .report import Report
 from .user import User
 
 
@@ -33,7 +35,7 @@ class ReportingApi:
         self.projects = None
         self.categories: Categories = None
 
-    def _login(self) -> None:
+    def login(self) -> None:
         """
         Auth in the reporting
         """
@@ -110,7 +112,7 @@ class ReportingApi:
             self.last_error = response_data["errorMessage"]
             return False
 
-        self.projects = response_data
+        self.projects = Projects(response_data["projects"])
 
         return True
 
@@ -141,9 +143,9 @@ class ReportingApi:
             self.last_error = response_data["errorMessage"]
             return {}
 
-        return response_data[0]
+        return Report(response_data[0])
 
-    def add_task(self, task: Task, report: dict) -> bool:
+    def add_task(self, task: Task, report: Report) -> bool:
         """
         Add task to the report
 
@@ -162,23 +164,30 @@ class ReportingApi:
             return False
 
         category = self.categories.get_by_name(task.kind)
+        if category is None:
+            self.last_error = "Category for " + task.kind + " does not find"
+            return False
 
-        # TODO: Set data to the request and send it
+        project = self.projects.get_by_name(task.project)
+        if project is None or not project["active"]:
+            self.last_error = "Project for " + task.project + " does not find"
+            return False
+
         data = {
             "categoryId": category["id"],
             "clientId": self.user_data.user["id"],
             "departmentId": self.user_data.user["departmentId"],
             "description": task.name,
-            "hours": task.get_transformed_time(),
+            "hours": int(task.get_transformed_time() * 100),
             "invoiceHours": 0,
-            "orderNumber": 0,  # TODO: from report
+            "orderNumber": report.next_task_order_num(),
             "overrideEmployeeId": None,
             "paidEvent": None,
             "pjmApproved": False,
             "pjmHours": None,
             "pomApproved": False,
-            "projectId": 0,  # TODO: get from object project
-            "reportId": 0,  # TODO: from report
+            "projectId": project["id"],
+            "reportId": report.report["id"],
             "salaryCoefficient": category["salaryCoefficient"],
             "salaryCoefficientType": 0
         }
