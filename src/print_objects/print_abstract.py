@@ -31,9 +31,9 @@ class PrintAbstract():
 
             task_indent = indent + indent
             for task in day_data.get_tasks_by_kind(kind):
-                text_tasks += task_indent + task.get_string_time() + "h - " + \
+                text_tasks += task_indent + str(task.get_transformed_time()) + "h - " + \
                     task.name + "\n"
-                day_time += float(task.get_string_time())
+                day_time += task.get_transformed_time()
 
         text += "Summary time: " + str(day_time) + "h\n"
         text += "Tasks:\n"
