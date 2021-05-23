@@ -1,3 +1,8 @@
+"""
+Object for holding projects
+"""
+
+
 class Projects:
     """
     Hold projects and related function

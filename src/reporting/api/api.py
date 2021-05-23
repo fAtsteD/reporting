@@ -5,9 +5,9 @@ Connection class to the reporting
 from datetime import datetime
 
 import requests
+from config_app import config
+from transform import Task
 
-from ..config_app import config
-from ..transform import Task
 from .categories import Categories
 from .projects import Projects
 from .report import Report
@@ -19,13 +19,13 @@ class ReportingApi:
     Class save connection params to reporting
     """
 
-    def __init__(self, login: str, password: str) -> None:
+    def __init__(self) -> None:
         """
         Connect to the server
         """
         self.request_session = requests.Session()
-        self.login = login
-        self.password = password
+        self.login = config.reporting.login
+        self.password = config.reporting.password
 
         self.last_error = None
         self.base_url = config.reporting.url
