@@ -28,6 +28,12 @@ def load_config():
     if "dictionary" in data:
         config.dictionary.set_data(data["dictionary"])
 
+    if "default-type" in data:
+        config.default_kind = data["default-type"]
+
+    if "default-project" in data:
+        config.default_project = data["default-project"]
+
     if "omit-task" in data:
         skip_tasks = data["omit-task"]
         for task_name in skip_tasks:
@@ -50,7 +56,7 @@ def load_config():
         config.minute_round_to = int(data["minute-round-to"])
 
     if "jira" in data:
-        if set("server", "login", "password").issubset(data["jira"]):
+        if set(["server", "login", "password"]).issubset(data["jira"]):
             for param in data["jira"]:
                 config.jira[param] = data["jira"][param]
             config.jira["use_jira"] = True
@@ -60,12 +66,6 @@ def load_config():
 
     if "reporting" in data:
         config.reporting.set_data(data["reporting"])
-
-    if "default-type" in data:
-        config.default_kind = data["default-type"]
-
-    if "default-project" in data:
-        config.default_project = data["default-project"]
 
 
 def _get_config_file() -> str:

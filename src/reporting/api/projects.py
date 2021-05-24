@@ -32,3 +32,9 @@ class Projects:
         """
         if len(self.projects) == 0:
             return None
+
+        for project in self.projects:
+            if project["name"] == name:
+                return project
+
+        return None

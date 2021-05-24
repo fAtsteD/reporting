@@ -23,11 +23,11 @@ def main():
         print_object.print(day_data)
 
     # Send data to JIRA
-    if config.jira["use_jira"]:
-        log_work = input("Log work? (y/n) ")
-        if log_work == "y":
-            jira = Jira(config.jira)
-            jira.set_worklog(day_data)
+    # if config.jira["use_jira"]:
+    #     log_work = input("Log work? (y/n) ")
+    #     if log_work == "y":
+    #         jira = Jira(config.jira)
+    #         jira.set_worklog(day_data)
 
     # Send data to reporting
     if config.reporting.can_use:

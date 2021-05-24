@@ -44,7 +44,7 @@ class Categories:
             return None
 
         for category in self.categories:
-            if category.name == name:
+            if category["name"] == name:
                 return category
 
         return None

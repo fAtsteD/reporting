@@ -1,8 +1,7 @@
 """
 Work with tasks from app
 """
-from transform import DayData
-
+from ..transform import DayData
 from .api import *
 from .common import get_api
 

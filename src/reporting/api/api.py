@@ -5,9 +5,9 @@ Connection class to the reporting
 from datetime import datetime
 
 import requests
-from config_app import config
-from transform import Task
 
+from ...config_app import config
+from ...transform import Task
 from .categories import Categories
 from .projects import Projects
 from .report import Report
@@ -24,15 +24,13 @@ class ReportingApi:
         Connect to the server
         """
         self.request_session = requests.Session()
-        self.login = config.reporting.login
-        self.password = config.reporting.password
 
         self.last_error = None
         self.base_url = config.reporting.url
         self.is_auth = False
 
         self.user_data: User = None
-        self.projects = None
+        self.projects: Projects = None
         self.categories: Categories = None
 
     def login(self) -> None:
@@ -40,15 +38,17 @@ class ReportingApi:
         Auth in the reporting
         """
         data = {
-            "login": self.login,
-            "password": self.password
+            "login": config.reporting.login,
+            "password": config.reporting.password
         }
 
         response = self.request_session.post(
-            self.base_url + config.reporting.auth_suburl, json=data)
+            self.base_url + config.reporting.suburl_auth, json=data)
 
-        if response.text == "1":
+        if response.text == "":
             self.is_auth = True
+
+        # TODO: Add check error
 
     def init(self) -> bool:
         """
@@ -77,7 +77,7 @@ class ReportingApi:
         Load categories from server
         """
         response = self.request_session.get(
-            self.base_url + config.reporting.categories_suburl)
+            self.base_url + config.reporting.suburl_categories)
 
         try:
             response_data = response.json()
@@ -99,7 +99,7 @@ class ReportingApi:
         Load projects from server
         """
         response = self.request_session.get(
-            self.base_url + config.reporting.projects_suburl)
+            self.base_url + config.reporting.suburl_projects)
 
         try:
             response_data = response.json()
@@ -126,8 +126,8 @@ class ReportingApi:
             return False
 
         data = {
-            "date": str(date.year) + "-" + str(date.month) + "-" + str(date.day),
-            "employeeId": self.user_data["id"]
+            "date": date.strftime('%Y-%m-%d'),
+            "employeeId": self.user_data.user["id"]
         }
 
         response = self.request_session.get(
@@ -149,7 +149,9 @@ class ReportingApi:
         """
         Add task to the report
 
-        Report data has to be like response in the get report
+        Report data has to be like response in the get report.
+
+        In success server send tasks that you sent to it.
         """
         if self.user_data is None:
             self.last_error = "Need init request before"
@@ -173,28 +175,38 @@ class ReportingApi:
             self.last_error = "Project for " + task.project + " does not find"
             return False
 
-        data = {
-            "categoryId": category["id"],
-            "clientId": self.user_data.user["id"],
-            "departmentId": self.user_data.user["departmentId"],
-            "description": task.name,
-            "hours": int(task.get_transformed_time() * 100),
-            "invoiceHours": 0,
-            "orderNumber": report.next_task_order_num(),
-            "overrideEmployeeId": None,
-            "paidEvent": None,
-            "pjmApproved": False,
-            "pjmHours": None,
-            "pomApproved": False,
-            "projectId": project["id"],
-            "reportId": report.report["id"],
-            "salaryCoefficient": category["salaryCoefficient"],
-            "salaryCoefficientType": 0
-        }
+        data = [
+            {
+                "categoryId": category["id"],
+                "clientId": self.user_data.user["id"],
+                "departmentId": self.user_data.user["departmentId"],
+                "description": task.name,
+                "hours": int(task.get_transformed_time() * 100),
+                "invoiceHours": 0,
+                "orderNumber": report.next_task_order_num(),
+                "overrideEmployeeId": None,
+                "paidEvent": None,
+                "pjmApproved": False,
+                "pjmHours": None,
+                "pomApproved": False,
+                "projectId": project["id"],
+                "reportId": report.report["id"],
+                "salaryCoefficient": category["salaryCoefficient"],
+                "salaryCoefficientType": 0
+            }
+        ]
 
         response = self.request_session.post(
             self.base_url + config.reporting.suburl_add_task, json=data)
 
-        # TODO: check response
+        try:
+            response_data = response.json()
+        except Exception:
+            self.last_error = "Can't parse JSON response for getting report request"
+            return False
+
+        if "error" in response_data:
+            self.last_error = response_data["errorMessage"]
+            return False
 
         return True

@@ -9,15 +9,12 @@ class Task:
     Hold all data for one task
     """
 
-    default_project = config.default_project
-    default_kind = config.default_kind
-
     def __init__(self):
         self.time: datetime.datetime = None
         self.time_begin: datetime.datetime = None
         self.name: str = ""
-        self.project: str = self.default_project
-        self.kind: str = self.default_kind
+        self.project: str = config.default_project
+        self.kind: str = config.default_kind
 
     def get_transformed_time(self):
         """
