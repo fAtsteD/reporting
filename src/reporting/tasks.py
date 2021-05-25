@@ -12,9 +12,24 @@ def send_tasks(day_data: DayData) -> None:
     """
     api = get_api()
 
-    report = api.get_report(day_data.date)
+    reports = api.get_reports(day_data.date)
+
+    if reports is None:
+        exit(api.last_error)
+
+    if len(reports) == 0:
+        report = api.set_report(day_data.date)
+
+        if report is None:
+            exit(api.last_error)
+
+        reports.append(report)
 
     print("\nSend task:")
     for task in day_data.tasks:
-        api.add_task(task, report)
-        print("[+] " + task.name)
+        print_str = ""
+        if api.add_task(task, reports[0]):
+            print_str += "[+] "
+        else:
+            print_str += "[-] "
+        print(print_str + task.name + " - " + task.kind)

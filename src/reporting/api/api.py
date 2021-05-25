@@ -23,6 +23,9 @@ class ReportingApi:
         """
         Connect to the server
         """
+        if not config.reporting.can_use:
+            exit("Used reporing module without required settings")
+
         self.request_session = requests.Session()
 
         self.last_error = None
@@ -116,14 +119,14 @@ class ReportingApi:
 
         return True
 
-    def get_report(self, date: datetime) -> dict:
+    def get_reports(self, date: datetime) -> list:
         """
         Return report for the day
         Before the request need do init request
         """
         if self.user_data is None:
             self.last_error = "You need do init request before"
-            return False
+            return None
 
         data = {
             "date": date.strftime('%Y-%m-%d'),
@@ -137,13 +140,50 @@ class ReportingApi:
             response_data = response.json()
         except Exception:
             self.last_error = "Can't parse JSON response for getting report request"
-            return {}
+            return None
 
         if "error" in response_data:
             self.last_error = response_data["errorMessage"]
-            return {}
+            return None
 
-        return Report(response_data[0])
+        result = []
+        if len(response_data) > 0:
+            for report in response_data:
+                result.append(Report(report))
+
+        return result
+
+    def set_report(self, date: datetime, have_problems: False, has_tasks: True) -> Report:
+        """
+        Create report and return it
+        """
+        if self.user_data is None:
+            self.last_error = "You need do init request before"
+            return None
+
+        data = {
+            "date": date.strftime('%Y-%m-%d'),
+            "employeeId": self.user_data.user["id"],
+            "haveProblems": have_problems,
+            "id": None,
+            "noTasks": not has_tasks,
+            "problems": "",
+        }
+
+        response = self.request_session.put(
+            self.base_url + config.reporting.suburl_get_report, params=data)
+
+        try:
+            response_data = response.json()
+        except Exception:
+            self.last_error = "Can't parse JSON response for getting report request"
+            return None
+
+        if "error" in response_data:
+            self.last_error = response_data["errorMessage"]
+            return None
+
+        return Report(response_data)
 
     def add_task(self, task: Task, report: Report) -> bool:
         """

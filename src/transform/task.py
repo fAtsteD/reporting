@@ -10,7 +10,7 @@ class Task:
     """
 
     def __init__(self):
-        self.time: datetime.datetime = None
+        self.time: datetime.timedelta = None
         self.time_begin: datetime.datetime = None
         self.name: str = ""
         self.project: str = config.default_project

@@ -79,19 +79,19 @@ Example:
     "default-type": "Development",
     "default-project": "My project",
     "minute-round-to": 25,
-    "text-indent": "  "
+    "text-indent": "  ",
     "jira": {
         "server": "https://jira.example.domain.com/",
         "login": "test.user",
         "password": "password",
-        "issue_key_base": "JRA-"
+        "issue-key-base": "JRA-"
     },
     "dictionary": {
-        "task":{
+        "task": {
             "l": "lunch"
         },
         "type": {},
-        "project":{}
+        "project": {}
     },
     "reporting": {
         "login": "test",
@@ -102,7 +102,7 @@ Example:
         "suburl_projects": "example/path",
         "suburl_init": "example/path",
         "suburl_get_report": "example/path",
-        "suburl_add_task": "example/path",
+        "suburl_add_task": "example/path"
     }
 }
 ```

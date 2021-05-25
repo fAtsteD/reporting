@@ -7,7 +7,7 @@ from .api import ReportingApi
 _reporting_api = None
 
 
-def get_api()->ReportingApi:
+def get_api() -> ReportingApi:
     """
     Initialize api. Do requeired requests
     """
@@ -22,8 +22,6 @@ def get_api()->ReportingApi:
 
         if not _reporting_api.init():
             exit(_reporting_api.last_error)
-
-        print("Get data from server")
 
         if not _reporting_api.load_categories():
             exit(_reporting_api.last_error)

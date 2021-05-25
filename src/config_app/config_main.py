@@ -56,10 +56,7 @@ def load_config():
         config.minute_round_to = int(data["minute-round-to"])
 
     if "jira" in data:
-        if set(["server", "login", "password"]).issubset(data["jira"]):
-            for param in data["jira"]:
-                config.jira[param] = data["jira"][param]
-            config.jira["use_jira"] = True
+        config.jira.set_data(data["jira"])
 
     if "indent" in data:
         config.text_indent = data["indent"]

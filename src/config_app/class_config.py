@@ -1,6 +1,7 @@
 import dateutil.parser
 
 from .dictionary import Dictionary
+from .jira_config import JiraConfig
 from .reporting_config import ReportingConfig
 
 
@@ -30,10 +31,7 @@ class config:
     minute_round_to = 25
 
     # Jira
-    jira = {
-        "use_jira": False,
-        "issue_key_base": ""
-    }
+    jira = JiraConfig()
 
     # Reporting
     reporting = ReportingConfig()

@@ -3,6 +3,7 @@ import re
 
 from jira import JIRA, JIRAError
 
+from ..config_app import config
 from ..helpers.time import *
 from ..transform import DayData
 
@@ -12,19 +13,18 @@ class Jira():
     Object with required method
     """
 
-    def __init__(self, config):
-
-        if not config["use_jira"]:
+    def __init__(self):
+        if not config.jira.can_use:
             exit("Used JIRA module without required settings")
 
-        self._base = config["issue_key_base"]
+        self._base = config.jira.issue_key_base
 
         jira_options = {
-            "server": config["server"]
+            "server": config.jira.server
         }
 
         self._jira = JIRA(jira_options, basic_auth=(
-            config["login"], config["password"]))
+            config.jira.login, config.jira.password))
 
     def set_worklog(self, day_data: DayData):
         """
@@ -55,9 +55,9 @@ class Jira():
         else:
             print("[-] " + issue_key + " - " + time)
 
-    def _convert_time(self, time: datetime.datetime):
+    def _convert_time(self, time: datetime.timedelta):
         """
         Convert time to the jira type string
         """
 
-        return str(time.hour) + "h " + str(time.hour) + "m"
+        return str(time.seconds // 3600) + "h " + str((time.seconds // 60) % 60) + "m"
