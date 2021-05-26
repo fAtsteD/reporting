@@ -50,8 +50,19 @@ class ReportingApi:
 
         if response.text == "":
             self.is_auth = True
+            return True
 
-        # TODO: Add check error
+        try:
+            response_data = response.json()
+        except Exception:
+            self.is_auth = False
+            self.last_error = "Can't parse JSON response for categories request"
+            return False
+
+        if "error" in response_data:
+            self.last_error = response_data["errorMessage"]
+            self.is_auth = False
+            return False
 
     def init(self) -> bool:
         """
@@ -153,7 +164,7 @@ class ReportingApi:
 
         return result
 
-    def set_report(self, date: datetime, have_problems: False, has_tasks: True) -> Report:
+    def set_report(self, date: datetime, report_id: None, have_problems=False, has_tasks=True) -> Report:
         """
         Create report and return it
         """
@@ -165,10 +176,12 @@ class ReportingApi:
             "date": date.strftime('%Y-%m-%d'),
             "employeeId": self.user_data.user["id"],
             "haveProblems": have_problems,
-            "id": None,
             "noTasks": not has_tasks,
             "problems": "",
         }
+
+        if not report_id is None:
+            data["id"] = report_id
 
         response = self.request_session.put(
             self.base_url + config.reporting.suburl_get_report, params=data)

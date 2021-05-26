@@ -15,10 +15,9 @@ def get_api() -> ReportingApi:
 
     if _reporting_api is None:
         _reporting_api = ReportingApi()
-        _reporting_api.login()
 
-        if not _reporting_api.is_auth:
-            exit("Cannot auth in reporting")
+        if not _reporting_api.login():
+            exit(_reporting_api.last_error)
 
         if not _reporting_api.init():
             exit(_reporting_api.last_error)
