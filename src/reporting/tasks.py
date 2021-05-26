@@ -25,7 +25,6 @@ def send_tasks(day_data: DayData) -> None:
 
         reports.append(report)
 
-    print("\nSend task:")
     for task in day_data.tasks:
         print_str = ""
         if api.add_task(task, reports[0]):

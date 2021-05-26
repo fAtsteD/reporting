@@ -50,10 +50,13 @@ class Jira():
         except JIRAError:
             is_accept = False
 
+        print_str = ""
         if is_accept:
-            print("[+] " + issue_key + " - " + time)
+            print_str = "[+] "
         else:
-            print("[-] " + issue_key + " - " + time)
+            print_str = "[-] "
+
+        print(print_str + issue_key + " - " + time)
 
     def _convert_time(self, time: datetime.timedelta):
         """
