@@ -218,7 +218,8 @@ class ReportingApi:
             self.last_error = "Need load projects request before"
             return False
 
-        category = self.categories.get_by_name(task.kind)
+        category = self.categories.get_by_name(
+            task.kind, self.user_data.user["departmentId"])
         if category is None:
             self.last_error = "Category for " + task.kind + " does not find"
             return False
