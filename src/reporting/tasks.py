@@ -6,7 +6,7 @@ from .api import *
 from .common import get_api
 
 
-def send_tasks(day_data: DayData) -> None:
+def send_tasks(day_data: DayData, report_num=0) -> None:
     """
     Send task to the report. Print status each
     """
@@ -17,18 +17,20 @@ def send_tasks(day_data: DayData) -> None:
     if reports is None:
         exit(api.last_error)
 
-    if len(reports) == 0:
-        report = api.set_report(day_data.date)
+    report_id = None
+    if len(reports) > 0:
+        report_id = reports[report_num]["id"]
 
-        if report is None:
-            exit(api.last_error)
+    report = api.set_report(day_data.date, report_id)
 
-        reports.append(report)
+    if report is None:
+        exit(api.last_error)
 
     for task in day_data.tasks:
         print_str = ""
-        if api.add_task(task, reports[0]):
+        if api.add_task(task, report):
             print_str += "[+] "
         else:
             print_str += "[-] "
+
         print(print_str + task.name + " - " + task.kind)
