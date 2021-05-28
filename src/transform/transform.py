@@ -94,16 +94,18 @@ def _parse_task(task_str: str) -> Task:
 
     if (len(split_str) >= 2):
         # Parse task
-        result.name = config.dictionary.translate_task(split_str[1].strip())
+        result.name = config.dictionary.translate_task(
+            split_str[1].strip().replace('\-', '-'))
 
     if (len(split_str) >= 3):
         # Parse project
-        result.kind = config.dictionary.translate_kind(split_str[2].strip())
+        result.kind = config.dictionary.translate_kind(
+            split_str[2].strip().replace('\-', '-'))
 
     if (len(split_str) >= 4):
         # Parse project
         result.project = config.dictionary.translate_project(
-            split_str[3].strip())
+            split_str[3].strip().replace('\-', '-'))
 
     return result
 
