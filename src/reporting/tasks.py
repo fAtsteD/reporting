@@ -19,7 +19,7 @@ def send_tasks(day_data: DayData, report_num=0) -> None:
 
     report_id = None
     if len(reports) > 0:
-        report_id = reports[report_num]["id"]
+        report_id = reports[report_num].report["id"]
 
     report = api.set_report(day_data.date, report_id)
 

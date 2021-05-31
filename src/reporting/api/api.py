@@ -184,7 +184,7 @@ class ReportingApi:
             data["id"] = report_id
 
         response = self.request_session.put(
-            self.base_url + config.reporting.suburl_get_report, params=data)
+            self.base_url + config.reporting.suburl_get_report, json=data)
 
         try:
             response_data = response.json()
