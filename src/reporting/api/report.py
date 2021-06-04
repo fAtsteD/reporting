@@ -8,6 +8,8 @@ class Report:
     Hold report from request get report
     Has additional methods
 
+    timeRecords is not setted when create report
+
     Report:
     {
         "id": int,
@@ -59,7 +61,7 @@ class Report:
         Next task for report from order number
         """
         if self.next_order_num == 0:
-            if len(self.report["timeRecords"]) > 0:
+            if "timeRecords" in self.report and len(self.report["timeRecords"]) > 0:
                 max_num = 1
                 for record in self.report["timeRecords"]:
                     if record["orderNumber"] > max_num:
