@@ -39,9 +39,9 @@ class Report:
         ],
         "problems": str,
         "noTasks": bool,
-        "sent": "2021-05-14T18:13:19.356+03:00",
-        "created": str",
-        "updated": str",
+        "sent": str,
+        "created": str,
+        "updated": str,
         "haveProblems": bool,
         "sentEmails": str,
         "cc": null
