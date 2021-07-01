@@ -48,7 +48,7 @@ Setting that can be setted:
     -   server - url to the server with Jira
     -   login - user login to the account
     -   password - user password to the account
-    -   issue_key_base - (optional) prefix for all issue key. Default empty string
+    -   issue-key-base - (optional) prefix for all issue key. Default empty string
 -   text-indent - indent in the beginning of line for task, type etc
 -   dictionary - dictionary with shorter version of origin or reworded (can be used in omit task):
     -   task - only use for task name
@@ -57,13 +57,18 @@ Setting that can be setted:
 -   reporting - settings for reporting (have different class for them):
     -   login - user login to the account
     -   password - password to the account
-    -   url - main url to the reporting
-    -   suburl_auth - related suburl to the some of part
-    -   suburl_categories - related suburl to the some of part
-    -   suburl_projects - related suburl to the some of part
-    -   suburl_init - related suburl to the some of part
-    -   suburl_get_report - related suburl to the some of part
-    -   suburl_add_task - related suburl to the some of part
+    -   api-url - main url to the reporting api
+    -   site-url - main url to the reporting site
+    -   suburl-auth - related suburl to the some of part
+    -   suburl-logout - related suburl to the some of part
+    -   suburl-categories - related suburl to the some of part
+    -   suburl-projects - related suburl to the some of part
+    -   suburl-init - related suburl to the some of part
+    -   suburl-get-report - related suburl to the some of part
+    -   suburl-add-task - related suburl to the some of part
+    -   suburl-page-login - related suburl to the page
+-   default-type - default type, setted if task does not have
+-   default-project - default project, setted if task does not have
 
 Example:
 
@@ -96,14 +101,19 @@ Example:
     "reporting": {
         "login": "test",
         "password": "pass",
-        "url": "https://reporting.example.com/",
-        "suburl_auth": "example/path",
-        "suburl_categories": "example/path",
-        "suburl_projects": "example/path",
-        "suburl_init": "example/path",
-        "suburl_get_report": "example/path",
-        "suburl_add_task": "example/path"
-    }
+        "api-url": "https://reporting.example.com/api",
+        "site-url": "https://reporting.example.com/",
+        "suburl-auth": "example/path",
+        "suburl-logout" : "common/logout",
+        "suburl-categories": "example/path",
+        "suburl-projects": "example/path",
+        "suburl-init": "example/path",
+        "suburl-get-report": "example/path",
+        "suburl-add-task": "example/path",
+        "suburl-page-login": "example/path"
+    },
+    "default-type": "Development",
+    "default-project": "Project"
 }
 ```
 
