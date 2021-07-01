@@ -3,13 +3,14 @@ Work with tasks from app
 """
 from ..transform import DayData
 from .api import *
-from .common import get_api
+from .common import get_api, get_site
 
 
 def send_tasks(day_data: DayData, report_num=0) -> None:
     """
     Send task to the report. Print status each
     """
+
     api = get_api()
 
     reports = api.get_reports(day_data.date)
@@ -34,3 +35,5 @@ def send_tasks(day_data: DayData, report_num=0) -> None:
             print_str += "[-] "
 
         print(print_str + task.name + " - " + task.kind)
+
+    api.logout()

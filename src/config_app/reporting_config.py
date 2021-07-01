@@ -8,11 +8,13 @@ class ReportingConfig:
     url = ""
     site_url = ""
     suburl_auth = ""
+    suburl_logout = ""
     suburl_categories = ""
     suburl_projects = ""
     suburl_init = ""
     suburl_get_report = ""
     suburl_add_task = ""
+
     suburl_page_login = ""
 
     # Auth
@@ -23,11 +25,10 @@ class ReportingConfig:
         """
         Set data to the class from data dict (file config usually)
         """
-        if set(["api-url", "site-url", "suburl-auth", "suburl-page-login", "login", "password"]).issubset(data):
+        if set(["api-url", "suburl-auth", "login", "password"]).issubset(data):
             self.url = data["api-url"].strip("/") + "/"
             self.site_url = data["site-url"].strip("/") + "/"
             self.suburl_auth = data["suburl-auth"].strip("/") + "/"
-            self.suburl_page_login = data["suburl-page-login"].strip("/") + "/"
             self.login = data["login"]
             self.password = data["password"]
             self.can_use = True
@@ -46,3 +47,12 @@ class ReportingConfig:
 
         if "suburl-add-task" in data:
             self.suburl_add_task = data["suburl-add-task"].strip("/") + "/"
+
+        if "suburl-logout" in data:
+            self.suburl_logout = data["suburl-logout"].strip("/") + "/"
+
+        if "site-url" in data:
+            self.site_url = data["site-url"].strip("/") + "/"
+
+        if "suburl-page-login" in data:
+            self.suburl_page_login = data["suburl-page-login"].strip("/") + "/"
