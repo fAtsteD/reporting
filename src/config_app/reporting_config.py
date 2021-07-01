@@ -6,12 +6,14 @@ class ReportingConfig:
 
     # Urls
     url = ""
+    site_url = ""
     suburl_auth = ""
     suburl_categories = ""
     suburl_projects = ""
     suburl_init = ""
     suburl_get_report = ""
     suburl_add_task = ""
+    suburl_page_login = ""
 
     # Auth
     login = ""
@@ -21,9 +23,11 @@ class ReportingConfig:
         """
         Set data to the class from data dict (file config usually)
         """
-        if set(["api-url", "suburl-auth", "login", "password"]).issubset(data):
+        if set(["api-url", "site-url", "suburl-auth", "suburl-page-login", "login", "password"]).issubset(data):
             self.url = data["api-url"].strip("/") + "/"
+            self.site_url = data["site-url"].strip("/") + "/"
             self.suburl_auth = data["suburl-auth"].strip("/") + "/"
+            self.suburl_page_login = data["suburl-page-login"].strip("/") + "/"
             self.login = data["login"]
             self.password = data["password"]
             self.can_use = True

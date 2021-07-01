@@ -30,6 +30,7 @@ class ReportingApi:
 
         self.last_error = None
         self.base_url = config.reporting.url
+        self.base_url_site = config.reporting.site_url
         self.is_auth = False
 
         self.user_data: User = None
@@ -56,12 +57,27 @@ class ReportingApi:
             response_data = response.json()
         except Exception:
             self.is_auth = False
-            self.last_error = "Can't parse JSON response for categories request"
+            self.last_error = "Can't parse JSON response for login request"
             return False
 
         if "error" in response_data:
             self.last_error = response_data["errorMessage"]
             self.is_auth = False
+            return False
+
+    def loginPage(self) -> None:
+        """
+        Request for login page even if you logged in.
+        Set session cookie in that request for authenticated user
+        """
+        response = self.request_session.get(
+            self.base_url_site + config.reporting.suburl_page_login)
+
+        if response.text != "" and response.status_code < 400:
+            return True
+        else:
+            self.last_error = "Login page empty or status code wrong. Status code: " + \
+                response.status_code
             return False
 
     def init(self) -> bool:

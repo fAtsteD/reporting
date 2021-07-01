@@ -19,6 +19,9 @@ def get_api() -> ReportingApi:
         if not _reporting_api.login():
             exit(_reporting_api.last_error)
 
+        if not _reporting_api.loginPage():
+            exit(_reporting_api.last_error)
+
         if not _reporting_api.init():
             exit(_reporting_api.last_error)
 
