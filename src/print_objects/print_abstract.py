@@ -2,6 +2,8 @@
 """
 File with class for print report
 """
+import datetime
+
 from ..config_app import config
 from ..transform import DayData, Task
 
@@ -23,7 +25,9 @@ class PrintAbstract():
         """
         day_time = 0.0
         indent = config.text_indent
-        text = day_data.date.strftime("%d.%m.%Y") + "\n"
+        text = day_data.date.strftime(
+            "%d.%m.%Y") + " (" + datetime.date.today().strftime(
+            "%d.%m.%Y") + ")\n"
 
         text_tasks = ""
         for kind in day_data.kinds:
