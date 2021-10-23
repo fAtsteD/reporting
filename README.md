@@ -63,6 +63,7 @@ Setting that can be setted:
     -   suburl-logout - related suburl to the some of part
     -   suburl-categories - related suburl to the some of part
     -   suburl-projects - related suburl to the some of part
+    -   suburl-positions - related suburl to the some of part
     -   suburl-init - related suburl to the some of part
     -   suburl-get-report - related suburl to the some of part
     -   suburl-add-task - related suburl to the some of part
@@ -107,6 +108,7 @@ Example:
         "suburl-logout" : "common/logout",
         "suburl-categories": "example/path",
         "suburl-projects": "example/path",
+        "suburl-positions": "example/path",
         "suburl-init": "example/path",
         "suburl-get-report": "example/path",
         "suburl-add-task": "example/path",
