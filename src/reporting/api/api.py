@@ -10,6 +10,7 @@ from requests.sessions import Session
 from ...config_app import config
 from ...transform import Task
 from .categories import Categories
+from .positions import Positions
 from .projects import Projects
 from .report import Report
 from .user import User
@@ -36,6 +37,7 @@ class ReportingApi:
 
         self.user_data: User = None
         self.projects: Projects = None
+        self.positions: Positions = None
         self.categories: Categories = None
 
     def login(self) -> bool:
@@ -148,6 +150,28 @@ class ReportingApi:
             return False
 
         self.projects = Projects(response_data["projects"])
+
+        return True
+
+    def load_positions(self) -> bool:
+        """
+        Load privilegies by user from server
+        """
+        response = self.request_session.get(
+            self.base_url + config.reporting.suburl_positions)
+
+        try:
+            response_data = response.json()
+        except Exception:
+            self.positions = None
+            self.last_error = "Can't parse JSON response for positions request"
+            return False
+
+        if "error" in response_data:
+            self.last_error = response_data["errorMessage"]
+            return False
+
+        self.positions = Positions(response_data)
 
         return True
 

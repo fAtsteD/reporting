@@ -14,6 +14,7 @@ class ReportingConfig:
     suburl_init = ""
     suburl_get_report = ""
     suburl_add_task = ""
+    suburl_positions = ""
 
     suburl_page_login = ""
 
