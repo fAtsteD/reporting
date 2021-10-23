@@ -36,22 +36,22 @@ class Categories:
         """
         self.categories = categories
 
-    def get_by_name(self, name: str, department_id: str) -> dict:
+    def get_by_name(self, name: str, corp_struct_id: str) -> dict:
         """
         Retrieve id from categories
         """
         if len(self.categories) == 0:
             return None
 
-        def check_department_id(departments: list) -> bool:
+        def check_corp_struct_id(departments: list) -> bool:
             for department in departments:
-                if department["departmentId"] == department_id:
+                if department["corpStructItemId"] == corp_struct_id:
                     return True
 
             return False
 
         for category in self.categories:
-            if category["name"] == name and check_department_id(category["categoryDepartmentDtos"]):
+            if category["name"] == name and check_corp_struct_id(category["categoryDepartmentDtos"]):
                 return category
 
         return None

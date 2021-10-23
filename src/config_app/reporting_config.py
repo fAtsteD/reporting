@@ -40,6 +40,9 @@ class ReportingConfig:
         if "suburl-projects" in data:
             self.suburl_projects = data["suburl-projects"].strip("/") + "/"
 
+        if "suburl-positions" in data:
+            self.suburl_positions = data["suburl-positions"].strip("/") + "/"
+
         if "suburl-init" in data:
             self.suburl_init = data["suburl-init"].strip("/") + "/"
 

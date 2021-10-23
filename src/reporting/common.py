@@ -38,6 +38,9 @@ def get_api() -> ReportingApi:
         if not _reporting_api.load_projects():
             exit(_reporting_api.last_error)
 
+        if not _reporting_api.load_positions():
+            exit(_reporting_api.last_error)
+
     return _reporting_api
 
 

@@ -156,6 +156,8 @@ class ReportingApi:
     def load_positions(self) -> bool:
         """
         Load privilegies by user from server
+
+        Also update user data if it is not empty.
         """
         response = self.request_session.get(
             self.base_url + config.reporting.suburl_positions)
@@ -172,6 +174,12 @@ class ReportingApi:
             return False
 
         self.positions = Positions(response_data)
+
+        if self.user_data is not None:
+            user_position = self.positions.get_by_user_id(
+                self.user_data.user["id"])
+            del user_position["id"]
+            self.user_data.update_data(user_position)
 
         return True
 
@@ -264,7 +272,7 @@ class ReportingApi:
             return False
 
         category = self.categories.get_by_name(
-            task.kind, self.user_data.user["departmentId"])
+            task.kind, self.user_data.user["corpStructItemId"])
         if category is None:
             self.last_error = "Category for " + task.kind + " does not find"
             return False
@@ -278,7 +286,7 @@ class ReportingApi:
             {
                 "categoryId": category["id"],
                 "clientId": self.user_data.user["id"],
-                "departmentId": self.user_data.user["departmentId"],
+                "corpStructItemId": self.user_data.user["corpStructItemId"],
                 "description": task.name,
                 "hours": int(task.get_transformed_time() * 100),
                 "invoiceHours": 0,
