@@ -43,15 +43,8 @@ class Categories:
         if len(self.categories) == 0:
             return None
 
-        def check_corp_struct_id(departments: list) -> bool:
-            for department in departments:
-                if department["corpStructItemId"] == corp_struct_id:
-                    return True
-
-            return False
-
         for category in self.categories:
-            if category["name"] == name and check_corp_struct_id(category["categoryDepartmentDtos"]):
+            if category["name"] == name:
                 return category
 
         return None
