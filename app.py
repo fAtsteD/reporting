@@ -24,7 +24,7 @@ def main():
 
     # Send data to JIRA
     if config.jira.can_use:
-        log_work = input("Log work? (y/n) ")
+        log_work = input("Log work to JIRA? (y/n) ")
         if log_work == "y":
             jira = Jira()
             jira.set_worklog(day_data)
