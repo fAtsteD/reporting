@@ -177,7 +177,7 @@ class ReportingApi:
 
         if self.user_data is not None:
             user_position = self.positions.get_by_user_id(
-                self.user_data.user["id"])
+                self.user_data.user["employeeId"])
             del user_position["id"]
             self.user_data.update_data(user_position)
 
@@ -194,7 +194,7 @@ class ReportingApi:
 
         data = {
             "date": date.strftime('%Y-%m-%d'),
-            "employeeId": self.user_data.user["id"]
+            "employeeId": self.user_data.user["employeeId"]
         }
 
         response = self.request_session.get(
@@ -227,7 +227,7 @@ class ReportingApi:
 
         data = {
             "date": date.strftime('%Y-%m-%d'),
-            "employeeId": self.user_data.user["id"],
+            "employeeId": self.user_data.user["employeeId"],
             "haveProblems": have_problems,
             "noTasks": not has_tasks,
             "problems": "",
@@ -285,7 +285,7 @@ class ReportingApi:
         data = [
             {
                 "categoryId": category["id"],
-                "clientId": self.user_data.user["id"],
+                "clientId": self.user_data.user["employeeId"],
                 "corpStructItemId": self.user_data.user["corpStructItemId"],
                 "description": task.name,
                 "hours": int(task.get_transformed_time() * 100),
