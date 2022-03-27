@@ -42,11 +42,11 @@ def load_config():
 
     if "outputs-day-report" in data:
         if "console" in data["outputs-day-report"]:
-            if 1 <= data["outputs-day-report"]["console"] and data["outputs-day-report"]["console"] <= 2:
+            if 1 <= data["outputs-day-report"]["console"] and data["outputs-day-report"]["console"] <= 1:
                 config.console_type_print = data["outputs-day-report"]["console"]
             config.outputs_day_report.append(PrintConsole())
         if "file" in data["outputs-day-report"] and config.output_file_day != "":
-            if 1 <= data["outputs-day-report"]["file"] and data["outputs-day-report"]["file"] <= 2:
+            if 1 <= data["outputs-day-report"]["file"] and data["outputs-day-report"]["file"] <= 1:
                 config.file_type_print = data["outputs-day-report"]["file"]
             config.outputs_day_report.append(PrintToFile())
     else:
