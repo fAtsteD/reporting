@@ -183,7 +183,7 @@ class ReportingApi:
 
         return True
 
-    def get_reports(self, date: datetime) -> list:
+    def get_reports(self, date: datetime) -> list[Report]:
         """
         Return report for the day
         Before the request need do init request

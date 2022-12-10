@@ -11,9 +11,9 @@ class DayData():
     def __init__(self):
         self.date = datetime.date.today()
 
-        self.tasks: list = []
-        self.projects: list = []
-        self.kinds: list = []
+        self.tasks: list[Task] = []
+        self.projects: list[str] = []
+        self.kinds: list[str] = []
 
     def is_exist(self, task_name: str) -> bool:
         """
@@ -39,7 +39,7 @@ class DayData():
             if self.tasks[i].name == task_name:
                 return self.tasks[i]
 
-    def get_tasks_by_kind(self, kind: str) -> list:
+    def get_tasks_by_kind(self, kind: str) -> list[Task]:
         """
         Return tasks in the defined kind
         """

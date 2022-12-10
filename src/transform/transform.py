@@ -43,7 +43,7 @@ def get_day_data():
     return day_data
 
 
-def _read_one_day(data: DayData) -> list:
+def _read_one_day(data: DayData) -> list[Task]:
     """
     Read all tasks for one day to array
     """
@@ -66,7 +66,7 @@ def _read_one_day(data: DayData) -> list:
                 continue
 
             task = _parse_task(line)
-            one_day.append(_parse_task(line))
+            one_day.append(task)
 
             if not task.kind in data.kinds:
                 data.kinds.append(task.kind)
@@ -80,8 +80,6 @@ def _read_one_day(data: DayData) -> list:
 def _parse_task(task_str: str) -> Task:
     """
     Parse string to dict of date, name of task, kind, project
-
-    Returning dictionary
     """
     result = Task()
 
@@ -110,7 +108,7 @@ def _parse_task(task_str: str) -> Task:
     return result
 
 
-def _summarize_tasks(data: DayData, one_day: list):
+def _summarize_tasks(data: DayData, one_day: list[Task]):
     """
     Summarize tasks, set their duration
     """

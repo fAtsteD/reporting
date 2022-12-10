@@ -16,9 +16,9 @@ class Task:
         self.project: str = config.default_project
         self.kind: str = config.default_kind
 
-    def get_transformed_time(self):
+    def get_transformed_time(self) -> float:
         """
-        Return transformed and scaled time of task with rounding from setting
+        Rounded time from 60 minutes to 100 and return like float value of hours
         """
         time_str = str(self.time)
         time_arr = time_str.split(":")
