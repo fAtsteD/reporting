@@ -1,7 +1,6 @@
 import datetime
 
 from ..config_app import config
-from ..helpers.time import scale_time
 
 
 class Task:
@@ -20,7 +19,27 @@ class Task:
         """
         Rounded time from 60 minutes to 100 and return like float value of hours
         """
-        time_str = str(self.time)
-        time_arr = time_str.split(":")
-        time_arr = scale_time(int(time_arr[0]), int(time_arr[1]))
-        return float(str(time_arr[0]) + "." + str(time_arr[1]))
+        time = self.get_scaled_time()
+        return time.seconds / 60 / 60
+
+    def get_scaled_time(self) -> datetime.timedelta:
+        """
+        Return time with scaling to the config minutes round
+        """
+        if self.time is None:
+            return datetime.timedelta(hours=0, minutes=0)
+
+        hours = self.time.seconds / 60 // 60
+        minutes = self.time.seconds / 60 % 60
+
+        frac = minutes % config.minute_round_to
+        if frac >= int(config.minute_round_to / 2) + 1:
+            minutes = (minutes // config.minute_round_to + 1) * \
+                config.minute_round_to
+            if minutes == 100:
+                hours += 1
+                minutes = 0
+        else:
+            minutes = minutes // config.minute_round_to * config.minute_round_to
+
+        return datetime.timedelta(hours=hours, minutes=minutes)

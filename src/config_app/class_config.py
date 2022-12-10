@@ -1,4 +1,4 @@
-import dateutil.parser
+import datetime
 
 from .dictionary import Dictionary
 from .jira_config import JiraConfig
@@ -37,4 +37,4 @@ class config:
     reporting = ReportingConfig()
 
     # Parameters for program
-    work_day_hours = dateutil.parser.parse("08:00")
+    work_day_hours = datetime.timedelta(hours=8, minutes=0)

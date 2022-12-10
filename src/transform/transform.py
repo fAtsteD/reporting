@@ -20,7 +20,6 @@ import re
 import dateutil.parser
 
 from ..config_app import config
-from ..helpers.time import *
 from .day_data import DayData
 from .task import Task
 
@@ -112,7 +111,6 @@ def _summarize_tasks(data: DayData, one_day: list[Task]):
     """
     Summarize tasks, set their duration
     """
-    sum_time = dateutil.parser.parse("00:00")
     num_one_day_tasks = len(one_day)
 
     for i in range(num_one_day_tasks):
@@ -123,11 +121,9 @@ def _summarize_tasks(data: DayData, one_day: list[Task]):
         delta_time = None
 
         if i == num_one_day_tasks - 1:
-            delta_time = config.work_day_hours - sum_time
+            delta_time = data.get_leaved_time()
         else:
             delta_time = one_day[i + 1].time_begin - task.time_begin
-
-        sum_time += delta_time
 
         exist_task = data.get_task_by_name(task.name)
         if exist_task is None:

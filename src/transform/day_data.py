@@ -1,6 +1,7 @@
 import datetime
 
 from .task import Task
+from ..config_app import config
 
 
 class DayData():
@@ -50,3 +51,15 @@ class DayData():
                 result.append(task)
 
         return result
+
+    def get_leaved_time(self) -> datetime.timedelta:
+        """
+        Return time leaves before end of the day
+
+        It uses scaled time for computation.
+        """
+        sum_time = datetime.timedelta(hours=0, minutes=0)
+        for task in self.tasks:
+            sum_time += task.get_scaled_time()
+
+        return config.work_day_hours - sum_time

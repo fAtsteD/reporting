@@ -4,7 +4,6 @@ import re
 from jira import JIRA, JIRAError
 
 from ..config_app import config
-from ..helpers.time import *
 from ..transform import DayData
 
 
@@ -36,7 +35,7 @@ class Jira():
             task_to_jira = regexp_compile.match(task.name)
             if task_to_jira != None:
                 self._set_worklog_to_jira(task_to_jira.group(
-                    1), self._convert_time(task.time))
+                    1), self._convert_time(task.get_scaled_time()))
 
     def _set_worklog_to_jira(self, issue_key: str, time: str):
         """
