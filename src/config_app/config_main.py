@@ -2,6 +2,7 @@
 """
 Read config file and take config data
 """
+import argparse
 import json
 from os import path
 
@@ -13,7 +14,10 @@ def load_config():
     """
     Parse config file and set settings
     """
-    config_file = _get_config_file()
+    if path.isfile(path.dirname(__file__) + "/../../config.json"):
+        config_file = path.dirname(__file__) + "/../../config.json"
+    else:
+        exit("Config file is not exist.")
 
     data = json.load(open(config_file, "r", encoding="utf-8"))
 
@@ -64,9 +68,24 @@ def load_config():
     if "reporting" in data:
         config.reporting.set_data(data["reporting"])
 
+    _config_arguments()
 
-def _get_config_file() -> str:
-    if path.isfile(path.dirname(__file__) + "/../../config.json"):
-        return path.dirname(__file__) + "/../../config.json"
-    else:
-        exit("Config file is not exist.")
+
+def _config_arguments():
+    """
+    Parse params from arguments to program
+    """
+    parser = argparse.ArgumentParser(
+        description='Parse file with day (days) of tasks begins in some time and save it is in many systems')
+
+    parser.add_argument('--show', required=False, default=False, const=True, metavar='', action='store_const',
+                        help='Only print parsed data')
+
+    args = parser.parse_args()
+
+    if (args.show):
+        config.jira.is_use = False
+        config.reporting.is_use = False
+        config.outputs_day_report = [
+            PrintConsole()
+        ]

@@ -2,7 +2,7 @@ class ReportingConfig:
     """
     Config data related to the reporting
     """
-    can_use = False
+    is_use = False
 
     # Urls
     url = ""
@@ -32,7 +32,7 @@ class ReportingConfig:
             self.suburl_auth = data["suburl-auth"].strip("/") + "/"
             self.login = data["login"]
             self.password = data["password"]
-            self.can_use = True
+            self.is_use = True
 
         if "suburl-categories" in data:
             self.suburl_categories = data["suburl-categories"].strip("/") + "/"

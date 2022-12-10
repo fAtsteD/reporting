@@ -2,7 +2,7 @@ class JiraConfig:
     """
     Config data related to the jira
     """
-    can_use = False
+    is_use = False
 
     # Urls
     server = ""
@@ -22,7 +22,7 @@ class JiraConfig:
             self.server = data["server"].strip("/") + "/"
             self.login = data["login"]
             self.password = data["password"]
-            self.can_use = True
+            self.is_use = True
 
         if "issue-key-base" in data:
             self.issue_key_base = data["issue-key-base"]

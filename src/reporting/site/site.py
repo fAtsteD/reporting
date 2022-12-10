@@ -16,7 +16,7 @@ class ReportingSite:
         """
         Connect to the server
         """
-        if not config.reporting.can_use:
+        if not config.reporting.is_use:
             exit("Used reporing module without required settings")
 
         self.request_session = request_session

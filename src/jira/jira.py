@@ -14,7 +14,7 @@ class Jira():
     """
 
     def __init__(self):
-        if not config.jira.can_use:
+        if not config.jira.is_use:
             exit("Used JIRA module without required settings")
 
         self._base = config.jira.issue_key_base
