@@ -16,7 +16,10 @@ class Jira():
         if not config.jira.is_use:
             exit("Used JIRA module without required settings")
 
-        self._base = config.jira.issue_key_base
+        if isinstance(config.jira.issue_key_base, list):
+            self._bases = config.jira.issue_key_base
+        else:
+            self._bases = [config.jira.issue_key_base]
 
         jira_options = {
             "server": config.jira.server
@@ -29,7 +32,8 @@ class Jira():
         """
         Set worklog time to the task
         """
-        regexp_compile = re.compile("^(" + self._base + "[0-9]+):.+$")
+        bases = map(lambda base: '(?:' + re.escape(base) + '[0-9]+)', self._bases)
+        regexp_compile = re.compile("^(" + '|'.join(bases) + "):.+$")
 
         for task in day_data.tasks:
             task_to_jira = regexp_compile.match(task.name)

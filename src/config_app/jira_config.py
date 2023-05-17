@@ -12,7 +12,7 @@ class JiraConfig:
     password = ""
 
     # Tasks
-    issue_key_base = ""
+    issue_key_base = []
 
     def set_data(self, data: dict):
         """

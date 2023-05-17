@@ -48,7 +48,7 @@ Setting that can be setted:
     -   server - url to the server with Jira
     -   login - user login to the account
     -   password - user password to the account
-    -   issue-key-base - (optional) prefix for all issue key. Default empty string
+    -   issue-key-base - (optional) prefix for all issue key. Default empty array
 -   text-indent - indent in the beginning of line for task, type etc
 -   dictionary - dictionary with shorter version of origin or reworded (can be used in omit task):
     -   task - only use for task name
@@ -90,7 +90,9 @@ Example:
         "server": "https://jira.example.domain.com/",
         "login": "test.user",
         "password": "password",
-        "issue-key-base": "JRA-"
+        "issue-key-base": [
+            "JRA-"
+        ]
     },
     "dictionary": {
         "task": {
