@@ -29,15 +29,17 @@ class DayData():
 
         return False
 
-    def get_task_by_name(self, task_name: str) -> Task:
+    def get_task_by_task(self, task: Task) -> Task:
         """
-        Rerurn existing task by name
+        Rerurn existing task by created task.
+
+        It return task with the same name, kind, project only.
         """
-        if not self.is_exist(task_name):
+        if not self.is_exist(task.name):
             return None
 
         for i in range(len(self.tasks)):
-            if self.tasks[i].name == task_name:
+            if self.tasks[i].name == task.name and self.tasks[i].kind == task.kind and self.tasks[i].project == task.project:
                 return self.tasks[i]
 
     def get_tasks_by_kind(self, kind: str) -> list[Task]:

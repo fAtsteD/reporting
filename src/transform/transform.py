@@ -125,7 +125,8 @@ def _summarize_tasks(data: DayData, one_day: list[Task]):
         else:
             delta_time = one_day[i + 1].time_begin - task.time_begin
 
-        exist_task = data.get_task_by_name(task.name)
+        exist_task = data.get_task_by_task(task)
+
         if exist_task is None:
             task.time = delta_time
             data.tasks.append(task)
