@@ -44,6 +44,7 @@ class ReportingApi:
         """
         Auth in the reporting
         """
+        self.last_error = None
         data = {
             "login": config.reporting.login,
             "password": config.reporting.password
@@ -70,6 +71,7 @@ class ReportingApi:
         """
         Log out from the reporting
         """
+        self.last_error = None
         response = self.request_session.post(
             self.base_url + config.reporting.suburl_logout)
 
@@ -91,6 +93,7 @@ class ReportingApi:
         """
         Init request for receiving requeired data
         """
+        self.last_error = None
         response = self.request_session.get(
             self.base_url + config.reporting.suburl_init)
 
@@ -113,6 +116,7 @@ class ReportingApi:
         """
         Load categories from server
         """
+        self.last_error = None
         response = self.request_session.get(
             self.base_url + config.reporting.suburl_categories)
 
@@ -135,6 +139,7 @@ class ReportingApi:
         """
         Load projects from server
         """
+        self.last_error = None
         response = self.request_session.get(
             self.base_url + config.reporting.suburl_projects)
 
@@ -159,6 +164,7 @@ class ReportingApi:
 
         Also update user data if it is not empty.
         """
+        self.last_error = None
         response = self.request_session.get(
             self.base_url + config.reporting.suburl_positions)
 
@@ -188,6 +194,8 @@ class ReportingApi:
         Return report for the day
         Before the request need do init request
         """
+        self.last_error = None
+
         if self.user_data is None:
             self.last_error = "You need do init request before"
             return None
@@ -221,6 +229,8 @@ class ReportingApi:
         """
         Create report and return it
         """
+        self.last_error = None
+
         if self.user_data is None:
             self.last_error = "You need do init request before"
             return None
@@ -259,6 +269,8 @@ class ReportingApi:
 
         In success server send tasks that you sent to it.
         """
+        self.last_error = None
+
         if self.user_data is None:
             self.last_error = "Need init request before"
             return False

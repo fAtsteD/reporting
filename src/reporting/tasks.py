@@ -36,4 +36,7 @@ def send_tasks(day_data: DayData, report_num=0) -> None:
 
         print(print_str + task.name + " - " + task.kind)
 
+        if api.last_error:
+            print("Error: " + api.last_error)
+
     api.logout()
