@@ -41,3 +41,4 @@ class config:
 
     # SQLite
     sqlite_session: Session = None
+    sqlite_database_path: str = './report.db'

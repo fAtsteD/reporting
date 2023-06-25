@@ -5,9 +5,10 @@ Read config file and take config data
 import argparse
 import json
 import re
-from os import path
+from os import makedirs, path
 
 import dateutil.parser
+from genericpath import isfile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -29,11 +30,13 @@ def load_config():
 
     if "hour-report-path" in data and path.isfile(data["hour-report-path"]):
         config.input_file_hours = path.normpath(data["hour-report-path"])
-    else:
-        exit("Input file is not setted in config.")
 
-    if "day-report-path" in data and path.isfile(data["day-report-path"]):
-        config.output_file_day = data["day-report-path"]
+    if "sqlite-database-path" in data:
+        config.sqlite_database_path = path.normpath(
+            data["sqlite-database-path"])
+
+        if not path.exists(path.dirname(config.sqlite_database_path)):
+            makedirs(path.dirname(config.sqlite_database_path))
 
     if "dictionary" in data:
         config.dictionary.set_data(data["dictionary"])
@@ -102,9 +105,8 @@ def _sqlaclchemy_init():
     """
     Initialize sqlaclchemy library and migrate
     """
-    database_file = "report.db"
     sqlalchemy_engine = create_engine(
-        "sqlite:///./" + database_file, echo=False, future=True)
+        "sqlite:///" + config.sqlite_database_path, echo=False, future=True)
     Session = sessionmaker(bind=sqlalchemy_engine)
     config.sqlite_session = Session()
 

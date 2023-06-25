@@ -40,7 +40,7 @@ Near the project (near file app.py) has to be file `config.json` with settings.
 Setting that can be setted:
 
 -   hour-report-path - path to file with tasks by hours
--   day-report-path - path to file where will be write tasks by project
+-   sqlite-database-path - path to file with database SQLite
 -   omit-task - name of tasks that will be skipped
 -   output-day-report - where to print result of report, can be 2 type of print (for disabling printing not include that type)
 -   minute_round_to - for what number round minutes in the report. Default 25

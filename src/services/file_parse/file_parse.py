@@ -1,5 +1,6 @@
 import datetime
 import re
+from os import path
 
 import dateutil.parser
 
@@ -44,6 +45,9 @@ class FileParse:
         One day - one report, so it updates existed reports.
         """
         reports: list[Report] = []
+
+        if not path.isfile(config.input_file_hours):
+            return reports
 
         with open(config.input_file_hours, "r", encoding="utf-8") as input_file_hours:
             # Need for double new line finding
