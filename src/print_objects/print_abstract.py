@@ -4,8 +4,8 @@ File with class for print report
 """
 import datetime
 
-from ..config_app import config
-from ..transform import DayData, Task
+from config_app import config
+from transform import DayData, Task
 
 
 class PrintAbstract():

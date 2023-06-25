@@ -139,6 +139,7 @@ cython_debug/
 
 # Project related files that does not save
 config.json
+report.db
 
 # VS Code
 .vscode

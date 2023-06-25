@@ -6,10 +6,8 @@ import requests
 from requests.sessions import Session
 
 from .api import ReportingApi
-from .site import ReportingSite
 
 _reporting_api = None
-_reporting_site = None
 _request_session = None
 
 
@@ -42,21 +40,6 @@ def get_api() -> ReportingApi:
             exit(_reporting_api.last_error)
 
     return _reporting_api
-
-
-def get_site() -> ReportingSite:
-    """
-    Initialize site. Do requeired requests
-    """
-    global _reporting_site
-
-    if _reporting_site is None:
-        _reporting_site = ReportingSite(get_request_session())
-
-        if _reporting_site.login() == "":
-            exit(_reporting_site.last_error)
-
-    return _reporting_site
 
 
 def get_request_session() -> Session:

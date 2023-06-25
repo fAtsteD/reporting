@@ -7,8 +7,9 @@ from datetime import datetime
 import requests
 from requests.sessions import Session
 
-from ...config_app import config
-from ...transform import Task
+from config_app import config
+from models.task import Task
+
 from .categories import Categories
 from .positions import Positions
 from .projects import Projects
@@ -299,7 +300,7 @@ class ReportingApi:
                 "categoryId": category["id"],
                 "clientId": self.user_data.user["employeeId"],
                 "corpStructItemId": self.user_data.user["corpStructItemId"],
-                "description": task.name,
+                "description": task.summary,
                 "hours": int(task.get_transformed_time() * 100),
                 "invoiceHours": 0,
                 "orderNumber": report.next_task_order_num(),

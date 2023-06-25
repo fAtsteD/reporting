@@ -3,8 +3,8 @@ import re
 
 from jira import JIRA, JIRAError
 
-from ..config_app import config
-from ..transform import DayData
+from config_app import config
+from models.report import Report
 
 
 class Jira():
@@ -28,18 +28,21 @@ class Jira():
         self._jira = JIRA(jira_options, basic_auth=(
             config.jira.login, config.jira.password))
 
-    def set_worklog(self, day_data: DayData):
+    def set_worklog(self, report: Report):
         """
         Set worklog time to the task
         """
         bases = map(lambda base: '(?:' + re.escape(base) + '[0-9]+)', self._bases)
         regexp_compile = re.compile("^(" + '|'.join(bases) + "):.+$")
 
-        for task in day_data.tasks:
-            task_to_jira = regexp_compile.match(task.name)
+        for task in report.tasks:
+            task_to_jira = regexp_compile.match(task.summary)
+
             if task_to_jira != None:
-                self._set_worklog_to_jira(task_to_jira.group(
-                    1), self._convert_time(task.get_scaled_time()))
+                self._set_worklog_to_jira(
+                    task_to_jira.group(1),
+                    self._convert_time(task.logged_rounded())
+                )
 
     def _set_worklog_to_jira(self, issue_key: str, time: str):
         """
@@ -61,9 +64,9 @@ class Jira():
 
         print(print_str + issue_key + " - " + time)
 
-    def _convert_time(self, time: datetime.timedelta):
+    def _convert_time(self, seconds: int) -> str:
         """
         Convert time to the jira type string
         """
 
-        return str(time.seconds // 3600) + "h " + str((time.seconds // 60) % 60) + "m"
+        return str(seconds // 3600) + "h " + str((seconds // 60) % 60) + "m"

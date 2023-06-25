@@ -1,5 +1,7 @@
 import datetime
 
+from sqlalchemy.orm import Session
+
 from .dictionary import Dictionary
 from .jira_config import JiraConfig
 from .reporting_config import ReportingConfig
@@ -11,16 +13,14 @@ class config:
 
     One config for app, so all vars static.
     """
+    # Actions
+    show_date: str | datetime.date | None = None
+    parse_days: int | None = None
+
     # Input
     input_file_hours = ""
 
-    # Output
-    outputs_day_report = []
-    output_file_day = ""
-
     # Text
-    file_type_print = 1
-    console_type_print = 1
     text_indent = "  "
     dictionary = Dictionary()
 
@@ -38,3 +38,6 @@ class config:
 
     # Parameters for program
     work_day_hours = datetime.timedelta(hours=8, minutes=0)
+
+    # SQLite
+    sqlite_session: Session = None
