@@ -103,8 +103,12 @@ class FileParse:
                         task_line.time_begin - previous_task_line.time_begin)
 
                 if task_line.summary.strip() and task_line.summary not in config.skip_tasks:
-                    task = config.sqlite_session.query(Task).where(Task.report.has(
-                        Report.date == report_date)).where(Task.summary == task_line.summary).first()
+                    task = config.sqlite_session.query(Task)\
+                        .filter(Task.report.has(Report.date == report_date))\
+                        .filter(Task.summary == task_line.summary)\
+                        .filter(Task.kind == task_line.kind)\
+                        .filter(Task.project == task_line.project)\
+                        .first()
 
                     if task is None:
                         task = Task(summary=task_line.summary)
@@ -145,10 +149,14 @@ class FileParse:
             # Parse project
             task.kind = config.dictionary.translate_kind(
                 split_str[2].strip().replace('\-', '-')).replace('\\\\', '\\')
+        else:
+            task.kind = config.default_kind
 
         if (len(split_str) >= 4):
             # Parse project
             task.project = config.dictionary.translate_project(
                 split_str[3].strip().replace('\-', '-')).replace('\\\\', '\\')
+        else:
+            task.project = config.default_project
 
         return task

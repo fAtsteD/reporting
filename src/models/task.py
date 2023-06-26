@@ -16,10 +16,8 @@ class Task(Base):
         default=0, server_default=sa.FetchedValue())
     summary: Mapped[str] = mapped_column(
         default="", server_default=sa.FetchedValue())
-    kind: Mapped[str] = mapped_column(
-        default=config.default_kind, server_default=sa.FetchedValue())
-    project: Mapped[str] = mapped_column(
-        default=config.default_project, server_default=sa.FetchedValue())
+    kind: Mapped[str] = mapped_column()
+    project: Mapped[str] = mapped_column()
     updated_at: Mapped[datetime.datetime] = mapped_column(
         default=sa.func.now(), server_default=sa.FetchedValue(), onupdate=sa.func.now(), server_onupdate=sa.FetchedValue())
     created_at: Mapped[datetime.datetime] = mapped_column(
@@ -35,7 +33,7 @@ class Task(Base):
         If logged time has but after round it is 0, it sets round value for seconds
         """
         if self.logged_seconds <= 0:
-            return 0.0
+            return 0
 
         hours = self.logged_seconds / 60 // 60
         minutes = self.logged_seconds / 60 % 60
@@ -45,19 +43,18 @@ class Task(Base):
             minutes = (minutes // config.minute_round_to + 1) * \
                 config.minute_round_to
 
-            if minutes == 60:
+            if minutes == 100:
                 hours += 1
                 minutes = 0
         else:
             minutes = minutes // config.minute_round_to * config.minute_round_to
 
-        rounded = datetime.timedelta(
-            hours=hours, minutes=minutes).total_seconds()
+        seconds = hours * 60 * 60 + minutes * 60
 
-        if rounded > 0:
-            return rounded
+        if seconds > 0:
+            return seconds
 
-        return datetime.timedelta(minutes=config.minute_round_to).total_seconds()
+        return config.minute_round_to * 60
 
     def logged_timedelta(self, logged_time: datetime.timedelta):
         """
