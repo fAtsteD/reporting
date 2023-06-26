@@ -28,7 +28,7 @@ def main():
 
         if config.show_date == 'last':
             report = config.sqlite_session.query(
-                Report).order_by(Report().date).first()
+                Report).order_by(Report.date.desc()).first()
         else:
             report = config.sqlite_session.query(
                 Report).filter(Report.date == config.show_date).first()
@@ -40,13 +40,13 @@ def main():
 
     if config.jira.is_use:
         report = config.sqlite_session.query(
-            Report).order_by(Report().date).limit(1).one()
+            Report).order_by(Report.date.desc()).first()
         jira = Jira()
         jira.set_worklog(report)
 
     if config.reporting.is_use:
         report = config.sqlite_session.query(
-            Report).order_by(Report().date).limit(1).one()
+            Report).order_by(Report.date.desc()).first()
         send_tasks(report)
 
 
