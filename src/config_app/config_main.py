@@ -8,7 +8,6 @@ import re
 from os import makedirs, path
 
 import dateutil.parser
-from genericpath import isfile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

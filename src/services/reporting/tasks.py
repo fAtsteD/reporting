@@ -22,7 +22,7 @@ def send_tasks(report: Report, report_num=0) -> None:
 
     reporting_report_id = None
     if len(reporting_reports) > 0:
-        reporting_report_id = report[report_num].report["id"]
+        reporting_report_id = reporting_reports[report_num].report["id"]
 
     reporting_report = api.set_report(report.date, reporting_report_id)
 

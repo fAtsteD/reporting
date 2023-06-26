@@ -301,7 +301,7 @@ class ReportingApi:
                 "clientId": self.user_data.user["employeeId"],
                 "corpStructItemId": self.user_data.user["corpStructItemId"],
                 "description": task.summary,
-                "hours": int(task.get_transformed_time() * 100),
+                "hours": self._tranform_time(task.logged_rounded()),
                 "invoiceHours": 0,
                 "orderNumber": report.next_task_order_num(),
                 "overrideEmployeeId": None,
@@ -330,3 +330,11 @@ class ReportingApi:
             return False
 
         return True
+
+    def _tranform_time(self, seconds: int) -> int:
+        """
+        Transform seconds to the hours and minutes with
+        mapping from 0-60 to 0-100
+        """
+        return round(seconds / 60 / 60 * 100)
+
