@@ -58,7 +58,6 @@ Setting that can be setted:
     -   login - user login to the account
     -   password - password to the account
     -   api-url - main url to the reporting api
-    -   site-url - main url to the reporting site
     -   suburl-auth - related suburl to the some of part
     -   suburl-logout - related suburl to the some of part
     -   suburl-categories - related suburl to the some of part
@@ -67,7 +66,6 @@ Setting that can be setted:
     -   suburl-init - related suburl to the some of part
     -   suburl-get-report - related suburl to the some of part
     -   suburl-add-task - related suburl to the some of part
-    -   suburl-page-login - related suburl to the page
 -   default-type - default type, setted if task does not have
 -   default-project - default project, setted if task does not have
 
@@ -76,14 +74,11 @@ Example:
 ```json
 {
     "hour-report-path": "~/example-hours.txt",
-    "day-report-path": "~/example-day-report.txt",
     "omit-task": ["lunch", "break"],
     "outputs-day-report": {
         "console": 1,
         "file": 1
     },
-    "default-type": "Development",
-    "default-project": "My project",
     "minute-round-to": 25,
     "text-indent": "  ",
     "jira": {
@@ -105,7 +100,6 @@ Example:
         "login": "test",
         "password": "pass",
         "api-url": "https://reporting.example.com/api",
-        "site-url": "https://reporting.example.com/",
         "suburl-auth": "example/path",
         "suburl-logout" : "common/logout",
         "suburl-categories": "example/path",
@@ -114,7 +108,6 @@ Example:
         "suburl-init": "example/path",
         "suburl-get-report": "example/path",
         "suburl-add-task": "example/path",
-        "suburl-page-login": "example/path"
     },
     "default-type": "Development",
     "default-project": "Project"

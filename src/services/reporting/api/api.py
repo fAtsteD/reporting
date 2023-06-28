@@ -33,7 +33,6 @@ class ReportingApi:
 
         self.last_error = None
         self.base_url = config.reporting.url
-        self.base_url_site = config.reporting.site_url
         self.is_auth = False
 
         self.user_data: User = None

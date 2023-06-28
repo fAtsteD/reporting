@@ -6,7 +6,6 @@ class ReportingConfig:
 
     # Urls
     url = ""
-    site_url = ""
     suburl_auth = ""
     suburl_logout = ""
     suburl_categories = ""
@@ -15,8 +14,6 @@ class ReportingConfig:
     suburl_get_report = ""
     suburl_add_task = ""
     suburl_positions = ""
-
-    suburl_page_login = ""
 
     # Auth
     login = ""
@@ -28,7 +25,6 @@ class ReportingConfig:
         """
         if set(["api-url", "suburl-auth", "login", "password"]).issubset(data):
             self.url = data["api-url"].strip("/") + "/"
-            self.site_url = data["site-url"].strip("/") + "/"
             self.suburl_auth = data["suburl-auth"].strip("/") + "/"
             self.login = data["login"]
             self.password = data["password"]
@@ -54,9 +50,3 @@ class ReportingConfig:
 
         if "suburl-logout" in data:
             self.suburl_logout = data["suburl-logout"].strip("/") + "/"
-
-        if "site-url" in data:
-            self.site_url = data["site-url"].strip("/") + "/"
-
-        if "suburl-page-login" in data:
-            self.suburl_page_login = data["suburl-page-login"].strip("/") + "/"
