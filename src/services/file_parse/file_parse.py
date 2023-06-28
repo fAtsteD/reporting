@@ -79,6 +79,9 @@ class FileParse:
 
                 if previous_line == "\n" and line == "\n":
                     day_index += 1
+                    config.sqlite_session.commit()
+
+                    # TODO: recalculate in report seconds of each tasks for rounding
 
                     if previous_task and previous_task_line and previous_task_line.summary and report.total_seconds() < config.work_day_hours.total_seconds():
                         previous_task.logged_timedelta(datetime.timedelta(
