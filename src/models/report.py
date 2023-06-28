@@ -47,6 +47,8 @@ class Report(Base):
             self.updated_at = sa.func.now()
             config.sqlite_session.delete(task)
 
+        config.sqlite_session.commit()
+
     def __str__(self):
         """
         Report to the text present, it is multiline

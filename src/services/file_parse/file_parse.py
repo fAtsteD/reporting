@@ -92,10 +92,6 @@ class FileParse:
                         previous_task = None
                         continue
 
-                    # Save result in db in middle of parsing for stability of work
-                    if day_index % 100 == 0:
-                        config.sqlite_session.commit()
-
                     break
                 else:
                     previous_line = line
@@ -152,12 +148,13 @@ class FileParse:
                             task.project = project
 
                         config.sqlite_session.add(task)
+                        config.sqlite_session.commit()
 
                 previous_task = task
                 previous_task_line = task_line
 
-        config.sqlite_session.autoflush = True
         config.sqlite_session.commit()
+        config.sqlite_session.autoflush = True
         return reports
 
     def _parse_task(self, task_str: str) -> TaskLine:
