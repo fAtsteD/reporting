@@ -20,7 +20,9 @@ class Task(Base):
     kinds_id: Mapped[int] = mapped_column(sa.ForeignKey("kinds.id"))
     kind: Mapped["Kind"] = relationship(back_populates="tasks")
 
-    project: Mapped[str] = mapped_column()
+    projects_id: Mapped[int] = mapped_column(sa.ForeignKey("projects.id"))
+    project: Mapped["Project"] = relationship(back_populates="tasks")
+
     updated_at: Mapped[datetime.datetime] = mapped_column(
         default=sa.func.now(), server_default=sa.FetchedValue(), onupdate=sa.func.now(), server_onupdate=sa.FetchedValue())
     created_at: Mapped[datetime.datetime] = mapped_column(
@@ -75,12 +77,9 @@ class Task(Base):
         """
         One text line present of task
         """
-        text = ""
-
         logged_hours = round(self.logged_seconds / 60 // 60)
         logged_hours_str = f"0{logged_hours}" if logged_hours < 10 else f"{logged_hours}"
         logged_minutes = round(self.logged_seconds / 60 % 60)
         logged_minutes_str = f"0{logged_minutes}" if logged_minutes < 10 else f"{logged_minutes}"
-        text += f"{logged_hours_str}:{logged_minutes_str} - {self.summary} - {self.project}"
 
-        return text
+        return f"{logged_hours_str}:{logged_minutes_str} - {self.summary} - {self.project.name}"

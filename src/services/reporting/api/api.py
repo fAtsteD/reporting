@@ -291,13 +291,13 @@ class ReportingApi:
             self.last_error = "Need load projects request before"
             return False
 
-        category = self.get_category_by_task(task)
+        category = self._get_category_by_task(task)
 
         if not category:
             self.last_error = "Category for " + task.kind + " does not find"
             return False
 
-        project = self.projects.get_by_name(task.project)
+        project = self._get_project_by_task(task)
 
         if project is None or not project["active"]:
             self.last_error = "Project for " + task.project + " does not find"
@@ -346,7 +346,7 @@ class ReportingApi:
         """
         return round(seconds / 60 / 60 * 100)
 
-    def get_category_by_task(self, task: Task) -> dict:
+    def _get_category_by_task(self, task: Task) -> dict:
         """
         Return category dict from reporting for task
 
@@ -362,4 +362,21 @@ class ReportingApi:
         return self.categories.get_by_name(
             category_name,
             self.user_data.get_corp_struct_id()
+        )
+
+    def _get_project_by_task(self, task: Task) -> dict:
+        """
+        Return project dict from reporting for task
+
+        It searches by name, but before searching it transform saved
+        project to the related of reporting
+        """
+        project = task.project
+        project_name = project.name
+
+        if project.alias in config.reporting.projects.keys():
+            project_name = config.reporting.projects[project.alias]
+
+        return self.projects.get_by_name(
+            project_name
         )

@@ -6,6 +6,7 @@ import dateutil.parser
 
 from config_app import config
 from models.kind import Kind
+from models.project import Project
 from models.report import Report
 from models.task import Task
 
@@ -111,7 +112,7 @@ class FileParse:
                     ).filter(
                         Task.kind.has(Kind.alias == task_line.kind)
                     ).filter(
-                        Task.project == task_line.project
+                        Task.project.has(Project.alias == task_line.project)
                     ).first()
 
                     if task is None:
@@ -120,15 +121,29 @@ class FileParse:
 
                         if task_line.kind:
                             kind = config.sqlite_session.query(Kind).filter(
-                                Kind.alias == task_line.kind).first()
+                                Kind.alias == task_line.kind
+                            ).first()
 
                             if kind is None:
-                                exit(f"Kind {task_line.kind} does not exist")
+                                exit(
+                                    f"Kind {task_line.kind} does not exist"
+                                )
 
                             task.kind = kind
 
                         if task_line.project:
-                            task.project = task_line.project
+                            project = config.sqlite_session.query(
+                                Project
+                            ).filter(
+                                Project.alias == task_line.project
+                            ).first()
+
+                            if project is None:
+                                exit(
+                                    f"Project {task_line.project} does not exist"
+                                )
+
+                            task.project = project
 
                         report.tasks.append(task)
 
@@ -148,26 +163,24 @@ class FileParse:
         if (len(split_str) >= 1):
             # Parse time, date will be current, it is not right
             task.time_begin = dateutil.parser.parse(
-                split_str[0].replace(" ", ":").strip())
+                split_str[0].replace(" ", ":").strip()
+            )
 
         if (len(split_str) >= 2):
-            # Parse task
             task.summary = config.dictionary.translate_task(
                 split_str[1].strip().replace('\-', '-')).replace('\\\\', '\\')
 
         if (len(split_str) >= 3):
-            task.kind = split_str[2].strip().replace(
-                '\-', '-'
-            ).replace(
-                '\\\\', '\\'
+            task.kind = config.dictionary.translate_kind(
+                split_str[2].strip().replace('\-', '-').replace('\\\\', '\\')
             )
         else:
             task.kind = config.default_kind
 
         if (len(split_str) >= 4):
-            # Parse project
             task.project = config.dictionary.translate_project(
-                split_str[3].strip().replace('\-', '-')).replace('\\\\', '\\')
+                split_str[3].strip().replace('\-', '-').replace('\\\\', '\\')
+            )
         else:
             task.project = config.default_project
 

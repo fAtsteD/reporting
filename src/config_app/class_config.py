@@ -16,8 +16,12 @@ class config:
     # Actions
     show_date: str | datetime.date | None = None
     parse_days: int | None = None
+
     kind_data: dict = {}
     show_kinds = False
+
+    project_data: dict = {}
+    show_projects = False
 
     # Input
     input_file_hours = ""

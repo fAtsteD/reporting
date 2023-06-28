@@ -4,12 +4,12 @@ from models.kind import Kind
 
 class KindService():
     """
-    Orchestrate kind CRUD and other operations
+    Orchestrate kind operations
     """
 
     def add(self, alias: str, name: str) -> Kind:
         """
-        Create new kind and return it
+        Create/update kind and return it
         """
         kind = config.sqlite_session.query(Kind).filter(
             Kind.alias == alias

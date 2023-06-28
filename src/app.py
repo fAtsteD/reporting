@@ -7,7 +7,8 @@ from config_app import config, load_config
 from models.report import Report
 from services.file_parse import FileParse
 from services.jira import Jira
-from services.kind.kind import KindService
+from services.kind import KindService
+from services.project import ProjectService
 from services.reporting import Reporting
 
 
@@ -26,6 +27,16 @@ def main():
         kind_service = KindService()
         print("Kinds:")
         print(kind_service.text_all_kinds())
+
+    if config.project_data:
+        project_service = ProjectService()
+        project_service.add(config.project_data[0], config.project_data[1])
+        config.show_projects = True
+
+    if config.show_projects:
+        project_service = ProjectService()
+        print("Projects:")
+        print(project_service.text_all_projects())
 
     if config.parse_days is not None:
         file_parse = FileParse(config.input_file_hours, config.parse_days)

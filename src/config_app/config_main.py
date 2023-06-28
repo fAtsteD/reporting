@@ -83,10 +83,16 @@ def _config_arguments():
                         help="search task from Jira and logs time to them, default for last report")
     parser.add_argument("--reporting", required=False, nargs="?", const="last", metavar="01.01.2000", action="store",
                         help="log all task time to the reporting system, default for last report")
+
     parser.add_argument("--kind", required=False, nargs=2, metavar=("t", "Test"), action="store",
                         help="add/update kind to the database and can be used in the future, alias (first param) is unique, other data will updates")
     parser.add_argument("--show-kinds", required=False, default=False, action="store_true",
                         help="print all kinds and their data")
+
+    parser.add_argument("--project", required=False, nargs=2, metavar=("p", "Project"), action="store",
+                        help="add/update project to the database and can be used in the future, alias (first param) is unique, other data will updates")
+    parser.add_argument("--show-projects", required=False, default=False, action="store_true",
+                        help="print all projects and their data")
 
     args = parser.parse_args()
 
@@ -124,6 +130,11 @@ def _config_arguments():
         config.kind_data = args.kind
 
     config.show_kinds = args.show_kinds
+
+    if args.project:
+        config.project_data = args.project
+
+    config.show_projects = args.show_projects
 
 
 def _sqlaclchemy_init():
