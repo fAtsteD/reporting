@@ -41,9 +41,11 @@ def main():
     if config.parse_days is not None:
         file_parse = FileParse(config.input_file_hours, config.parse_days)
         reports = file_parse.reports()
+        print(f"Parsed {len(reports)}")
 
-        for report in reports:
-            print(report)
+        if len(reports) < 10:
+            for report in reports:
+                print(report)
 
     if config.show_date is not None:
         report = None
