@@ -78,7 +78,7 @@ def _config_arguments():
     parser.add_argument("--show", required=False, nargs="?", const="last", metavar="01.01.2000", action="store",
                         help="print report for defined date or last by default")
     parser.add_argument("--parse", required=False, nargs="?", const=1, metavar="N", action="store",
-                        help="parse last n days from file and save to db")
+                        help="parse last n days from file and save to db, default 1, set 0 for all report in file")
     parser.add_argument("--jira", required=False, nargs="?", const="last", metavar="01.01.2000", action="store",
                         help="search task from Jira and logs time to them, default for last report")
     parser.add_argument("--reporting", required=False, nargs="?", const="last", metavar="01.01.2000", action="store",
@@ -105,7 +105,7 @@ def _config_arguments():
         else:
             config.show_date = args.show
 
-    if args.parse is not None and int(args.parse) > 0:
+    if args.parse is not None and int(args.parse) >= 0:
         config.parse_days = int(args.parse)
 
     if args.jira is not None:

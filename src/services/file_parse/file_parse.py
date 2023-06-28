@@ -51,6 +51,8 @@ class FileParse:
         if not path.isfile(config.input_file_hours):
             return reports
 
+        config.sqlite_session.autoflush = False
+
         with open(config.input_file_hours, "r", encoding="utf-8") as input_file_hours:
             # Need for double new line finding
             report = None
@@ -71,7 +73,6 @@ class FileParse:
                         config.sqlite_session.add(report)
 
                     report.remove_tasks()
-                    config.sqlite_session.commit()
                     reports.append(report)
 
                     continue
@@ -79,16 +80,21 @@ class FileParse:
                 if previous_line == "\n" and line == "\n":
                     day_index += 1
 
-                    if previous_task_line.summary and report.total_seconds() < config.work_day_hours.total_seconds():
+                    if previous_task and previous_task_line and previous_task_line.summary and report.total_seconds() < config.work_day_hours.total_seconds():
                         previous_task.logged_timedelta(datetime.timedelta(
-                            seconds=config.work_day_hours.total_seconds() - report.total_seconds()))
+                            seconds=config.work_day_hours.total_seconds() - report.total_seconds()
+                        ))
 
-                    if day_index < self.read_days:
+                    if day_index < self.read_days or self.read_days == 0:
                         report = None
                         previous_line = ""
                         previous_task_line = None
                         previous_task = None
                         continue
+
+                    # Save result in db in middle of parsing for stability of work
+                    if day_index % 100 == 0:
+                        config.sqlite_session.commit()
 
                     break
                 else:
@@ -150,6 +156,7 @@ class FileParse:
                 previous_task = task
                 previous_task_line = task_line
 
+        config.sqlite_session.autoflush = True
         config.sqlite_session.commit()
         return reports
 
@@ -163,7 +170,7 @@ class FileParse:
         if (len(split_str) >= 1):
             # Parse time, date will be current, it is not right
             task.time_begin = dateutil.parser.parse(
-                split_str[0].replace(" ", ":").strip()
+                split_str[0].strip().replace(" ", ":")
             )
 
         if (len(split_str) >= 2):
