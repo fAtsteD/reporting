@@ -79,15 +79,17 @@ def _config_arguments():
                         help="print report for defined date or last by default")
     parser.add_argument("--parse", required=False, nargs="?", const=1, metavar="N", action="store",
                         help="parse last n days from file and save to db")
-    parser.add_argument("--jira", required=False, action="store_true",
-                        help="search task from Jira and logs time to them, only for last report")
-    parser.add_argument("--reporting", required=False, action="store_true",
-                        help="log all task time to the reporting system, only for last report")
+    parser.add_argument("--jira", required=False, nargs="?", const="last", metavar="01.01.2000", action="store",
+                        help="search task from Jira and logs time to them, default for last report")
+    parser.add_argument("--reporting", required=False, nargs="?", const="last", metavar="01.01.2000", action="store",
+                        help="log all task time to the reporting system, default for last report")
 
     args = parser.parse_args()
 
+    regex_date = "^[0-9]{1,2}\.[0-9]{1,2}\.([0-9]{4}|[0-9]{2})$"
+
     if args.show is not None:
-        if (re.search("^[0-9]{1,2}\.[0-9]{1,2}\.([0-9]{4}|[0-9]{2})$", args.show.strip())):
+        if (re.search(regex_date, args.show.strip())):
             config.show_date = dateutil.parser.parse(
                 args.show, dayfirst=True).date()
         else:
@@ -96,8 +98,23 @@ def _config_arguments():
     if args.parse is not None and int(args.parse) > 0:
         config.parse_days = int(args.parse)
 
-    config.jira.is_use = args.jira if config.jira.is_use else config.jira.is_use
-    config.reporting.is_use = args.reporting if config.reporting.is_use else config.reporting.is_use
+    if args.jira is not None:
+        config.jira.is_use = True if config.jira.is_use else config.jira.is_use
+
+        if (re.search(regex_date, args.jira.strip())):
+            config.jira.report_date = dateutil.parser.parse(
+                args.jira, dayfirst=True).date()
+    else:
+        config.jira.is_use = False
+
+    if args.reporting is not None:
+        config.reporting.is_use = True if config.reporting.is_use else config.reporting.is_use
+
+        if (re.search(regex_date, args.reporting.strip())):
+            config.reporting.report_date = dateutil.parser.parse(
+                args.reporting, dayfirst=True).date()
+    else:
+        config.reporting.is_use = False
 
 
 def _sqlaclchemy_init():

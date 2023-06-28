@@ -28,10 +28,16 @@ def main():
 
         if config.show_date == 'last':
             report = config.sqlite_session.query(
-                Report).order_by(Report.date.desc()).first()
+                Report
+            ).order_by(
+                Report.date.desc()
+            ).first()
         else:
             report = config.sqlite_session.query(
-                Report).filter(Report.date == config.show_date).first()
+                Report
+            ).filter(
+                Report.date == config.show_date
+            ).first()
 
         if report is None:
             print(f"Report does not exist")
@@ -39,14 +45,40 @@ def main():
             print(report)
 
     if config.jira.is_use:
-        report = config.sqlite_session.query(
-            Report).order_by(Report.date.desc()).first()
+        report = None
+
+        if config.jira.report_date == 'last':
+            report = config.sqlite_session.query(
+                Report
+            ).order_by(
+                Report.date.desc()
+            ).first()
+        else:
+            report = config.sqlite_session.query(
+                Report
+            ).filter(
+                Report.date == config.jira.report_date
+            ).first()
+
         jira = Jira()
         jira.set_worklog(report)
 
     if config.reporting.is_use:
-        report = config.sqlite_session.query(
-            Report).order_by(Report.date.desc()).first()
+        report = None
+
+        if config.reporting.report_date == 'last':
+            report = config.sqlite_session.query(
+                Report
+            ).order_by(
+                Report.date.desc()
+            ).first()
+        else:
+            report = config.sqlite_session.query(
+                Report
+            ).filter(
+                Report.date == config.reporting.report_date
+            ).first()
+
         reporting = Reporting()
         reporting.send_tasks(report)
         reporting.logout()

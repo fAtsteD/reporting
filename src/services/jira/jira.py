@@ -62,6 +62,8 @@ class Jira():
         else:
             print(f"[-] {issue_key} - {time}")
 
+        print()
+
     def _convert_time(self, seconds: int) -> str:
         """
         Convert time to the jira type string

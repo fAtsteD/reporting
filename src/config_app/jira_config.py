@@ -1,8 +1,12 @@
+import datetime
+
+
 class JiraConfig:
     """
     Config data related to the jira
     """
     is_use = False
+    report_date: str | datetime.date = "last"
 
     # Urls
     server = ""

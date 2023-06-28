@@ -12,25 +12,19 @@ Example:
 
 ```
 09 00 - 0123456: Do something - project of my life
-10 45 - 0123456: Do something harder - project of my life
+10 45 - 0123456: Do something \- harder - project of my life
 12 33 - lunch
 ...
 ```
 
 > !!! Task, time, project do not have 'space dash space'. !!!
 
-## Result of transformation
+## Commands
 
-Example:
+The app has help in command line, read it before use. It always require some command.
 
-Type 1:
-
-```
-01.01.2020
-  project of life (3.5 ч.):
-    1.75h - 0123456: Do something
-    1.75h - 0123456: Do something harder
-...
+```bash
+report --help
 ```
 
 ## Config
