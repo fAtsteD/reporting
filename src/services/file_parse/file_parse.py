@@ -117,7 +117,7 @@ class FileParse:
 
                     if task is None:
                         task = Task(summary=task_line.summary)
-                        config.sqlite_session.add(task)
+                        task.report = report
 
                         if task_line.kind:
                             kind = config.sqlite_session.query(Kind).filter(
@@ -145,7 +145,7 @@ class FileParse:
 
                             task.project = project
 
-                        report.tasks.append(task)
+                        config.sqlite_session.add(task)
 
                 previous_task = task
                 previous_task_line = task_line
