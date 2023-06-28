@@ -291,10 +291,9 @@ class ReportingApi:
             self.last_error = "Need load projects request before"
             return False
 
-        category = self.categories.get_by_name(
-            task.kind, self.user_data.get_corp_struct_id())
+        category = self.get_category_by_task(task)
 
-        if category is None:
+        if not category:
             self.last_error = "Category for " + task.kind + " does not find"
             return False
 
@@ -346,3 +345,21 @@ class ReportingApi:
         mapping from 0-60 to 0-100
         """
         return round(seconds / 60 / 60 * 100)
+
+    def get_category_by_task(self, task: Task) -> dict:
+        """
+        Return category dict from reporting for task
+
+        It searches by name, but before searching it transform saved
+        kind to the related of reporting
+        """
+        kind = task.kind
+        category_name = kind.name
+
+        if kind.alias in config.reporting.kinds.keys():
+            category_name = config.reporting.kinds[kind.alias]
+
+        return self.categories.get_by_name(
+            category_name,
+            self.user_data.get_corp_struct_id()
+        )

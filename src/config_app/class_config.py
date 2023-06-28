@@ -16,6 +16,8 @@ class config:
     # Actions
     show_date: str | datetime.date | None = None
     parse_days: int | None = None
+    kind_data: dict = {}
+    show_kinds = False
 
     # Input
     input_file_hours = ""

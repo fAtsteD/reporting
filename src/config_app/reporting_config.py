@@ -8,6 +8,9 @@ class ReportingConfig:
     is_use = False
     report_date: str | datetime.date = "last"
 
+    kinds = {} # Kinds relation: key - from db, value - from reporting
+    projects = {} # Projects relation: key - from db, value - from reporting
+
     # Urls
     url = ""
     suburl_auth = ""
@@ -59,3 +62,9 @@ class ReportingConfig:
 
         if "suburl-logout" in data:
             self.suburl_logout = data["suburl-logout"].strip("/") + "/"
+
+        if "kinds" in data:
+            self.kinds = data["kinds"]
+
+        if "projects" in data:
+            self.projects = data["projects"]

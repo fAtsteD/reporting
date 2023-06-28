@@ -5,6 +5,7 @@ from os import path
 import dateutil.parser
 
 from config_app import config
+from models.kind import Kind
 from models.report import Report
 from models.task import Task
 
@@ -103,24 +104,33 @@ class FileParse:
                         task_line.time_begin - previous_task_line.time_begin)
 
                 if task_line.summary.strip() and task_line.summary not in config.skip_tasks:
-                    task = config.sqlite_session.query(Task)\
-                        .filter(Task.report.has(Report.date == report_date))\
-                        .filter(Task.summary == task_line.summary)\
-                        .filter(Task.kind == task_line.kind)\
-                        .filter(Task.project == task_line.project)\
-                        .first()
+                    task = config.sqlite_session.query(Task).filter(
+                        Task.report.has(Report.date == report_date)
+                    ).filter(
+                        Task.summary == task_line.summary
+                    ).filter(
+                        Task.kind.has(Kind.alias == task_line.kind)
+                    ).filter(
+                        Task.project == task_line.project
+                    ).first()
 
                     if task is None:
                         task = Task(summary=task_line.summary)
+                        config.sqlite_session.add(task)
 
                         if task_line.kind:
-                            task.kind = task_line.kind
+                            kind = config.sqlite_session.query(Kind).filter(
+                                Kind.alias == task_line.kind).first()
+
+                            if kind is None:
+                                exit(f"Kind {task_line.kind} does not exist")
+
+                            task.kind = kind
 
                         if task_line.project:
                             task.project = task_line.project
 
                         report.tasks.append(task)
-                        config.sqlite_session.add(task)
 
                 previous_task = task
                 previous_task_line = task_line
@@ -146,9 +156,11 @@ class FileParse:
                 split_str[1].strip().replace('\-', '-')).replace('\\\\', '\\')
 
         if (len(split_str) >= 3):
-            # Parse project
-            task.kind = config.dictionary.translate_kind(
-                split_str[2].strip().replace('\-', '-')).replace('\\\\', '\\')
+            task.kind = split_str[2].strip().replace(
+                '\-', '-'
+            ).replace(
+                '\\\\', '\\'
+            )
         else:
             task.kind = config.default_kind
 

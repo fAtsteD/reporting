@@ -46,7 +46,6 @@ Setting that can be setted:
 -   text-indent - indent in the beginning of line for task, type etc
 -   dictionary - dictionary with shorter version of origin or reworded (can be used in omit task):
     -   task - only use for task name
-    -   type - only use for type name
     -   project - only use for project name
 -   reporting - settings for reporting (have different class for them):
     -   login - user login to the account
@@ -61,6 +60,8 @@ Setting that can be setted:
     -   suburl-init - related suburl to the some of part
     -   suburl-get-report - related suburl to the some of part
     -   suburl-add-task - related suburl to the some of part
+    -   kinds - dictionary for transformation kinds inside to the reporting, all inside kind's keys can view in command line
+    -   projects - dictionary for transformation projects inside to the reporting, all inside project's keys can view in command line
 -   default-type - default type, setted if task does not have
 -   default-project - default project, setted if task does not have
 
@@ -103,6 +104,12 @@ Example:
         "suburl-init": "example/path",
         "suburl-get-report": "example/path",
         "suburl-add-task": "example/path",
+        "kinds": {
+            "d": "Develop",
+        },
+        "projects": {
+            "bs": "Best Project",
+        },
     },
     "default-type": "Development",
     "default-project": "Project"

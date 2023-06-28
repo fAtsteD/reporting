@@ -50,7 +50,7 @@ class Categories:
         Retrieve id from categories
         """
         if len(self._categories) == 0 or len(self._categories_binding) == 0:
-            return None
+            return {}
 
         allowed_categories = set(map(
             lambda category_binding: category_binding["categoryId"],
@@ -69,4 +69,4 @@ class Categories:
             if category["name"] == name:
                 return category
 
-        return None
+        return {}

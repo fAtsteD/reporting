@@ -16,11 +16,17 @@ class Report(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     date: Mapped[datetime.date] = mapped_column(index=True)
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(), server_default=sa.FetchedValue(), onupdate=sa.func.now(), server_onupdate=sa.FetchedValue())
+        default=sa.func.now(),
+        server_default=sa.FetchedValue(),
+        onupdate=sa.func.now(),
+        server_onupdate=sa.FetchedValue()
+    )
     created_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(), server_default=sa.FetchedValue())
+        default=sa.func.now(),
+        server_default=sa.FetchedValue()
+    )
 
-    tasks: Mapped[List[Task]] = relationship(back_populates="report")
+    tasks: Mapped[List["Task"]] = relationship(back_populates="report")
 
     def total_seconds(self) -> int:
         """
@@ -53,22 +59,20 @@ class Report(Base):
         total_minutes = round(self.total_seconds() / 60 % 60)
         total_minutes_str = f"0{total_minutes}" if total_minutes < 10 else f"{total_minutes}"
         text += f"Summary time: {total_hours_str}:{total_minutes_str}\n"
-        tasks_by_kind = {}
+
         indent = config.text_indent
-
-        for task in self.tasks:
-            if task.kind not in tasks_by_kind.keys():
-                tasks_by_kind[task.kind] = []
-
-            tasks_by_kind[task.kind].append(task)
-
+        tasks = config.sqlite_session.query(Task).filter(
+            Task.report.has(Report.id == self.id)
+        ).order_by(Task.kinds_id).all()
         text += "Tasks:\n"
+        task_indent = indent + indent
+        previos_kind = ""
 
-        for kind, group_tasks in tasks_by_kind.items():
-            text += indent + kind + ":\n"
-            task_indent = indent + indent
+        for task in tasks:
+            if task.kind.name != previos_kind:
+                text += indent + task.kind.name + ":\n"
 
-            for task in group_tasks:
-                text += f"{task_indent}{task}\n"
+            text += f"{task_indent}{task}\n"
+            previos_kind = task.kind.name
 
         return text

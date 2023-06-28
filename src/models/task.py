@@ -16,7 +16,10 @@ class Task(Base):
         default=0, server_default=sa.FetchedValue())
     summary: Mapped[str] = mapped_column(
         default="", server_default=sa.FetchedValue())
-    kind: Mapped[str] = mapped_column()
+
+    kinds_id: Mapped[int] = mapped_column(sa.ForeignKey("kinds.id"))
+    kind: Mapped["Kind"] = relationship(back_populates="tasks")
+
     project: Mapped[str] = mapped_column()
     updated_at: Mapped[datetime.datetime] = mapped_column(
         default=sa.func.now(), server_default=sa.FetchedValue(), onupdate=sa.func.now(), server_onupdate=sa.FetchedValue())
