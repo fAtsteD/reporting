@@ -9,6 +9,7 @@ class ReportingConfig:
     suburl_auth = ""
     suburl_logout = ""
     suburl_categories = ""
+    suburl_categories_binding = ""
     suburl_projects = ""
     suburl_init = ""
     suburl_get_report = ""
@@ -32,6 +33,9 @@ class ReportingConfig:
 
         if "suburl-categories" in data:
             self.suburl_categories = data["suburl-categories"].strip("/") + "/"
+
+        if "suburl-categories-binding" in data:
+            self.suburl_categories_binding = data["suburl-categories-binding"].strip("/") + "/"
 
         if "suburl-projects" in data:
             self.suburl_projects = data["suburl-projects"].strip("/") + "/"

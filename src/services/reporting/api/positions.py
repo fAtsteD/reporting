@@ -22,16 +22,16 @@ class Positions:
         """
         Init position object
         """
-        self.positions = positions
+        self._positions = positions
 
     def get_by_user_id(self, user_id: str) -> dict:
         """
         Return position dictionary by user id
         """
-        if len(self.positions) == 0:
+        if len(self._positions) == 0:
             return None
 
-        for position in self.positions:
+        for position in self._positions:
             if position["employeeId"] == user_id:
                 return position
 

@@ -7,7 +7,7 @@ from config_app import config, load_config
 from models.report import Report
 from services.file_parse import FileParse
 from services.jira import Jira
-from services.reporting import send_tasks
+from services.reporting import Reporting
 
 
 def main():
@@ -47,7 +47,9 @@ def main():
     if config.reporting.is_use:
         report = config.sqlite_session.query(
             Report).order_by(Report.date.desc()).first()
-        send_tasks(report)
+        reporting = Reporting()
+        reporting.send_tasks(report)
+        reporting.logout()
 
 
 if __name__ == "__main__":

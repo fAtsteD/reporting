@@ -32,7 +32,8 @@ class Jira():
         """
         Set worklog time to the task
         """
-        bases = map(lambda base: '(?:' + re.escape(base) + '[0-9]+)', self._bases)
+        bases = map(
+            lambda base: '(?:' + re.escape(base) + '[0-9]+)', self._bases)
         regexp_compile = re.compile("^(" + '|'.join(bases) + "):.+$")
 
         for task in report.tasks:
@@ -56,13 +57,10 @@ class Jira():
         except JIRAError:
             is_accept = False
 
-        print_str = ""
         if is_accept:
-            print_str = "[+] "
+            print(f"[+] {issue_key} - {time}")
         else:
-            print_str = "[-] "
-
-        print(print_str + issue_key + " - " + time)
+            print(f"[-] {issue_key} - {time}")
 
     def _convert_time(self, seconds: int) -> str:
         """

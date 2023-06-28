@@ -24,16 +24,16 @@ class Projects:
         """
         Init project object
         """
-        self.projects = projects
+        self._projects = projects
 
     def get_by_name(self, name: str) -> dict:
         """
         Return project dictionary by name
         """
-        if len(self.projects) == 0:
+        if len(self._projects) == 0:
             return None
 
-        for project in self.projects:
+        for project in self._projects:
             if project["name"] == name:
                 return project
 

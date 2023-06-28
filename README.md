@@ -61,6 +61,7 @@ Setting that can be setted:
     -   suburl-auth - related suburl to the some of part
     -   suburl-logout - related suburl to the some of part
     -   suburl-categories - related suburl to the some of part
+    -   suburl-categories-binding - related suburl to the some of part
     -   suburl-projects - related suburl to the some of part
     -   suburl-positions - related suburl to the some of part
     -   suburl-init - related suburl to the some of part

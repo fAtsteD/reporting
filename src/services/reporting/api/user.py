@@ -27,7 +27,19 @@ class User:
     """
 
     def __init__(self, user: dict) -> None:
-        self.user = user
+        self._user = user
+
+    def get_corp_struct_id(self) -> int:
+        """
+        User corpStructItemId
+        """
+        return self._user['corpStructItemId']
+
+    def get_id(self) -> int:
+        """
+        User employeeId
+        """
+        return self._user['employeeId']
 
     def update_data(self, data: dict) -> None:
         """
@@ -35,4 +47,4 @@ class User:
 
         Rewrite exist fields, add new.
         """
-        self.user = {**self.user, **data}
+        self._user = {**self._user, **data}

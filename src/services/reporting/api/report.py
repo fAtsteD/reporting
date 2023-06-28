@@ -52,23 +52,23 @@ class Report:
         """
         Initialize by report
         """
-        self.report = report
+        self._report = report
 
-        self.next_order_num = 0
+        self._next_order_num = 0
 
     def next_task_order_num(self) -> int:
         """
         Next task for report from order number
         """
-        if self.next_order_num == 0:
-            if "timeRecords" in self.report and len(self.report["timeRecords"]) > 0:
+        if self._next_order_num == 0:
+            if "timeRecords" in self._report and len(self._report["timeRecords"]) > 0:
                 max_num = 1
-                for record in self.report["timeRecords"]:
+                for record in self._report["timeRecords"]:
                     if record["orderNumber"] > max_num:
                         max_num = record["orderNumber"]
 
-                self.next_order_num = max_num
+                self._next_order_num = max_num
 
-        self.next_order_num += 1
+        self._next_order_num += 1
 
-        return self.next_order_num
+        return self._next_order_num
