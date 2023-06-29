@@ -81,8 +81,6 @@ class FileParse:
                     day_index += 1
                     config.sqlite_session.commit()
 
-                    # TODO: recalculate in report seconds of each tasks for rounding
-
                     if previous_task and previous_task_line and previous_task_line.summary and report.total_seconds() < config.work_day_hours.total_seconds():
                         previous_task.logged_timedelta(datetime.timedelta(
                             seconds=config.work_day_hours.total_seconds() - report.total_seconds()
@@ -110,15 +108,10 @@ class FileParse:
                         task_line.time_begin - previous_task_line.time_begin)
 
                 if task_line.summary.strip() and task_line.summary not in config.skip_tasks:
-                    task = config.sqlite_session.query(Task).filter(
-                        Task.report.has(Report.date == report_date)
-                    ).filter(
-                        Task.summary == task_line.summary
-                    ).filter(
-                        Task.kind.has(Kind.alias == task_line.kind)
-                    ).filter(
-                        Task.project.has(Project.alias == task_line.project)
-                    ).first()
+                    for report_task in report.tasks:
+                        if report_task.summary == task_line.summary and report_task.kind.alias == task_line.kind and report_task.project.alias == task_line.project:
+                            task = report_task
+                            break
 
                     if task is None:
                         task = Task(summary=task_line.summary)
@@ -151,7 +144,6 @@ class FileParse:
                             task.project = project
 
                         config.sqlite_session.add(task)
-                        config.sqlite_session.commit()
 
                 previous_task = task
                 previous_task_line = task_line
