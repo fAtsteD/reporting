@@ -70,6 +70,7 @@ def main():
 
     if config.jira.is_use:
         report = None
+        print("Jira")
 
         if config.jira.report_date == 'last':
             report = config.sqlite_session.query(
@@ -89,6 +90,7 @@ def main():
 
     if config.reporting.is_use:
         report = None
+        print("Reporting")
 
         if config.reporting.report_date == 'last':
             report = config.sqlite_session.query(

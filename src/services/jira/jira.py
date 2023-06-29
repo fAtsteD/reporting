@@ -40,33 +40,33 @@ class Jira():
             task_to_jira = regexp_compile.match(task.summary)
 
             if task_to_jira != None:
-                self._set_worklog_to_jira(
+                is_ok = self._set_worklog_to_jira(
                     task_to_jira.group(1),
                     self._convert_time(task.logged_rounded())
                 )
 
-    def _set_worklog_to_jira(self, issue_key: str, time: str):
+                if is_ok:
+                    print(f"[+] {task}")
+                else:
+                    print(f"[-] {task}")
+
+        print()
+
+    def _set_worklog_to_jira(self, issue_key: str, time: str)-> bool:
         """
         Set time (already converted to structure for jira) to the jira server for specific key
         """
-        is_accept = True
-
         try:
+            # First request for checking that issue exist
             issue = self._jira.issue(issue_key)
             worklog = self._jira.add_worklog(issue_key, time)
         except JIRAError:
-            is_accept = False
+            return False
 
-        if is_accept:
-            print(f"[+] {issue_key} - {time}")
-        else:
-            print(f"[-] {issue_key} - {time}")
-
-        print()
+        return True
 
     def _convert_time(self, seconds: int) -> str:
         """
         Convert time to the jira type string
         """
-
-        return str(seconds // 3600) + "h " + str((seconds // 60) % 60) + "m"
+        return f"{round((seconds / 60) // 60)}h {round((seconds / 60) % 60)}m"

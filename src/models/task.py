@@ -77,9 +77,10 @@ class Task(Base):
         """
         One text line present of task
         """
-        logged_hours = round(self.logged_seconds / 60 // 60)
+        logged_rounded = self.logged_rounded()
+        logged_hours = round(logged_rounded / 60 // 60)
         logged_hours_str = f"0{logged_hours}" if logged_hours < 10 else f"{logged_hours}"
-        logged_minutes = round(self.logged_seconds / 60 % 60)
+        logged_minutes = round(logged_rounded / 60 % 60)
         logged_minutes_str = f"0{logged_minutes}" if logged_minutes < 10 else f"{logged_minutes}"
 
         return f"{logged_hours_str}:{logged_minutes_str} - {self.summary} - {self.project.name}"
