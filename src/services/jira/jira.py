@@ -1,4 +1,3 @@
-import datetime
 import re
 
 from jira import JIRA, JIRAError
@@ -7,7 +6,14 @@ from config_app import config
 from models.report import Report
 
 
-class Jira():
+def convert_time_to_jira_time(seconds: int) -> str:
+    """
+    Convert time to the jira type string
+    """
+    return f"{round((seconds / 60) // 60)}h {round((seconds / 60) % 60)}m"
+
+
+class Jira:
     """
     Object with required method
     """
@@ -21,11 +27,7 @@ class Jira():
         else:
             self._bases = [config.jira.issue_key_base]
 
-        jira_options = {
-            "server": config.jira.server
-        }
-
-        self._jira = JIRA(jira_options, basic_auth=(
+        self._jira = JIRA(server=config.jira.server, basic_auth=(
             config.jira.login, config.jira.password))
 
     def set_worklog(self, report: Report):
@@ -39,10 +41,10 @@ class Jira():
         for task in report.tasks:
             task_to_jira = regexp_compile.match(task.summary)
 
-            if task_to_jira != None:
+            if task_to_jira is not None:
                 is_ok = self._set_worklog_to_jira(
                     task_to_jira.group(1),
-                    self._convert_time(task.logged_rounded())
+                    convert_time_to_jira_time(task.logged_rounded())
                 )
 
                 if is_ok:
@@ -52,21 +54,15 @@ class Jira():
 
         print()
 
-    def _set_worklog_to_jira(self, issue_key: str, time: str)-> bool:
+    def _set_worklog_to_jira(self, issue_key: str, time: str) -> bool:
         """
         Set time (already converted to structure for jira) to the jira server for specific key
         """
         try:
             # First request for checking that issue exist
-            issue = self._jira.issue(issue_key)
-            worklog = self._jira.add_worklog(issue_key, time)
+            self._jira.issue(issue_key)
+            self._jira.add_worklog(issue_key, time)
         except JIRAError:
             return False
 
         return True
-
-    def _convert_time(self, seconds: int) -> str:
-        """
-        Convert time to the jira type string
-        """
-        return f"{round((seconds / 60) // 60)}h {round((seconds / 60) % 60)}m"

@@ -7,7 +7,7 @@ class TaskLine:
     """
 
     def __init__(self):
-        self.time_begin: datetime = None
+        self.time_begin: datetime | None = None
         self.summary = ""
         self.kind = ""
         self.project = ""

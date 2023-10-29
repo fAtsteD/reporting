@@ -16,6 +16,14 @@ from .report import Report
 from .user import User
 
 
+def transform_time(seconds: int) -> int:
+    """
+    Transform seconds to the hours and minutes with
+    mapping from 0-60 to 0-100
+    """
+    return round(seconds / 60 / 60 * 100)
+
+
 class ReportingApi:
     """
     Class save connection params to reporting
@@ -26,7 +34,7 @@ class ReportingApi:
         Connect to the server
         """
         if not config.reporting.is_use:
-            exit("Used reporing module without required settings")
+            exit("Used reporting module without required settings")
 
         self._request_session = request_session
 
@@ -34,10 +42,10 @@ class ReportingApi:
         self.base_url = config.reporting.url
         self.is_auth = False
 
-        self.user_data: User = None
-        self.projects: Projects = None
-        self.positions: Positions = None
-        self.categories: Categories = None
+        self.user_data: User | None = None
+        self.projects: Projects | None = None
+        self.positions: Positions | None = None
+        self.categories: Categories | None = None
 
     def login(self) -> bool:
         """
@@ -90,7 +98,7 @@ class ReportingApi:
 
     def init(self) -> bool:
         """
-        Init request for receiving requeired data
+        Init request for receiving required data
         """
         response = self._request_session.get(
             self.base_url + config.reporting.suburl_init
@@ -168,7 +176,7 @@ class ReportingApi:
 
     def load_positions(self) -> bool:
         """
-        Load privilegies by user from server
+        Load privileges by user from server
 
         Also update user data if it is not empty.
         """
@@ -191,13 +199,14 @@ class ReportingApi:
 
         if self.user_data is not None:
             user_position = self.positions.get_by_user_id(
-                self.user_data.get_id())
+                self.user_data.get_id()
+            )
             del user_position["id"]
             self.user_data.update_data(user_position)
 
         return True
 
-    def get_reports(self, date: datetime) -> list[Report]:
+    def get_reports(self, date: datetime) -> list[Report] | None:
         """
         Return report for the day
         Before the request need do init request
@@ -233,7 +242,7 @@ class ReportingApi:
 
         return result
 
-    def set_report(self, date: datetime, report_id: None, have_problems=False, has_tasks=True) -> Report:
+    def set_report(self, date: datetime, report_id: None, have_problems=False, has_tasks=True) -> Report | None:
         """
         Create report and return it
         """
@@ -251,7 +260,7 @@ class ReportingApi:
             "problems": "",
         }
 
-        if not report_id is None:
+        if report_id is not None:
             data["id"] = report_id
 
         response = self._request_session.put(
@@ -309,7 +318,7 @@ class ReportingApi:
                 "clientId": self.user_data.get_id(),
                 "corpStructItemId": self.user_data.get_corp_struct_id(),
                 "description": task.summary,
-                "hours": self._tranform_time(task.logged_rounded()),
+                "hours": transform_time(task.logged_rounded()),
                 "invoiceHours": 0,
                 "orderNumber": report.next_task_order_num(),
                 "overrideEmployeeId": None,
@@ -318,7 +327,7 @@ class ReportingApi:
                 "pjmHours": None,
                 "pomApproved": False,
                 "projectId": project["id"],
-                "reportId": report._report["id"],
+                "reportId": report.get_id(),
                 "salaryCoefficient": category["salaryCoefficient"],
                 "salaryCoefficientType": 0
             }
@@ -339,19 +348,12 @@ class ReportingApi:
 
         return True
 
-    def _tranform_time(self, seconds: int) -> int:
-        """
-        Transform seconds to the hours and minutes with
-        mapping from 0-60 to 0-100
-        """
-        return round(seconds / 60 / 60 * 100)
-
     def _get_category_by_task(self, task: Task) -> dict:
         """
         Return category dict from reporting for task
 
         It searches by name, but before searching it transform saved
-        kind to the related of reporting
+        kind to the related report kinds
         """
         kind = task.kind
         category_name = kind.name
@@ -369,7 +371,7 @@ class ReportingApi:
         Return project dict from reporting for task
 
         It searches by name, but before searching it transform saved
-        project to the related of reporting
+        project to the related report projects
         """
         project = task.project
         project_name = project.name

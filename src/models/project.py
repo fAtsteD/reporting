@@ -9,7 +9,7 @@ from .base import Base
 
 class Project(Base):
     """
-    It project of tasks, because each project can has short, name etc.
+    It's project of tasks, because each project can has short, name etc.
     """
     __tablename__ = "projects"
 

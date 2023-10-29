@@ -43,7 +43,7 @@ class Reporting:
 
         reporting_report_id = None
         if len(reporting_reports) > 0:
-            reporting_report_id = reporting_reports[0]._report["id"]
+            reporting_report_id = reporting_reports[0].get_id()
 
         reporting_report = self._reporting_api.set_report(
             report.date, reporting_report_id)

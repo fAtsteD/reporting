@@ -2,7 +2,7 @@ from config_app import config
 from models.project import Project
 
 
-class ProjectService():
+class ProjectService:
     """
     Orchestrate project operations
     """

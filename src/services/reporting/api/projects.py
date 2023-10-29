@@ -26,7 +26,7 @@ class Projects:
         """
         self._projects = projects
 
-    def get_by_name(self, name: str) -> dict:
+    def get_by_name(self, name: str) -> dict | None:
         """
         Return project dictionary by name
         """

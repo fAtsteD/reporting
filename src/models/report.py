@@ -32,12 +32,12 @@ class Report(Base):
         """
         Total seconds of the report's all tasks
         """
-        sum = 0
+        sum_seconds = 0
 
         for task in self.tasks:
-            sum += task.logged_seconds if task.logged_seconds is not None and task.logged_seconds > 0 else 0
+            sum_seconds += task.logged_seconds if task.logged_seconds is not None and task.logged_seconds > 0 else 0
 
-        return sum
+        return sum_seconds
 
     def remove_tasks(self):
         """
@@ -68,13 +68,13 @@ class Report(Base):
         ).order_by(Task.kinds_id).all()
         text += "Tasks:\n"
         task_indent = indent + indent
-        previos_kind = ""
+        previous_kind = ""
 
         for task in tasks:
-            if task.kind.name != previos_kind:
+            if task.kind.name != previous_kind:
                 text += indent + task.kind.name + ":\n"
 
             text += f"{task_indent}{task}\n"
-            previos_kind = task.kind.name
+            previous_kind = task.kind.name
 
         return text

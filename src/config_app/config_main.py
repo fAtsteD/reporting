@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 """
 Read config file and take config data
 """
@@ -13,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 from models.base import Base
 
-from .class_config import config
+from .class_config import Config
 
 
 def load_config():
@@ -28,41 +27,41 @@ def load_config():
     data = json.load(open(config_file, "r", encoding="utf-8"))
 
     if "hour-report-path" in data and path.isfile(data["hour-report-path"]):
-        config.input_file_hours = path.normpath(data["hour-report-path"])
+        Config.input_file_hours = path.normpath(data["hour-report-path"])
 
     if "sqlite-database-path" in data:
-        config.sqlite_database_path = path.normpath(
+        Config.sqlite_database_path = path.normpath(
             data["sqlite-database-path"])
 
-        if not path.exists(path.dirname(config.sqlite_database_path)):
-            makedirs(path.dirname(config.sqlite_database_path))
+        if not path.exists(path.dirname(Config.sqlite_database_path)):
+            makedirs(path.dirname(Config.sqlite_database_path))
 
     if "dictionary" in data:
-        config.dictionary.set_data(data["dictionary"])
+        Config.dictionary.set_data(data["dictionary"])
 
     if "default-type" in data:
-        config.default_kind = data["default-type"]
+        Config.default_kind = data["default-type"]
 
     if "default-project" in data:
-        config.default_project = data["default-project"]
+        Config.default_project = data["default-project"]
 
     if "omit-task" in data:
         skip_tasks = data["omit-task"]
         for task_name in skip_tasks:
-            config.skip_tasks.append(
-                config.dictionary.translate_task(task_name))
+            Config.skip_tasks.append(
+                Config.dictionary.translate_task(task_name))
 
     if "minute-round-to" in data and isinstance(data["minute-round-to"], int):
-        config.minute_round_to = int(data["minute-round-to"])
+        Config.minute_round_to = int(data["minute-round-to"])
 
     if "jira" in data:
-        config.jira.set_data(data["jira"])
+        Config.jira.set_data(data["jira"])
 
     if "indent" in data:
-        config.text_indent = data["indent"]
+        Config.text_indent = data["indent"]
 
     if "reporting" in data:
-        config.reporting.set_data(data["reporting"])
+        Config.reporting.set_data(data["reporting"])
 
     _config_arguments()
     _sqlaclchemy_init()
@@ -85,65 +84,67 @@ def _config_arguments():
                         help="log all task time to the reporting system, default for last report")
 
     parser.add_argument("--kind", required=False, nargs=2, metavar=("t", "Test"), action="store",
-                        help="add/update kind to the database and can be used in the future, alias (first param) is unique, other data will updates")
+                        help="add/update kind to the database and can be used in the future, alias (first param) is "
+                             "unique, other data will updates")
     parser.add_argument("--show-kinds", required=False, default=False, action="store_true",
                         help="print all kinds and their data")
 
     parser.add_argument("--project", required=False, nargs=2, metavar=("p", "Project"), action="store",
-                        help="add/update project to the database and can be used in the future, alias (first param) is unique, other data will updates")
+                        help="add/update project to the database and can be used in the future, alias (first param) "
+                             "is unique, other data will updates")
     parser.add_argument("--show-projects", required=False, default=False, action="store_true",
                         help="print all projects and their data")
 
     args = parser.parse_args()
 
-    regex_date = "^[0-9]{1,2}\.[0-9]{1,2}\.([0-9]{4}|[0-9]{2})$"
+    regex_date = "^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})$"
 
     if args.show is not None:
-        if (re.search(regex_date, args.show.strip())):
-            config.show_date = dateutil.parser.parse(
+        if re.search(regex_date, args.show.strip()):
+            Config.show_date = dateutil.parser.parse(
                 args.show, dayfirst=True).date()
         else:
-            config.show_date = args.show
+            Config.show_date = args.show
 
     if args.parse is not None and int(args.parse) >= 0:
-        config.parse_days = int(args.parse)
+        Config.parse_days = int(args.parse)
 
     if args.jira is not None:
-        config.jira.is_use = True if config.jira.is_use else config.jira.is_use
+        Config.jira.is_use = True if Config.jira.is_use else Config.jira.is_use
 
-        if (re.search(regex_date, args.jira.strip())):
-            config.jira.report_date = dateutil.parser.parse(
+        if re.search(regex_date, args.jira.strip()):
+            Config.jira.report_date = dateutil.parser.parse(
                 args.jira, dayfirst=True).date()
     else:
-        config.jira.is_use = False
+        Config.jira.is_use = False
 
     if args.reporting is not None:
-        config.reporting.is_use = True if config.reporting.is_use else config.reporting.is_use
+        Config.reporting.is_use = True if Config.reporting.is_use else Config.reporting.is_use
 
-        if (re.search(regex_date, args.reporting.strip())):
-            config.reporting.report_date = dateutil.parser.parse(
+        if re.search(regex_date, args.reporting.strip()):
+            Config.reporting.report_date = dateutil.parser.parse(
                 args.reporting, dayfirst=True).date()
     else:
-        config.reporting.is_use = False
+        Config.reporting.is_use = False
 
     if args.kind:
-        config.kind_data = args.kind
+        Config.kind_data = args.kind
 
-    config.show_kinds = args.show_kinds
+    Config.show_kinds = args.show_kinds
 
     if args.project:
-        config.project_data = args.project
+        Config.project_data = args.project
 
-    config.show_projects = args.show_projects
+    Config.show_projects = args.show_projects
 
 
 def _sqlaclchemy_init():
     """
-    Initialize sqlaclchemy library and migrate
+    Initialize SQLAlchemy library and migrate
     """
     sqlalchemy_engine = create_engine(
-        "sqlite:///" + config.sqlite_database_path, echo=False, future=True)
+        "sqlite:///" + Config.sqlite_database_path, echo=False, future=True)
     Session = sessionmaker(bind=sqlalchemy_engine)
-    config.sqlite_session = Session()
+    Config.sqlite_session = Session()
 
     Base.metadata.create_all(sqlalchemy_engine)

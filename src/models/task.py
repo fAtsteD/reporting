@@ -63,7 +63,7 @@ class Task(Base):
 
     def logged_timedelta(self, logged_time: datetime.timedelta):
         """
-        Add timedelta to the setted logged seconds, it does not override
+        Add timedelta to the set logged seconds, it does not override
         value
 
         Firstly timedelta transforms to the seconds.

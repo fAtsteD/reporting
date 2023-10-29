@@ -24,7 +24,7 @@ class Positions:
         """
         self._positions = positions
 
-    def get_by_user_id(self, user_id: str) -> dict:
+    def get_by_user_id(self, user_id: int) -> dict | None:
         """
         Return position dictionary by user id
         """

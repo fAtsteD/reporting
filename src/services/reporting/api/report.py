@@ -8,7 +8,7 @@ class Report:
     Hold report from request get report
     Has additional methods
 
-    timeRecords is not setted when create report
+    timeRecords is not set when create report
 
     Report:
     {
@@ -53,8 +53,13 @@ class Report:
         Initialize by report
         """
         self._report = report
-
         self._next_order_num = 0
+
+    def get_id(self) -> int:
+        """
+        Server report id
+        """
+        return self._report["id"]
 
     def next_task_order_num(self) -> int:
         """

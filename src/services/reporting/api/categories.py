@@ -45,7 +45,7 @@ class Categories:
         self._categories = categories
         self._categories_binding = categories_binding
 
-    def get_by_name(self, name: str, corp_struct_id: str) -> dict:
+    def get_by_name(self, name: str, corp_struct_id: int) -> dict:
         """
         Retrieve id from categories
         """

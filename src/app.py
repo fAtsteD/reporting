@@ -3,7 +3,7 @@
 Begining point of program
 """
 
-from config_app import config, load_config
+from config_app import Config, load_config
 from models.report import Report
 from services.file_parse import FileParse
 from services.jira import Jira
@@ -18,28 +18,28 @@ def main():
     """
     load_config()
 
-    if config.kind_data:
+    if Config.kind_data:
         kind_service = KindService()
-        kind_service.add(config.kind_data[0], config.kind_data[1])
-        config.show_kinds = True
+        kind_service.add(Config.kind_data[0], Config.kind_data[1])
+        Config.show_kinds = True
 
-    if config.show_kinds:
+    if Config.show_kinds:
         kind_service = KindService()
         print("Kinds:")
         print(kind_service.text_all_kinds())
 
-    if config.project_data:
+    if Config.project_data:
         project_service = ProjectService()
-        project_service.add(config.project_data[0], config.project_data[1])
-        config.show_projects = True
+        project_service.add(Config.project_data[0], Config.project_data[1])
+        Config.show_projects = True
 
-    if config.show_projects:
+    if Config.show_projects:
         project_service = ProjectService()
         print("Projects:")
         print(project_service.text_all_projects())
 
-    if config.parse_days is not None:
-        file_parse = FileParse(config.input_file_hours, config.parse_days)
+    if Config.parse_days is not None:
+        file_parse = FileParse(Config.input_file_hours, Config.parse_days)
         reports = file_parse.reports()
         print(f"Parsed {len(reports)}")
 
@@ -47,20 +47,20 @@ def main():
             for report in reports:
                 print(report)
 
-    if config.show_date is not None:
+    if Config.show_date is not None:
         report = None
 
-        if config.show_date == 'last':
-            report = config.sqlite_session.query(
+        if Config.show_date == 'last':
+            report = Config.sqlite_session.query(
                 Report
             ).order_by(
                 Report.date.desc()
             ).first()
         else:
-            report = config.sqlite_session.query(
+            report = Config.sqlite_session.query(
                 Report
             ).filter(
-                Report.date == config.show_date
+                Report.date == Config.show_date
             ).first()
 
         if report is None:
@@ -68,41 +68,41 @@ def main():
         else:
             print(report)
 
-    if config.jira.is_use:
+    if Config.jira.is_use:
         report = None
         print("Jira")
 
-        if config.jira.report_date == 'last':
-            report = config.sqlite_session.query(
+        if Config.jira.report_date == 'last':
+            report = Config.sqlite_session.query(
                 Report
             ).order_by(
                 Report.date.desc()
             ).first()
         else:
-            report = config.sqlite_session.query(
+            report = Config.sqlite_session.query(
                 Report
             ).filter(
-                Report.date == config.jira.report_date
+                Report.date == Config.jira.report_date
             ).first()
 
         jira = Jira()
         jira.set_worklog(report)
 
-    if config.reporting.is_use:
+    if Config.reporting.is_use:
         report = None
         print("Reporting")
 
-        if config.reporting.report_date == 'last':
-            report = config.sqlite_session.query(
+        if Config.reporting.report_date == 'last':
+            report = Config.sqlite_session.query(
                 Report
             ).order_by(
                 Report.date.desc()
             ).first()
         else:
-            report = config.sqlite_session.query(
+            report = Config.sqlite_session.query(
                 Report
             ).filter(
-                Report.date == config.reporting.report_date
+                Report.date == Config.reporting.report_date
             ).first()
 
         reporting = Reporting()

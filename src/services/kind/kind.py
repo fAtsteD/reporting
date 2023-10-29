@@ -2,7 +2,7 @@ from config_app import config
 from models.kind import Kind
 
 
-class KindService():
+class KindService:
     """
     Orchestrate kind operations
     """

@@ -22,7 +22,7 @@ class JiraConfig:
         """
         Set data to the class from data dict (file config usually)
         """
-        if set(["server", "login", "password"]).issubset(data):
+        if {"server", "login", "password"}.issubset(data):
             self.server = data["server"].strip("/") + "/"
             self.login = data["login"]
             self.password = data["password"]

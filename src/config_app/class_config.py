@@ -7,7 +7,7 @@ from .jira_config import JiraConfig
 from .reporting_config import ReportingConfig
 
 
-class config:
+class Config:
     """
     Hold all config vars
 

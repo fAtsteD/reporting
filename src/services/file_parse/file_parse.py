@@ -3,7 +3,6 @@ import re
 from os import path
 
 import dateutil.parser
-
 from config_app import config
 from models.kind import Kind
 from models.project import Project
@@ -11,6 +10,42 @@ from models.report import Report
 from models.task import Task
 
 from .task_line import TaskLine
+
+
+def parse_task(task_str: str) -> TaskLine:
+    """
+    Parse line from file to task object
+    @param task_str: str
+    @return: TaskLine
+    """
+    task = TaskLine()
+    split_str = task_str.split(" - ")
+
+    if len(split_str) >= 1:
+        # Parse time, date will be current, it is not right
+        task.time_begin = dateutil.parser.parse(
+            split_str[0].strip().replace(" ", ":")
+        )
+
+    if len(split_str) >= 2:
+        task.summary = config.dictionary.translate_task(
+            split_str[1].strip().replace('\\-', '-')).replace('\\\\', '\\')
+
+    if len(split_str) >= 3:
+        task.kind = config.dictionary.translate_kind(
+            split_str[2].strip().replace('\\-', '-').replace('\\\\', '\\')
+        )
+    else:
+        task.kind = config.default_kind
+
+    if len(split_str) >= 4:
+        task.project = config.dictionary.translate_project(
+            split_str[3].strip().replace('\\-', '-').replace('\\\\', '\\')
+        )
+    else:
+        task.project = config.default_project
+
+    return task
 
 
 class FileParse:
@@ -41,9 +76,9 @@ class FileParse:
 
     def reports(self) -> list[Report]:
         """
-        Parse days and return thier reports
+        Parse days and return their reports
 
-        It parse and save/update reports to the db before return them.
+        It parses and save/update reports to the db before return them.
         One day - one report, so it updates existed reports.
         """
         reports: list[Report] = []
@@ -58,11 +93,11 @@ class FileParse:
             report = None
             day_index = 0
             previous_line = ""
-            previous_task_line: TaskLine = None
+            previous_task_line: TaskLine | None = None
             previous_task: Task = None
 
             for line in input_file_hours:
-                if (re.search("^[0-9]{1,2}\.[0-9]{1,2}\.([0-9]{4}|[0-9]{2})\n$", line)):
+                if re.search("^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})\n$", line):
                     report_date = dateutil.parser.parse(
                         line, dayfirst=True).date()
                     report = config.sqlite_session.query(
@@ -100,7 +135,7 @@ class FileParse:
                 if not line.strip() or report is None:
                     continue
 
-                task_line = self._parse_task(line)
+                task_line = parse_task(line)
                 task = None
 
                 if previous_task_line is not None and previous_task is not None:
@@ -151,36 +186,3 @@ class FileParse:
         config.sqlite_session.commit()
         config.sqlite_session.autoflush = True
         return reports
-
-    def _parse_task(self, task_str: str) -> TaskLine:
-        """
-        Parse line from file to task object
-        """
-        task = TaskLine()
-        split_str = task_str.split(" - ")
-
-        if (len(split_str) >= 1):
-            # Parse time, date will be current, it is not right
-            task.time_begin = dateutil.parser.parse(
-                split_str[0].strip().replace(" ", ":")
-            )
-
-        if (len(split_str) >= 2):
-            task.summary = config.dictionary.translate_task(
-                split_str[1].strip().replace('\-', '-')).replace('\\\\', '\\')
-
-        if (len(split_str) >= 3):
-            task.kind = config.dictionary.translate_kind(
-                split_str[2].strip().replace('\-', '-').replace('\\\\', '\\')
-            )
-        else:
-            task.kind = config.default_kind
-
-        if (len(split_str) >= 4):
-            task.project = config.dictionary.translate_project(
-                split_str[3].strip().replace('\-', '-').replace('\\\\', '\\')
-            )
-        else:
-            task.project = config.default_project
-
-        return task

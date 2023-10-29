@@ -31,7 +31,7 @@ class ReportingConfig:
         """
         Set data to the class from data dict (file config usually)
         """
-        if set(["api-url", "suburl-auth", "login", "password"]).issubset(data):
+        if {"api-url", "suburl-auth", "login", "password"}.issubset(data):
             self.url = data["api-url"].strip("/") + "/"
             self.suburl_auth = data["suburl-auth"].strip("/") + "/"
             self.login = data["login"]
