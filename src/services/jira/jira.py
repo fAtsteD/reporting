@@ -2,7 +2,7 @@ import re
 
 from jira import JIRA, JIRAError
 
-from config_app import config
+from config_app import Config
 from models.report import Report
 
 
@@ -19,15 +19,15 @@ class Jira:
     """
 
     def __init__(self):
-        if not config.jira.is_use:
+        if not Config.jira.is_use:
             exit("Used JIRA module without required settings")
 
-        if isinstance(config.jira.issue_key_base, list):
-            self._bases = config.jira.issue_key_base
+        if isinstance(Config.jira.issue_key_base, list):
+            self._bases = Config.jira.issue_key_base
         else:
-            self._bases = [config.jira.issue_key_base]
+            self._bases = [Config.jira.issue_key_base]
 
-        self._jira = JIRA(server=config.jira.server, basic_auth=(config.jira.login, config.jira.password))
+        self._jira = JIRA(server=Config.jira.server, basic_auth=(Config.jira.login, Config.jira.password))
 
     def set_worklog(self, report: Report):
         """

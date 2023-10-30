@@ -2,7 +2,7 @@ from datetime import datetime
 
 from requests.sessions import Session
 
-from config_app import config
+from config_app import Config
 from models.task import Task
 
 from .categories import Categories
@@ -29,13 +29,13 @@ class ReportingApi:
         """
         Connect to the server
         """
-        if not config.reporting.is_use:
+        if not Config.reporting.is_use:
             exit("Used reporting module without required settings")
 
         self._request_session = request_session
 
         self.last_error = None
-        self.base_url = config.reporting.url
+        self.base_url = Config.reporting.url
         self.is_auth = False
 
         self.user_data: User | None = None
@@ -48,9 +48,9 @@ class ReportingApi:
         Auth in the reporting
         """
         self.last_error = None
-        data = {"login": config.reporting.login, "password": config.reporting.password}
+        data = {"login": Config.reporting.login, "password": Config.reporting.password}
 
-        response = self._request_session.post(self.base_url + config.reporting.suburl_auth, json=data)
+        response = self._request_session.post(self.base_url + Config.reporting.suburl_auth, json=data)
 
         if response.text == "":
             self.is_auth = True
@@ -70,7 +70,7 @@ class ReportingApi:
         """
         Log out from the reporting
         """
-        response = self._request_session.post(self.base_url + config.reporting.suburl_logout)
+        response = self._request_session.post(self.base_url + Config.reporting.suburl_logout)
 
         if response.text == "":
             self.is_auth = False
@@ -90,7 +90,7 @@ class ReportingApi:
         """
         Init request for receiving required data
         """
-        response = self._request_session.get(self.base_url + config.reporting.suburl_init)
+        response = self._request_session.get(self.base_url + Config.reporting.suburl_init)
 
         try:
             response_data = response.json()
@@ -111,9 +111,9 @@ class ReportingApi:
         """
         Load categories from server
         """
-        response_categories = self._request_session.get(self.base_url + config.reporting.suburl_categories)
+        response_categories = self._request_session.get(self.base_url + Config.reporting.suburl_categories)
         response_categories_binding = self._request_session.get(
-            self.base_url + config.reporting.suburl_categories_binding
+            self.base_url + Config.reporting.suburl_categories_binding
         )
 
         try:
@@ -140,7 +140,7 @@ class ReportingApi:
         """
         Load projects from server
         """
-        response = self._request_session.get(self.base_url + config.reporting.suburl_projects)
+        response = self._request_session.get(self.base_url + Config.reporting.suburl_projects)
 
         try:
             response_data = response.json()
@@ -163,7 +163,7 @@ class ReportingApi:
 
         Also update user data if it is not empty.
         """
-        response = self._request_session.get(self.base_url + config.reporting.suburl_positions)
+        response = self._request_session.get(self.base_url + Config.reporting.suburl_positions)
 
         try:
             response_data = response.json()
@@ -198,7 +198,7 @@ class ReportingApi:
 
         data = {"date": date.strftime("%Y-%m-%d"), "employeeId": self.user_data.get_id()}
 
-        response = self._request_session.get(self.base_url + config.reporting.suburl_get_report, params=data)
+        response = self._request_session.get(self.base_url + Config.reporting.suburl_get_report, params=data)
 
         try:
             response_data = response.json()
@@ -238,7 +238,7 @@ class ReportingApi:
         if report_id is not None:
             data["id"] = report_id
 
-        response = self._request_session.put(self.base_url + config.reporting.suburl_get_report, json=data)
+        response = self._request_session.put(self.base_url + Config.reporting.suburl_get_report, json=data)
 
         try:
             response_data = response.json()
@@ -307,7 +307,7 @@ class ReportingApi:
             }
         ]
 
-        response = self._request_session.post(self.base_url + config.reporting.suburl_add_task, json=data)
+        response = self._request_session.post(self.base_url + Config.reporting.suburl_add_task, json=data)
 
         try:
             response_data = response.json()
@@ -331,8 +331,8 @@ class ReportingApi:
         kind = task.kind
         category_name = kind.name
 
-        if kind.alias in config.reporting.kinds.keys():
-            category_name = config.reporting.kinds[kind.alias]
+        if kind.alias in Config.reporting.kinds.keys():
+            category_name = Config.reporting.kinds[kind.alias]
 
         return self.categories.get_by_name(category_name, self.user_data.get_corp_struct_id())
 
@@ -346,7 +346,7 @@ class ReportingApi:
         project = task.project
         project_name = project.name
 
-        if project.alias in config.reporting.projects.keys():
-            project_name = config.reporting.projects[project.alias]
+        if project.alias in Config.reporting.projects.keys():
+            project_name = Config.reporting.projects[project.alias]
 
         return self.projects.get_by_name(project_name)

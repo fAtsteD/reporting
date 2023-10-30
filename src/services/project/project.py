@@ -1,4 +1,4 @@
-from config_app import config
+from config_app import Config
 from models.project import Project
 
 
@@ -11,15 +11,15 @@ class ProjectService:
         """
         Create/update project and return it
         """
-        project = config.sqlite_session.query(Project).filter(Project.alias == alias).first()
+        project = Config.sqlite_session.query(Project).filter(Project.alias == alias).first()
 
         if project is None:
             project = Project(alias=alias, name=name)
-            config.sqlite_session.add(project)
+            Config.sqlite_session.add(project)
         else:
             project.name = name
 
-        config.sqlite_session.commit()
+        Config.sqlite_session.commit()
 
         return project
 
@@ -27,7 +27,7 @@ class ProjectService:
         """
         Create text with all kinds and their data
         """
-        projects = config.sqlite_session.query(Project).all()
+        projects = Config.sqlite_session.query(Project).all()
         text = ""
 
         for project in projects:

@@ -4,7 +4,7 @@ from typing import List
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from config_app import config
+from config_app import Config
 from models.task import Task
 
 from .base import Base
@@ -42,9 +42,9 @@ class Report(Base):
         """
         for task in self.tasks:
             self.updated_at = sa.func.now()
-            config.sqlite_session.delete(task)
+            Config.sqlite_session.delete(task)
 
-        config.sqlite_session.commit()
+        Config.sqlite_session.commit()
 
     def __str__(self):
         """
@@ -58,9 +58,9 @@ class Report(Base):
         total_minutes_str = f"0{total_minutes}" if total_minutes < 10 else f"{total_minutes}"
         text += f"Summary time: {total_hours_str}:{total_minutes_str}\n"
 
-        indent = config.text_indent
+        indent = Config.text_indent
         tasks = (
-            config.sqlite_session.query(Task)
+            Config.sqlite_session.query(Task)
             .filter(Task.report.has(Report.id == self.id))
             .order_by(Task.kinds_id)
             .all()

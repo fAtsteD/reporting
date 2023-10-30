@@ -3,7 +3,7 @@ import datetime
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from config_app import config
+from config_app import Config
 
 from .base import Base
 
@@ -43,23 +43,23 @@ class Task(Base):
 
         hours = self.logged_seconds / 60 // 60
         minutes = self.logged_seconds / 60 % 60
-        frac = minutes % config.minute_round_to
+        frac = minutes % Config.minute_round_to
 
-        if frac >= int(config.minute_round_to / 2) + 1:
-            minutes = (minutes // config.minute_round_to + 1) * config.minute_round_to
+        if frac >= int(Config.minute_round_to / 2) + 1:
+            minutes = (minutes // Config.minute_round_to + 1) * Config.minute_round_to
 
             if minutes == 100:
                 hours += 1
                 minutes = 0
         else:
-            minutes = minutes // config.minute_round_to * config.minute_round_to
+            minutes = minutes // Config.minute_round_to * Config.minute_round_to
 
         seconds = hours * 60 * 60 + minutes * 60
 
         if seconds > 0:
             return seconds
 
-        return config.minute_round_to * 60
+        return Config.minute_round_to * 60
 
     def logged_timedelta(self, logged_time: datetime.timedelta):
         """

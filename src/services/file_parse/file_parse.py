@@ -4,7 +4,7 @@ from os import path
 
 import dateutil.parser
 
-from config_app import config
+from config_app import Config
 from models.kind import Kind
 from models.project import Project
 from models.report import Report
@@ -27,19 +27,19 @@ def parse_task(task_str: str) -> TaskLine:
         task.time_begin = dateutil.parser.parse(split_str[0].strip().replace(" ", ":"))
 
     if len(split_str) >= 2:
-        task.summary = config.dictionary.translate_task(split_str[1].strip().replace("\\-", "-")).replace("\\\\", "\\")
+        task.summary = Config.dictionary.translate_task(split_str[1].strip().replace("\\-", "-")).replace("\\\\", "\\")
 
     if len(split_str) >= 3:
-        task.kind = config.dictionary.translate_kind(split_str[2].strip().replace("\\-", "-").replace("\\\\", "\\"))
+        task.kind = Config.dictionary.translate_kind(split_str[2].strip().replace("\\-", "-").replace("\\\\", "\\"))
     else:
-        task.kind = config.default_kind
+        task.kind = Config.default_kind
 
     if len(split_str) >= 4:
-        task.project = config.dictionary.translate_project(
+        task.project = Config.dictionary.translate_project(
             split_str[3].strip().replace("\\-", "-").replace("\\\\", "\\")
         )
     else:
-        task.project = config.default_project
+        task.project = Config.default_project
 
     return task
 
@@ -79,12 +79,12 @@ class FileParse:
         """
         reports: list[Report] = []
 
-        if not path.isfile(config.input_file_hours):
+        if not path.isfile(Config.input_file_hours):
             return reports
 
-        config.sqlite_session.autoflush = False
+        Config.sqlite_session.autoflush = False
 
-        with open(config.input_file_hours, "r", encoding="utf-8") as input_file_hours:
+        with open(Config.input_file_hours, "r", encoding="utf-8") as input_file_hours:
             # Need for double new line finding
             report = None
             day_index = 0
@@ -95,11 +95,11 @@ class FileParse:
             for line in input_file_hours:
                 if re.search("^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})\n$", line):
                     report_date = dateutil.parser.parse(line, dayfirst=True).date()
-                    report = config.sqlite_session.query(Report).filter(Report.date == report_date).first()
+                    report = Config.sqlite_session.query(Report).filter(Report.date == report_date).first()
 
                     if report is None:
                         report = Report(date=report_date)
-                        config.sqlite_session.add(report)
+                        Config.sqlite_session.add(report)
 
                     report.remove_tasks()
                     reports.append(report)
@@ -108,16 +108,16 @@ class FileParse:
 
                 if previous_line == "\n" and line == "\n":
                     day_index += 1
-                    config.sqlite_session.commit()
+                    Config.sqlite_session.commit()
 
                     if (
                         previous_task
                         and previous_task_line
                         and previous_task_line.summary
-                        and report.total_seconds() < config.work_day_hours.total_seconds()
+                        and report.total_seconds() < Config.work_day_hours.total_seconds()
                     ):
                         previous_task.logged_timedelta(
-                            datetime.timedelta(seconds=config.work_day_hours.total_seconds() - report.total_seconds())
+                            datetime.timedelta(seconds=Config.work_day_hours.total_seconds() - report.total_seconds())
                         )
 
                     if day_index < self.read_days or self.read_days == 0:
@@ -140,7 +140,7 @@ class FileParse:
                 if previous_task_line is not None and previous_task is not None:
                     previous_task.logged_timedelta(task_line.time_begin - previous_task_line.time_begin)
 
-                if task_line.summary.strip() and task_line.summary not in config.skip_tasks:
+                if task_line.summary.strip() and task_line.summary not in Config.skip_tasks:
                     for report_task in report.tasks:
                         if (
                             report_task.summary == task_line.summary
@@ -155,7 +155,7 @@ class FileParse:
                         task.report = report
 
                         if task_line.kind:
-                            kind = config.sqlite_session.query(Kind).filter(Kind.alias == task_line.kind).first()
+                            kind = Config.sqlite_session.query(Kind).filter(Kind.alias == task_line.kind).first()
 
                             if kind is None:
                                 exit(f"Kind {task_line.kind} does not exist")
@@ -164,7 +164,7 @@ class FileParse:
 
                         if task_line.project:
                             project = (
-                                config.sqlite_session.query(Project).filter(Project.alias == task_line.project).first()
+                                Config.sqlite_session.query(Project).filter(Project.alias == task_line.project).first()
                             )
 
                             if project is None:
@@ -172,11 +172,11 @@ class FileParse:
 
                             task.project = project
 
-                        config.sqlite_session.add(task)
+                        Config.sqlite_session.add(task)
 
                 previous_task = task
                 previous_task_line = task_line
 
-        config.sqlite_session.commit()
-        config.sqlite_session.autoflush = True
+        Config.sqlite_session.commit()
+        Config.sqlite_session.autoflush = True
         return reports

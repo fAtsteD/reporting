@@ -1,4 +1,4 @@
-from config_app import config
+from config_app import Config
 from models.kind import Kind
 
 
@@ -11,15 +11,15 @@ class KindService:
         """
         Create/update kind and return it
         """
-        kind = config.sqlite_session.query(Kind).filter(Kind.alias == alias).first()
+        kind = Config.sqlite_session.query(Kind).filter(Kind.alias == alias).first()
 
         if kind is None:
             kind = Kind(alias=alias, name=name)
-            config.sqlite_session.add(kind)
+            Config.sqlite_session.add(kind)
         else:
             kind.name = name
 
-        config.sqlite_session.commit()
+        Config.sqlite_session.commit()
 
         return kind
 
@@ -27,7 +27,7 @@ class KindService:
         """
         Create text with all kinds and their data
         """
-        kinds = config.sqlite_session.query(Kind).all()
+        kinds = Config.sqlite_session.query(Kind).all()
         text = ""
 
         for kind in kinds:
