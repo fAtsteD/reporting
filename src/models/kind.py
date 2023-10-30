@@ -11,6 +11,7 @@ class Kind(Base):
     """
     It kind of tasks, because each kind can has short, full name etc.
     """
+
     __tablename__ = "kinds"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -20,12 +21,9 @@ class Kind(Base):
         default=sa.func.now(),
         server_default=sa.FetchedValue(),
         onupdate=sa.func.now(),
-        server_onupdate=sa.FetchedValue()
+        server_onupdate=sa.FetchedValue(),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(),
-        server_default=sa.FetchedValue()
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
 
     tasks: Mapped[List["Task"]] = relationship(back_populates="kind")
 

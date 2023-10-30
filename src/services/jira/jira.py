@@ -27,24 +27,21 @@ class Jira:
         else:
             self._bases = [config.jira.issue_key_base]
 
-        self._jira = JIRA(server=config.jira.server, basic_auth=(
-            config.jira.login, config.jira.password))
+        self._jira = JIRA(server=config.jira.server, basic_auth=(config.jira.login, config.jira.password))
 
     def set_worklog(self, report: Report):
         """
         Set worklog time to the task
         """
-        bases = map(
-            lambda base: '(?:' + re.escape(base) + '[0-9]+)', self._bases)
-        regexp_compile = re.compile("^(" + '|'.join(bases) + "):.+$")
+        bases = map(lambda base: "(?:" + re.escape(base) + "[0-9]+)", self._bases)
+        regexp_compile = re.compile("^(" + "|".join(bases) + "):.+$")
 
         for task in report.tasks:
             task_to_jira = regexp_compile.match(task.summary)
 
             if task_to_jira is not None:
                 is_ok = self._set_worklog_to_jira(
-                    task_to_jira.group(1),
-                    convert_time_to_jira_time(task.logged_rounded())
+                    task_to_jira.group(1), convert_time_to_jira_time(task.logged_rounded())
                 )
 
                 if is_ok:

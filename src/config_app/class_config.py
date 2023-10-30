@@ -13,6 +13,7 @@ class Config:
 
     One config for app, so all vars static.
     """
+
     # Actions
     show_date: str | datetime.date | None = None
     parse_days: int | None = None
@@ -47,4 +48,4 @@ class Config:
 
     # SQLite
     sqlite_session: Session = None
-    sqlite_database_path: str = './report.db'
+    sqlite_database_path: str = "./report.db"

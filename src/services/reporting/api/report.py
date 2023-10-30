@@ -1,8 +1,3 @@
-"""
-Object for holding report
-"""
-
-
 class Report:
     """
     Hold report from request get report

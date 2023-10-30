@@ -1,8 +1,3 @@
-"""
-Categories from server
-"""
-
-
 class Categories:
     """
     Save categories from server
@@ -52,18 +47,17 @@ class Categories:
         if len(self._categories) == 0 or len(self._categories_binding) == 0:
             return {}
 
-        allowed_categories = set(map(
-            lambda category_binding: category_binding["categoryId"],
-            filter(
-                lambda category_binding: category_binding["corpStructItemId"] == corp_struct_id,
-                self._categories_binding
+        allowed_categories = set(
+            map(
+                lambda category_binding: category_binding["categoryId"],
+                filter(
+                    lambda category_binding: category_binding["corpStructItemId"] == corp_struct_id,
+                    self._categories_binding,
+                ),
             )
-        ))
+        )
 
-        user_categories = list(filter(
-            lambda category: category["id"] in allowed_categories,
-            self._categories
-        ))
+        user_categories = list(filter(lambda category: category["id"] in allowed_categories, self._categories))
 
         for category in user_categories:
             if category["name"] == name:

@@ -1,7 +1,3 @@
-"""
-Connection class to the reporting
-"""
-
 from datetime import datetime
 
 from requests.sessions import Session
@@ -52,13 +48,9 @@ class ReportingApi:
         Auth in the reporting
         """
         self.last_error = None
-        data = {
-            "login": config.reporting.login,
-            "password": config.reporting.password
-        }
+        data = {"login": config.reporting.login, "password": config.reporting.password}
 
-        response = self._request_session.post(
-            self.base_url + config.reporting.suburl_auth, json=data)
+        response = self._request_session.post(self.base_url + config.reporting.suburl_auth, json=data)
 
         if response.text == "":
             self.is_auth = True
@@ -78,9 +70,7 @@ class ReportingApi:
         """
         Log out from the reporting
         """
-        response = self._request_session.post(
-            self.base_url + config.reporting.suburl_logout
-        )
+        response = self._request_session.post(self.base_url + config.reporting.suburl_logout)
 
         if response.text == "":
             self.is_auth = False
@@ -100,9 +90,7 @@ class ReportingApi:
         """
         Init request for receiving required data
         """
-        response = self._request_session.get(
-            self.base_url + config.reporting.suburl_init
-        )
+        response = self._request_session.get(self.base_url + config.reporting.suburl_init)
 
         try:
             response_data = response.json()
@@ -123,9 +111,7 @@ class ReportingApi:
         """
         Load categories from server
         """
-        response_categories = self._request_session.get(
-            self.base_url + config.reporting.suburl_categories
-        )
+        response_categories = self._request_session.get(self.base_url + config.reporting.suburl_categories)
         response_categories_binding = self._request_session.get(
             self.base_url + config.reporting.suburl_categories_binding
         )
@@ -146,8 +132,7 @@ class ReportingApi:
             self.last_error = response_data_categories_binding["errorMessage"]
             return False
 
-        self.categories = Categories(
-            response_data_categories, response_data_categories_binding)
+        self.categories = Categories(response_data_categories, response_data_categories_binding)
 
         return True
 
@@ -155,9 +140,7 @@ class ReportingApi:
         """
         Load projects from server
         """
-        response = self._request_session.get(
-            self.base_url + config.reporting.suburl_projects
-        )
+        response = self._request_session.get(self.base_url + config.reporting.suburl_projects)
 
         try:
             response_data = response.json()
@@ -180,9 +163,7 @@ class ReportingApi:
 
         Also update user data if it is not empty.
         """
-        response = self._request_session.get(
-            self.base_url + config.reporting.suburl_positions
-        )
+        response = self._request_session.get(self.base_url + config.reporting.suburl_positions)
 
         try:
             response_data = response.json()
@@ -198,9 +179,7 @@ class ReportingApi:
         self.positions = Positions(response_data)
 
         if self.user_data is not None:
-            user_position = self.positions.get_by_user_id(
-                self.user_data.get_id()
-            )
+            user_position = self.positions.get_by_user_id(self.user_data.get_id())
             del user_position["id"]
             self.user_data.update_data(user_position)
 
@@ -217,13 +196,9 @@ class ReportingApi:
             self.last_error = "You need do init request before"
             return None
 
-        data = {
-            "date": date.strftime('%Y-%m-%d'),
-            "employeeId": self.user_data.get_id()
-        }
+        data = {"date": date.strftime("%Y-%m-%d"), "employeeId": self.user_data.get_id()}
 
-        response = self._request_session.get(
-            self.base_url + config.reporting.suburl_get_report, params=data)
+        response = self._request_session.get(self.base_url + config.reporting.suburl_get_report, params=data)
 
         try:
             response_data = response.json()
@@ -253,7 +228,7 @@ class ReportingApi:
             return None
 
         data = {
-            "date": date.strftime('%Y-%m-%d'),
+            "date": date.strftime("%Y-%m-%d"),
             "employeeId": self.user_data.get_id(),
             "haveProblems": have_problems,
             "noTasks": not has_tasks,
@@ -263,8 +238,7 @@ class ReportingApi:
         if report_id is not None:
             data["id"] = report_id
 
-        response = self._request_session.put(
-            self.base_url + config.reporting.suburl_get_report, json=data)
+        response = self._request_session.put(self.base_url + config.reporting.suburl_get_report, json=data)
 
         try:
             response_data = response.json()
@@ -329,12 +303,11 @@ class ReportingApi:
                 "projectId": project["id"],
                 "reportId": report.get_id(),
                 "salaryCoefficient": category["salaryCoefficient"],
-                "salaryCoefficientType": 0
+                "salaryCoefficientType": 0,
             }
         ]
 
-        response = self._request_session.post(
-            self.base_url + config.reporting.suburl_add_task, json=data)
+        response = self._request_session.post(self.base_url + config.reporting.suburl_add_task, json=data)
 
         try:
             response_data = response.json()
@@ -361,10 +334,7 @@ class ReportingApi:
         if kind.alias in config.reporting.kinds.keys():
             category_name = config.reporting.kinds[kind.alias]
 
-        return self.categories.get_by_name(
-            category_name,
-            self.user_data.get_corp_struct_id()
-        )
+        return self.categories.get_by_name(category_name, self.user_data.get_corp_struct_id())
 
     def _get_project_by_task(self, task: Task) -> dict:
         """
@@ -379,6 +349,4 @@ class ReportingApi:
         if project.alias in config.reporting.projects.keys():
             project_name = config.reporting.projects[project.alias]
 
-        return self.projects.get_by_name(
-            project_name
-        )
+        return self.projects.get_by_name(project_name)

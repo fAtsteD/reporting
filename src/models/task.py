@@ -12,10 +12,8 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    logged_seconds: Mapped[int] = mapped_column(
-        default=0, server_default=sa.FetchedValue())
-    summary: Mapped[str] = mapped_column(
-        default="", server_default=sa.FetchedValue())
+    logged_seconds: Mapped[int] = mapped_column(default=0, server_default=sa.FetchedValue())
+    summary: Mapped[str] = mapped_column(default="", server_default=sa.FetchedValue())
 
     kinds_id: Mapped[int] = mapped_column(sa.ForeignKey("kinds.id"))
     kind: Mapped["Kind"] = relationship(back_populates="tasks")
@@ -24,9 +22,12 @@ class Task(Base):
     project: Mapped["Project"] = relationship(back_populates="tasks")
 
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(), server_default=sa.FetchedValue(), onupdate=sa.func.now(), server_onupdate=sa.FetchedValue())
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(), server_default=sa.FetchedValue())
+        default=sa.func.now(),
+        server_default=sa.FetchedValue(),
+        onupdate=sa.func.now(),
+        server_onupdate=sa.FetchedValue(),
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
 
     reports_id: Mapped[int] = mapped_column(sa.ForeignKey("reports.id"))
     report: Mapped["Report"] = relationship(back_populates="tasks")
@@ -45,8 +46,7 @@ class Task(Base):
         frac = minutes % config.minute_round_to
 
         if frac >= int(config.minute_round_to / 2) + 1:
-            minutes = (minutes // config.minute_round_to + 1) * \
-                config.minute_round_to
+            minutes = (minutes // config.minute_round_to + 1) * config.minute_round_to
 
             if minutes == 100:
                 hours += 1

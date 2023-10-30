@@ -11,6 +11,7 @@ class Project(Base):
     """
     It's project of tasks, because each project can has short, name etc.
     """
+
     __tablename__ = "projects"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -20,12 +21,9 @@ class Project(Base):
         default=sa.func.now(),
         server_default=sa.FetchedValue(),
         onupdate=sa.func.now(),
-        server_onupdate=sa.FetchedValue()
+        server_onupdate=sa.FetchedValue(),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(),
-        server_default=sa.FetchedValue()
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
 
     tasks: Mapped[List["Task"]] = relationship(back_populates="project")
 

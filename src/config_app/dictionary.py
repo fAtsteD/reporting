@@ -7,6 +7,7 @@ class Dictionary:
     """
     Save all dictionary. Transform data
     """
+
     tasks = {}
     kinds = {}
     projects = {}

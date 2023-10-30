@@ -11,9 +11,7 @@ class ProjectService:
         """
         Create/update project and return it
         """
-        project = config.sqlite_session.query(Project).filter(
-            Project.alias == alias
-        ).first()
+        project = config.sqlite_session.query(Project).filter(Project.alias == alias).first()
 
         if project is None:
             project = Project(alias=alias, name=name)

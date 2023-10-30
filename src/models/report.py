@@ -19,12 +19,9 @@ class Report(Base):
         default=sa.func.now(),
         server_default=sa.FetchedValue(),
         onupdate=sa.func.now(),
-        server_onupdate=sa.FetchedValue()
+        server_onupdate=sa.FetchedValue(),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(),
-        server_default=sa.FetchedValue()
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
 
     tasks: Mapped[List["Task"]] = relationship(back_populates="report")
 
@@ -53,8 +50,7 @@ class Report(Base):
         """
         Report to the text present, it is multiline
         """
-        text = self.date.strftime(
-            "%d.%m.%Y") + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
+        text = self.date.strftime("%d.%m.%Y") + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
 
         total_hours = round(self.total_seconds() / 60 // 60)
         total_hours_str = f"0{total_hours}" if total_hours < 10 else f"{total_hours}"
@@ -63,9 +59,12 @@ class Report(Base):
         text += f"Summary time: {total_hours_str}:{total_minutes_str}\n"
 
         indent = config.text_indent
-        tasks = config.sqlite_session.query(Task).filter(
-            Task.report.has(Report.id == self.id)
-        ).order_by(Task.kinds_id).all()
+        tasks = (
+            config.sqlite_session.query(Task)
+            .filter(Task.report.has(Report.id == self.id))
+            .order_by(Task.kinds_id)
+            .all()
+        )
         text += "Tasks:\n"
         task_indent = indent + indent
         previous_kind = ""

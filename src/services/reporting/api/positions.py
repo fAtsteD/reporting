@@ -1,8 +1,3 @@
-"""
-Object for holding positions
-"""
-
-
 class Positions:
     """
     Hold positions and related function

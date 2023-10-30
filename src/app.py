@@ -1,7 +1,4 @@
 #!/usr/bin/python3
-"""
-Begining point of program
-"""
 
 from config_app import Config, load_config
 from models.report import Report
@@ -50,18 +47,10 @@ def main():
     if Config.show_date is not None:
         report = None
 
-        if Config.show_date == 'last':
-            report = Config.sqlite_session.query(
-                Report
-            ).order_by(
-                Report.date.desc()
-            ).first()
+        if Config.show_date == "last":
+            report = Config.sqlite_session.query(Report).order_by(Report.date.desc()).first()
         else:
-            report = Config.sqlite_session.query(
-                Report
-            ).filter(
-                Report.date == Config.show_date
-            ).first()
+            report = Config.sqlite_session.query(Report).filter(Report.date == Config.show_date).first()
 
         if report is None:
             print(f"Report does not exist")
@@ -72,18 +61,10 @@ def main():
         report = None
         print("Jira")
 
-        if Config.jira.report_date == 'last':
-            report = Config.sqlite_session.query(
-                Report
-            ).order_by(
-                Report.date.desc()
-            ).first()
+        if Config.jira.report_date == "last":
+            report = Config.sqlite_session.query(Report).order_by(Report.date.desc()).first()
         else:
-            report = Config.sqlite_session.query(
-                Report
-            ).filter(
-                Report.date == Config.jira.report_date
-            ).first()
+            report = Config.sqlite_session.query(Report).filter(Report.date == Config.jira.report_date).first()
 
         jira = Jira()
         jira.set_worklog(report)
@@ -92,18 +73,10 @@ def main():
         report = None
         print("Reporting")
 
-        if Config.reporting.report_date == 'last':
-            report = Config.sqlite_session.query(
-                Report
-            ).order_by(
-                Report.date.desc()
-            ).first()
+        if Config.reporting.report_date == "last":
+            report = Config.sqlite_session.query(Report).order_by(Report.date.desc()).first()
         else:
-            report = Config.sqlite_session.query(
-                Report
-            ).filter(
-                Report.date == Config.reporting.report_date
-            ).first()
+            report = Config.sqlite_session.query(Report).filter(Report.date == Config.reporting.report_date).first()
 
         reporting = Reporting()
         reporting.send_tasks(report)

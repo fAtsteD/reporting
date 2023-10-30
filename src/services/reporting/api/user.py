@@ -1,8 +1,3 @@
-"""
-User data from server
-"""
-
-
 class User:
     """
     User data in dict
@@ -33,13 +28,13 @@ class User:
         """
         User corpStructItemId
         """
-        return self._user['corpStructItemId']
+        return self._user["corpStructItemId"]
 
     def get_id(self) -> int:
         """
         User employeeId
         """
-        return self._user['employeeId']
+        return self._user["employeeId"]
 
     def update_data(self, data: dict) -> None:
         """

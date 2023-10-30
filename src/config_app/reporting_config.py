@@ -5,11 +5,12 @@ class ReportingConfig:
     """
     Config data related to the reporting
     """
+
     is_use = False
     report_date: str | datetime.date = "last"
 
-    kinds = {} # Kinds relation: key - from db, value - from reporting
-    projects = {} # Projects relation: key - from db, value - from reporting
+    kinds = {}  # Kinds relation: key - from db, value - from reporting
+    projects = {}  # Projects relation: key - from db, value - from reporting
 
     # Urls
     url = ""
@@ -42,8 +43,7 @@ class ReportingConfig:
             self.suburl_categories = data["suburl-categories"].strip("/") + "/"
 
         if "suburl-categories-binding" in data:
-            self.suburl_categories_binding = data["suburl-categories-binding"].strip(
-                "/") + "/"
+            self.suburl_categories_binding = data["suburl-categories-binding"].strip("/") + "/"
 
         if "suburl-projects" in data:
             self.suburl_projects = data["suburl-projects"].strip("/") + "/"

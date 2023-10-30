@@ -11,9 +11,7 @@ class KindService:
         """
         Create/update kind and return it
         """
-        kind = config.sqlite_session.query(Kind).filter(
-            Kind.alias == alias
-        ).first()
+        kind = config.sqlite_session.query(Kind).filter(Kind.alias == alias).first()
 
         if kind is None:
             kind = Kind(alias=alias, name=name)
