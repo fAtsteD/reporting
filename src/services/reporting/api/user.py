@@ -24,7 +24,7 @@ class User:
     def __init__(self, user: dict) -> None:
         self._user = user
 
-    def get_corp_struct_id(self) -> int:
+    def get_corp_struct_item_id(self) -> int:
         """
         User corpStructItemId
         """

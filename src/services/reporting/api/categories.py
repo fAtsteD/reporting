@@ -40,18 +40,18 @@ class Categories:
         self._categories = categories
         self._categories_binding = categories_binding
 
-    def get_by_name(self, name: str, corp_struct_id: int) -> dict:
+    def get_by_name(self, name: str, corp_struct_item_id: int) -> dict | None:
         """
         Retrieve id from categories
         """
         if len(self._categories) == 0 or len(self._categories_binding) == 0:
-            return {}
+            return None
 
         allowed_categories = set(
             map(
                 lambda category_binding: category_binding["categoryId"],
                 filter(
-                    lambda category_binding: category_binding["corpStructItemId"] == corp_struct_id,
+                    lambda category_binding: category_binding["corpStructItemId"] == corp_struct_item_id,
                     self._categories_binding,
                 ),
             )
@@ -63,4 +63,4 @@ class Categories:
             if category["name"] == name:
                 return category
 
-        return {}
+        return None

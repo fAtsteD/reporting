@@ -26,6 +26,9 @@ class Reporting:
         if not self._reporting_api.load_categories():
             exit(self._reporting_api.last_error)
 
+        if not self._reporting_api.load_corp_struct_items():
+            exit(self._reporting_api.last_error)
+
         if not self._reporting_api.load_projects():
             exit(self._reporting_api.last_error)
 

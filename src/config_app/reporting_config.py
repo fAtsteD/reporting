@@ -11,6 +11,7 @@ class ReportingConfig:
 
     kinds = {}  # Kinds relation: key - from db, value - from reporting
     projects = {}  # Projects relation: key - from db, value - from reporting
+    project_to_corp_struct_item = {}  # Projects relation: key - from db, value - from reporting corp struct item alias
 
     # Urls
     url = ""
@@ -45,6 +46,9 @@ class ReportingConfig:
 
         if "projects" in data:
             self.projects = data["projects"]
+
+        if "project-to-corp-struct-item" in data:
+            self.project_to_corp_struct_item = data["project-to-corp-struct-item"]
 
         if "suburl-add-task" in data:
             self.suburl_add_task = data["suburl-add-task"].strip("/") + "/"

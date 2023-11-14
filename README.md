@@ -54,6 +54,7 @@ Setting that can be setted:
     -   login - user login to the account
     -   password - password to the account
     -   projects - dictionary for transformation projects inside to the reporting, all inside project's keys can view in command line
+    -   project-to-corp-struct-item - dictionary for setting related projects inside to the reporting corp struct item alias, all inside project's keys can view in command line
     -   suburl-add-task - related suburl to the some of part
     -   suburl-categories - related suburl to the some of part
     -   suburl-categories-binding - related suburl to the some of part
@@ -103,6 +104,9 @@ Example:
         "password": "pass",
         "projects": {
             "bs": "Best Project",
+        },
+        "project-to-corp-struct-item": {
+            "bs": "Best Corp Struct Item Alias",
         },
         "suburl-add-task": "example/path",
         "suburl-categories": "example/path",

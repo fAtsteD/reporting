@@ -3,9 +3,12 @@ from datetime import datetime
 from requests.sessions import Session
 
 from config_app import Config
+from models.kind import Kind
+from models.project import Project
 from models.task import Task
 
 from .categories import Categories
+from .corp_struct_items import CorpStructItems
 from .positions import Positions
 from .projects import Projects
 from .report import Report
@@ -38,10 +41,11 @@ class ReportingApi:
         self.base_url = Config.reporting.url
         self.is_auth = False
 
-        self.user_data: User | None = None
-        self.projects: Projects | None = None
-        self.positions: Positions | None = None
         self.categories: Categories | None = None
+        self.corp_struct_items: CorpStructItems | None = None
+        self.positions: Positions | None = None
+        self.projects: Projects | None = None
+        self.user_data: User | None = None
 
     def login(self) -> bool:
         """
@@ -157,11 +161,30 @@ class ReportingApi:
 
         return True
 
+    def load_corp_struct_items(self) -> bool:
+        """
+        Load corp struct items by user from server
+        """
+        response = self._request_session.get(self.base_url + Config.reporting.suburl_corp_struct_items)
+
+        try:
+            response_data = response.json()
+        except Exception:
+            self.corp_struct_items = None
+            self.last_error = "Can't parse JSON response for corp struct items request"
+            return False
+
+        if "error" in response_data:
+            self.last_error = response_data["errorMessage"]
+            return False
+
+        self.corp_struct_items = CorpStructItems(response_data)
+
+        return True
+
     def load_positions(self) -> bool:
         """
-        Load privileges by user from server
-
-        Also update user data if it is not empty.
+        Load positions from server
         """
         response = self._request_session.get(self.base_url + Config.reporting.suburl_positions)
 
@@ -266,6 +289,10 @@ class ReportingApi:
             self.last_error = "Need init request before"
             return False
 
+        if self.corp_struct_items is None:
+            self.last_error = "Need load corp struct items request before"
+            return False
+
         if self.categories is None:
             self.last_error = "Need load categories request before"
             return False
@@ -274,7 +301,13 @@ class ReportingApi:
             self.last_error = "Need load projects request before"
             return False
 
-        category = self._get_category_by_task(task)
+        corp_struct_item = self._get_corp_struct_item_by_task(task)
+
+        if not corp_struct_item:
+            self.last_error = "Corp struct item for " + task.project + " does not find"
+            return False
+
+        category = self._get_category_by_task(task, corp_struct_item["id"])
 
         if not category:
             self.last_error = "Category for " + task.kind + " does not find"
@@ -290,7 +323,7 @@ class ReportingApi:
             {
                 "categoryId": category["id"],
                 "clientId": self.user_data.get_id(),
-                "corpStructItemId": self.user_data.get_corp_struct_id(),
+                "corpStructItemId": corp_struct_item["id"],
                 "description": task.summary,
                 "hours": transform_time(task.logged_rounded()),
                 "invoiceHours": 0,
@@ -321,29 +354,44 @@ class ReportingApi:
 
         return True
 
-    def _get_category_by_task(self, task: Task) -> dict:
+    def _get_category_by_task(self, task: Task, corp_struct_item_id: int) -> dict | None:
         """
         Return category dict from reporting for task
 
         It searches by name, but before searching it transform saved
         kind to the related report kinds
         """
-        kind = task.kind
+        kind: Kind = task.kind
         category_name = kind.name
 
         if kind.alias in Config.reporting.kinds.keys():
             category_name = Config.reporting.kinds[kind.alias]
 
-        return self.categories.get_by_name(category_name, self.user_data.get_corp_struct_id())
+        return self.categories.get_by_name(category_name, corp_struct_item_id)
 
-    def _get_project_by_task(self, task: Task) -> dict:
+    def _get_corp_struct_item_by_task(self, task: Task) -> dict | None:
+        """
+        Return corp struct item dict from reporting for task
+
+        It uses project for searching corp struct item
+        by relational from config of app
+        """
+        project: Project = task.project
+
+        if project.alias in Config.reporting.project_to_corp_struct_item.keys():
+            corp_struct_item_alias = Config.reporting.project_to_corp_struct_item[project.alias]
+            return self.corp_struct_items.get_by_alias(corp_struct_item_alias)
+
+        return self.corp_struct_items.get_by_id(self.user_data.get_corp_struct_item_id())
+
+    def _get_project_by_task(self, task: Task) -> dict | None:
         """
         Return project dict from reporting for task
 
         It searches by name, but before searching it transform saved
         project to the related report projects
         """
-        project = task.project
+        project: Project = task.project
         project_name = project.name
 
         if project.alias in Config.reporting.projects.keys():
