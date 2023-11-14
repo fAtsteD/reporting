@@ -50,7 +50,7 @@ class ReportingApi:
         self.last_error = None
         data = {"login": Config.reporting.login, "password": Config.reporting.password}
 
-        response = self._request_session.post(self.base_url + Config.reporting.suburl_auth, json=data)
+        response = self._request_session.post(self.base_url + Config.reporting.suburl_login, json=data)
 
         if response.text == "":
             self.is_auth = True

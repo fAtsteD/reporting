@@ -11,8 +11,8 @@ Each line has time, name, type and project they are divided by space-dash-space:
 Example:
 
 ```
-09 00 - 0123456: Do something - project of my life
-10 45 - 0123456: Do something \- harder - project of my life
+09 00 - 0123456: Do something - develop - project of my life
+10 45 - 0123456: Do something \- harder - train - project of my life
 12 33 - lunch
 ...
 ```
@@ -49,20 +49,21 @@ Setting that can be setted:
     -   kind - only use for kind name, it has to change to alias insided
     -   project - only use for project name, it has to change to alias insided
 -   reporting - settings for reporting (have different class for them):
+    -   api-url - main url to the reporting api
+    -   kinds - dictionary for transformation kinds inside to the reporting, all inside kind's keys can view in command line
     -   login - user login to the account
     -   password - password to the account
-    -   api-url - main url to the reporting api
-    -   suburl-auth - related suburl to the some of part
-    -   suburl-logout - related suburl to the some of part
+    -   projects - dictionary for transformation projects inside to the reporting, all inside project's keys can view in command line
+    -   suburl-add-task - related suburl to the some of part
     -   suburl-categories - related suburl to the some of part
     -   suburl-categories-binding - related suburl to the some of part
-    -   suburl-projects - related suburl to the some of part
-    -   suburl-positions - related suburl to the some of part
-    -   suburl-init - related suburl to the some of part
+    -   suburl-corp-struct-items - related suburl to the some of part
     -   suburl-get-report - related suburl to the some of part
-    -   suburl-add-task - related suburl to the some of part
-    -   kinds - dictionary for transformation kinds inside to the reporting, all inside kind's keys can view in command line
-    -   projects - dictionary for transformation projects inside to the reporting, all inside project's keys can view in command line
+    -   suburl-init - related suburl to the some of part
+    -   suburl-login - related suburl to the some of part
+    -   suburl-logout - related suburl to the some of part
+    -   suburl-positions - related suburl to the some of part
+    -   suburl-projects - related suburl to the some of part
 -   default-type - default type, setted if task does not have, set alias from inside name
 -   default-project - default project, setted if task does not have, set alias from inside name
 
@@ -94,23 +95,25 @@ Example:
         "project": {}
     },
     "reporting": {
-        "login": "test",
-        "password": "pass",
         "api-url": "https://reporting.example.com/api",
-        "suburl-auth": "example/path",
-        "suburl-logout" : "common/logout",
-        "suburl-categories": "example/path",
-        "suburl-projects": "example/path",
-        "suburl-positions": "example/path",
-        "suburl-init": "example/path",
-        "suburl-get-report": "example/path",
-        "suburl-add-task": "example/path",
         "kinds": {
             "d": "Develop",
         },
+        "login": "test",
+        "password": "pass",
         "projects": {
             "bs": "Best Project",
         },
+        "suburl-add-task": "example/path",
+        "suburl-categories": "example/path",
+        "suburl-categories-binding": "example/path",
+        "suburl-corp-struct-items": "example/path",
+        "suburl-get-report": "example/path",
+        "suburl-init": "example/path",
+        "suburl-login": "example/path",
+        "suburl-logout" : "common/logout",
+        "suburl-positions": "example/path",
+        "suburl-projects": "example/path",
     },
     "default-type": "Development",
     "default-project": "Project"
