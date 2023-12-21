@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from datetime import datetime
+
 from config_app import Config, load_config
 from models.report import Report
 from services.file_parse import FileParse
@@ -14,6 +16,7 @@ def main():
     Main function for starting program
     """
     load_config()
+    current_date = datetime.today()
 
     if Config.kind_data:
         kind_service = KindService()
@@ -53,7 +56,7 @@ def main():
             report = Config.sqlite_session.query(Report).filter(Report.date == Config.show_date).first()
 
         if report is None:
-            print(f"Report does not exist")
+            print("Report does not exist")
         else:
             print(report)
 
@@ -71,6 +74,7 @@ def main():
 
     if Config.reporting.is_use:
         report = None
+        reporting_send_task = "y"
         print("Reporting")
 
         if Config.reporting.report_date == "last":
@@ -78,9 +82,16 @@ def main():
         else:
             report = Config.sqlite_session.query(Report).filter(Report.date == Config.reporting.report_date).first()
 
-        reporting = Reporting()
-        reporting.send_tasks(report)
-        reporting.logout()
+        if (current_date - report.date).days > Config.reporting.safe_send_report_days:
+            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\Current date: {current_date.strftime('%d.%m.%Y')}")
+            reporting_send_task = input(
+                f"The date difference more than {Config.reporting.safe_send_report_days} day(s). Do you want send tasks? (y/n) "
+            )
+
+        if reporting_send_task == "y":
+            reporting = Reporting()
+            reporting.send_tasks(report)
+            reporting.logout()
 
 
 if __name__ == "__main__":

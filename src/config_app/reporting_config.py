@@ -8,6 +8,7 @@ class ReportingConfig:
 
     is_use = False
     report_date: str | datetime.date = "last"
+    safe_send_report_days: int = 0
 
     kinds = {}  # Kinds relation: key - from db, value - from reporting
     projects = {}  # Projects relation: key - from db, value - from reporting
@@ -49,6 +50,9 @@ class ReportingConfig:
 
         if "project-to-corp-struct-item" in data:
             self.project_to_corp_struct_item = data["project-to-corp-struct-item"]
+
+        if "safe-send-report-days" in data and data["safe-send-report-days"] > 0:
+            self.safe_send_report_days = data["safe-send-report-days"]
 
         if "suburl-add-task" in data:
             self.suburl_add_task = data["suburl-add-task"].strip("/") + "/"
