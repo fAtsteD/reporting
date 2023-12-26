@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from datetime import datetime
+from datetime import date
 
 from config_app import Config, load_config
 from models.report import Report
@@ -16,7 +16,7 @@ def main():
     Main function for starting program
     """
     load_config()
-    current_date = datetime.today()
+    current_date = date.today()
 
     if Config.kind_data:
         kind_service = KindService()
