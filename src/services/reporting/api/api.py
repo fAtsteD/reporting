@@ -304,19 +304,19 @@ class ReportingApi:
         corp_struct_item = self._get_corp_struct_item_by_task(task)
 
         if not corp_struct_item:
-            self.last_error = "Corp struct item for " + task.project + " does not find"
+            self.last_error = "Corp struct item for " + str(task.project) + " does not find"
             return False
 
         category = self._get_category_by_task(task, corp_struct_item["id"])
 
         if not category:
-            self.last_error = "Category for " + task.kind + " does not find"
+            self.last_error = "Category for " + str(task.kind) + " does not find"
             return False
 
         project = self._get_project_by_task(task)
 
         if project is None or not project["active"]:
-            self.last_error = "Project for " + task.project + " does not find"
+            self.last_error = "Project for " + str(task.project) + " does not find"
             return False
 
         data = [
