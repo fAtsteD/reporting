@@ -1,5 +1,4 @@
 import datetime
-from typing import List
 
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -21,9 +20,10 @@ class Report(Base):
         onupdate=sa.func.now(),
         server_onupdate=sa.FetchedValue(),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        default=sa.func.now(), server_default=sa.FetchedValue())
 
-    tasks: Mapped[List["Task"]] = relationship(back_populates="report")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="report")
 
     def total_seconds(self) -> int:
         """
@@ -50,7 +50,9 @@ class Report(Base):
         """
         Report to the text present, it is multiline
         """
-        text = self.date.strftime("%d.%m.%Y") + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
+        text = self.date.strftime(
+            "%d.%m.%Y"
+        ) + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
 
         total_hours = round(self.total_seconds() / 60 // 60)
         total_hours_str = f"0{total_hours}" if total_hours < 10 else f"{total_hours}"

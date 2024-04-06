@@ -1,5 +1,4 @@
 import datetime
-from typing import List
 
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -16,16 +15,19 @@ class Project(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     alias: Mapped[str] = mapped_column(unique=True)
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str]
     updated_at: Mapped[datetime.datetime] = mapped_column(
         default=sa.func.now(),
         server_default=sa.FetchedValue(),
         onupdate=sa.func.now(),
         server_onupdate=sa.FetchedValue(),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        default=sa.func.now(),
+        server_default=sa.FetchedValue()
+    )
 
-    tasks: Mapped[List["Task"]] = relationship(back_populates="project")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="project")
 
     def __str__(self):
         """
