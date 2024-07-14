@@ -24,7 +24,7 @@ class Kind(Base):
     )
     created_at: Mapped[datetime.datetime] = mapped_column(
         default=sa.func.now(),
-        server_default=sa.FetchedValue()
+        server_default=sa.FetchedValue(),
     )
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="kind")

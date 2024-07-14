@@ -1,6 +1,7 @@
 """
 Read config file and take config data
 """
+
 import argparse
 import json
 import re
@@ -62,7 +63,7 @@ def load_config():
         Config.reporting.set_data(data["reporting"])
 
     _config_arguments()
-    _sqlaclchemy_init()
+    _sqlalchemy_init()
 
 
 def _config_arguments():
@@ -120,7 +121,11 @@ def _config_arguments():
         "unique, other data will updates",
     )
     parser.add_argument(
-        "--show-kinds", required=False, default=False, action="store_true", help="print all kinds and their data"
+        "--show-kinds",
+        required=False,
+        default=False,
+        action="store_true",
+        help="print all kinds and their data",
     )
 
     parser.add_argument(
@@ -133,7 +138,11 @@ def _config_arguments():
         "is unique, other data will updates",
     )
     parser.add_argument(
-        "--show-projects", required=False, default=False, action="store_true", help="print all projects and their data"
+        "--show-projects",
+        required=False,
+        default=False,
+        action="store_true",
+        help="print all projects and their data",
     )
 
     args = parser.parse_args()
@@ -176,7 +185,7 @@ def _config_arguments():
     Config.show_projects = args.show_projects
 
 
-def _sqlaclchemy_init():
+def _sqlalchemy_init():
     """
     Initialize SQLAlchemy library and migrate
     """
