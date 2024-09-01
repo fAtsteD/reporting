@@ -1,0 +1,26 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[project]
+dependencies = [
+    'jira == 3.*',
+    'python-dateutil == 2.*',
+    'requests == 2.*',
+    'SQLAlchemy == 2.*',
+]
+name = "reporting"
+requires-python = ">=3.10"
+version = "1.4.0"
+
+[project.scripts]
+reporting = "app:main"
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+minversion = "8.0"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.setuptools]
+include-package-data = true

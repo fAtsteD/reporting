@@ -1,13 +1,14 @@
+from dataclasses import dataclass
 from datetime import datetime
 
 
+@dataclass()
 class TaskLine:
     """
     Simple dto for structure parsed line of task
     """
 
-    def __init__(self):
-        self.time_begin: datetime | None = None
-        self.summary = ""
-        self.kind = ""
-        self.project = ""
+    time_begin: datetime | None = None
+    summary: str = ""
+    kind: str = ""
+    project: str = ""

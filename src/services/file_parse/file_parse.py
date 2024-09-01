@@ -16,25 +16,23 @@ from .task_line import TaskLine
 def parse_task(task_str: str) -> TaskLine:
     """
     Parse line from file to task object
-    @param task_str: str
-    @return: TaskLine
     """
     task = TaskLine()
     split_str = task_str.split(" - ")
 
-    if len(split_str) >= 1:
+    if len(split_str) >= 1 and split_str[0]:
         # Parse time, date will be current, it is not right
         task.time_begin = dateutil.parser.parse(split_str[0].strip().replace(" ", ":"))
 
-    if len(split_str) >= 2:
+    if len(split_str) >= 2 and split_str[1]:
         task.summary = Config.dictionary.translate_task(split_str[1].strip().replace("\\-", "-")).replace("\\\\", "\\")
 
-    if len(split_str) >= 3:
+    if len(split_str) >= 3 and split_str[2]:
         task.kind = Config.dictionary.translate_kind(split_str[2].strip().replace("\\-", "-").replace("\\\\", "\\"))
     else:
         task.kind = Config.default_kind
 
-    if len(split_str) >= 4:
+    if len(split_str) >= 4 and split_str[3]:
         task.project = Config.dictionary.translate_project(
             split_str[3].strip().replace("\\-", "-").replace("\\\\", "\\")
         )

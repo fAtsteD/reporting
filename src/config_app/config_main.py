@@ -16,7 +16,7 @@ from models.base import Base
 from .class_config import Config
 
 
-def load_config():
+def load_config(cli_args: list[str] | None = None):
     """
     Parse config file and set settings
     """
@@ -62,11 +62,11 @@ def load_config():
     if "reporting" in data:
         Config.reporting.set_data(data["reporting"])
 
-    _config_arguments()
+    _config_arguments(cli_args)
     _sqlalchemy_init()
 
 
-def _config_arguments():
+def _config_arguments(cli_args: list[str] | None):
     """
     Parse params from arguments to program
     """
@@ -145,7 +145,7 @@ def _config_arguments():
         help="print all projects and their data",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
 
     regex_date = "^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})$"
 

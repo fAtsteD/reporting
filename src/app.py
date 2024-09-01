@@ -11,11 +11,11 @@ from services.project import ProjectService
 from services.reporting import Reporting
 
 
-def main():
+def main(cli_args: list[str] | None = None):
     """
     Main function for starting program
     """
-    load_config()
+    load_config(cli_args)
     current_date = date.today()
 
     if Config.kind_data:
