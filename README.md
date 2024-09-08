@@ -1,5 +1,22 @@
 # Create and send report
 
+## Development
+
+Install virtual environment (venv) and install dev packages locally:
+```bash
+pip install -e '.[dev]'
+```
+
+Run tests:
+```bash
+pytest
+```
+
+Run with coverage:
+```bash
+pytest --cov=src
+```
+
 ## File with report
 
 Each line has time, name, type and project they are divided by space-dash-space:

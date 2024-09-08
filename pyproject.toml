@@ -13,6 +13,9 @@ name = "reporting"
 requires-python = ">=3.10"
 version = "1.4.0"
 
+[project.optional-dependencies]
+dev = ["black", "mypy", "pytest", "pytest-cov"]
+
 [project.scripts]
 reporting = "app:main"
 
