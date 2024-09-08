@@ -88,7 +88,7 @@ class FileParse:
             day_index = 0
             previous_line = ""
             previous_task_line: TaskLine | None = None
-            previous_task: Task = None
+            previous_task: Task | None = None
 
             for line in input_file_hours:
                 if re.search("^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})\n$", line):

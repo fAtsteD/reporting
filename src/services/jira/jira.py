@@ -1,6 +1,7 @@
 import re
 
-from jira import JIRA, JIRAError
+import jira.client
+import jira.exceptions
 
 from config_app import Config
 from models.report import Report
@@ -27,7 +28,7 @@ class Jira:
         else:
             self._bases = [Config.jira.issue_key_base]
 
-        self._jira = JIRA(server=Config.jira.server, basic_auth=(Config.jira.login, Config.jira.password))
+        self._jira = jira.client.JIRA(server=Config.jira.server, basic_auth=(Config.jira.login, Config.jira.password))
 
     def set_worklog(self, report: Report):
         """
@@ -59,7 +60,7 @@ class Jira:
             # First request for checking that issue exist
             self._jira.issue(issue_key)
             self._jira.add_worklog(issue_key, time)
-        except JIRAError:
+        except jira.exceptions.JIRAError:
             return False
 
         return True
