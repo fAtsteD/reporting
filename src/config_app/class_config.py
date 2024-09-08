@@ -34,7 +34,7 @@ class Config:
     # Tasks
     default_kind = "Development"
     default_project = "Default"
-    skip_tasks = []
+    skip_tasks: list[str] = []
     minute_round_to = 25
 
     # Jira
@@ -47,5 +47,5 @@ class Config:
     work_day_hours = datetime.timedelta(hours=8, minutes=0)
 
     # SQLite
-    sqlite_session: Session = None
+    sqlite_session: Session | None = None
     sqlite_database_path: str = "./report.db"

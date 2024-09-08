@@ -1,4 +1,4 @@
-import dateutil
+import dateutil.parser
 import pytest
 
 from config_app.class_config import Config
