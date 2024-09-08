@@ -46,7 +46,7 @@ report --help
 
 ## Config
 
-Near the project (near file app.py) has to be file `config.json` with settings.
+Create config file in the home folder `~/.reporting/config.json`
 
 Setting that can be setted:
 
@@ -63,8 +63,8 @@ Setting that can be setted:
 -   text-indent - indent in the beginning of line for task, type etc
 -   dictionary - dictionary with shorter version of origin or reworded (can be used in omit task):
     -   task - only use for task name
-    -   kind - only use for kind name, it has to change to alias insided
-    -   project - only use for project name, it has to change to alias insided
+    -   kind - only use for kind name, it has to change to alias inside
+    -   project - only use for project name, it has to change to alias inside
 -   reporting - settings for reporting (have different class for them):
     -   api-url - main url to the reporting api
     -   kinds - dictionary for transformation kinds inside to the reporting, all inside kind's keys can view in command line
@@ -147,8 +147,8 @@ Example:
 
 Program find tasks, their type and project. Task without project or type get in default name.
 
-Some tasks like lunch can be ommitted. For that purpose they have to be in the config file in ommit array.
-Task that has to be ommitted can be anything and have any symbols like another.
+Some tasks like lunch can be omitted. For that purpose they have to be in the config file in omit array.
+Task that has to be omitted can be anything and have any symbols like another.
 
 ## JIRA
 

@@ -14,6 +14,9 @@ class Config:
     One config for app, so all vars static.
     """
 
+    # Directories
+    program_dir = "~/.reporting"
+
     # Actions
     show_date: str | datetime.date | None = None
     parse_days: int | None = None

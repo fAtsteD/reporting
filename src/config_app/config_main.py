@@ -4,8 +4,9 @@ Read config file and take config data
 
 import argparse
 import json
+import os
 import re
-from os import makedirs, path
+from pathlib import Path
 
 import dateutil.parser
 from sqlalchemy import create_engine
@@ -20,21 +21,22 @@ def load_config(cli_args: list[str] | None = None):
     """
     Parse config file and set settings
     """
-    if path.isfile(path.dirname(__file__) + "/../../config.json"):
-        config_file = path.dirname(__file__) + "/../../config.json"
-    else:
-        exit("Config file is not exist.")
+    config_file = Path(Config.program_dir, "config.json").expanduser()
+    config_file.parent.mkdir(parents=True, exist_ok=True)
 
-    data = json.load(open(config_file, "r", encoding="utf-8"))
+    if not config_file.is_file():
+        exit(f"Config file is not exist. Create configuration in {config_file}")
 
-    if "hour-report-path" in data and path.isfile(data["hour-report-path"]):
-        Config.input_file_hours = path.normpath(data["hour-report-path"])
+    data = json.load(config_file.open("r", encoding="utf-8"))
+
+    if "hour-report-path" in data and os.path.isfile(data["hour-report-path"]):
+        Config.input_file_hours = os.path.normpath(data["hour-report-path"])
 
     if "sqlite-database-path" in data:
-        Config.sqlite_database_path = path.normpath(data["sqlite-database-path"])
+        Config.sqlite_database_path = os.path.normpath(data["sqlite-database-path"])
 
-        if not path.exists(path.dirname(Config.sqlite_database_path)):
-            makedirs(path.dirname(Config.sqlite_database_path))
+        if not os.path.exists(os.path.dirname(Config.sqlite_database_path)):
+            os.makedirs(os.path.dirname(Config.sqlite_database_path))
 
     if "dictionary" in data:
         Config.dictionary.set_data(data["dictionary"])
