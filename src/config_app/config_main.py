@@ -10,7 +10,7 @@ from pathlib import Path
 
 import dateutil.parser
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 
 from models.base import Base
 
@@ -188,8 +188,7 @@ def _sqlalchemy_init():
     """
     Initialize SQLAlchemy library and migrate
     """
-    sqlalchemy_engine = create_engine("sqlite:///" + Config.sqlite_database_path, echo=False, future=True)
-    Session = sessionmaker(bind=sqlalchemy_engine)
-    Config.sqlite_session = Session()
+    sqlalchemy_engine = create_engine("sqlite:///" + Config.sqlite_database_path, echo=False)
+    Config.sqlite_session = Session(bind=sqlalchemy_engine)
 
     Base.metadata.create_all(sqlalchemy_engine)

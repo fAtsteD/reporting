@@ -1,11 +1,12 @@
+import contextlib
 import json
 from collections.abc import Generator
 from pathlib import Path
 from typing import Protocol
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import Session
 
 from config_app import config_main
 from config_app.class_config import Config
@@ -22,15 +23,35 @@ def database_path() -> str:
 
 
 @pytest.fixture(scope="session")
-def database_session(database_path: str) -> Generator[Session]:
-    engine = create_engine("sqlite:///" + database_path, echo=False, future=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
+def database_engine(database_path: str) -> Generator[Engine]:
+    engine = create_engine(
+        "sqlite:///" + database_path,
+        echo=False,
+    )
     Base.metadata.create_all(engine)
+    yield engine
+    Base.metadata.drop_all(engine)
+
+
+@pytest.fixture
+def database_session(
+    database_engine: Engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[Session]:
+    session = Session(bind=database_engine)
     Config.sqlite_session = session
+    monkeypatch.setattr(config_main, "_sqlalchemy_init", lambda: None)
+
     yield session
+
     session.rollback()
     session.close()
+
+    with contextlib.closing(database_engine.connect()) as connection:
+        transaction = connection.begin()
+        for table in reversed(Base.metadata.sorted_tables):
+            connection.execute(table.delete())
+        transaction.commit()
 
 
 @pytest.fixture(scope="session")
@@ -43,8 +64,6 @@ def reporting_base_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
 @pytest.fixture
 def reporting_config(
     database_path: str,
-    database_session: Session,
-    monkeypatch: pytest.MonkeyPatch,
     reporting_base_dir: Path,
 ) -> ReportingConfigFixture:
     config_path = reporting_base_dir / "config.json"
@@ -59,7 +78,6 @@ def reporting_config(
             "project": {},
         },
     }
-    monkeypatch.setattr(config_main, "_sqlalchemy_init", lambda: None)
 
     def config_save(config: dict = {}) -> None:
         config_union = dict(config_default, **config)
