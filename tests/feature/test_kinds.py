@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from app import main
+import app
 from models.kind import Kind
 from tests.conftest import ReportingConfigFixture
 
@@ -13,7 +13,7 @@ def test_show_kinds_empty(
     reporting_config()
     output_expected = "Kinds:\n"
 
-    main(["--show-kinds"])
+    app.main(["--show-kinds"])
     output = capsys.readouterr()
 
     assert output.out == (output_expected + "\n")
@@ -36,7 +36,7 @@ def test_show_kinds(
         output_expected += f"{kind}\n"
     database_session.commit()
 
-    main(["--show-kinds"])
+    app.main(["--show-kinds"])
     output = capsys.readouterr()
 
     assert output.out == (output_expected + "\n")

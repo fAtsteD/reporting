@@ -34,3 +34,7 @@ testpaths = ["tests"]
 
 [tool.setuptools]
 include-package-data = true
+
+[[tool.mypy.overrides]]
+module = "app.*"
+ignore_missing_imports = true
