@@ -35,9 +35,6 @@ def load_config(cli_args: list[str] | None = None):
     if "sqlite-database-path" in data:
         Config.sqlite_database_path = os.path.normpath(data["sqlite-database-path"])
 
-        if not os.path.exists(os.path.dirname(Config.sqlite_database_path)):
-            os.makedirs(os.path.dirname(Config.sqlite_database_path))
-
     if "dictionary" in data:
         Config.dictionary.set_data(data["dictionary"])
 
