@@ -24,7 +24,7 @@ dev = [
 ]
 
 [project.scripts]
-reporting = "cli:main"
+reporting = "reporting.cli:main"
 
 [tool.pytest.ini_options]
 addopts = "-ra"
