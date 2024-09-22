@@ -1,27 +1,11 @@
-"""
-For config param dictionary object
-"""
+from dataclasses import dataclass, field
 
 
+@dataclass
 class Dictionary:
-    """
-    Save all dictionary. Transform data
-    """
-
-    tasks = {}
-    kinds = {}
-    projects = {}
-
-    def set_data(self, data: dict):
-        """
-        Set data to the object
-        """
-        if "task" in data:
-            self.tasks = data["task"]
-        if "type" in data:
-            self.kinds = data["type"]
-        if "project" in data:
-            self.projects = data["project"]
+    tasks: dict = field(default_factory=lambda: {})
+    kinds: dict = field(default_factory=lambda: {})
+    projects: dict = field(default_factory=lambda: {})
 
     def translate_task(self, text: str) -> str:
         """

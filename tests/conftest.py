@@ -8,9 +8,8 @@ import pytest
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 
-from config_app import config_main
 from config_app.class_config import Config
-from models.base import Base
+from models import Base
 
 
 class ReportingConfigFixture(Protocol):
@@ -39,8 +38,7 @@ def database_session(
     monkeypatch: pytest.MonkeyPatch,
 ) -> Generator[Session]:
     session = Session(bind=database_engine)
-    Config.sqlite_session = session
-    monkeypatch.setattr(config_main, "_sqlalchemy_init", lambda: None)
+    monkeypatch.setattr(Config, "sqlite_session", session)
 
     yield session
 
@@ -57,7 +55,7 @@ def database_session(
 @pytest.fixture(scope="session")
 def reporting_base_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     dir = tmp_path_factory.mktemp("reporting")
-    Config.program_dir = str(dir.absolute())
+    Config.program_dir = dir.absolute()
     return dir
 
 

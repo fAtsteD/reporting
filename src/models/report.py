@@ -3,10 +3,9 @@ import datetime
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from config_app import Config
+import config_app
+from models import Base
 from models.task import Task
-
-from .base import Base
 
 
 class Report(Base):
@@ -20,8 +19,7 @@ class Report(Base):
         onupdate=sa.func.now(),
         server_onupdate=sa.FetchedValue(),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(), server_default=sa.FetchedValue())
+    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="report")
 
@@ -40,19 +38,20 @@ class Report(Base):
         """
         Remove tasks in the report
         """
+        config = config_app.config
+
         for task in self.tasks:
             self.updated_at = sa.func.now()
-            Config.sqlite_session.delete(task)
+            config.sqlite_session.delete(task)
 
-        Config.sqlite_session.commit()
+        config.sqlite_session.commit()
 
     def __str__(self):
         """
         Report to the text present, it is multiline
         """
-        text = self.date.strftime(
-            "%d.%m.%Y"
-        ) + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
+        config = config_app.config
+        text = self.date.strftime("%d.%m.%Y") + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
 
         total_hours = round(self.total_seconds() / 60 // 60)
         total_hours_str = f"0{total_hours}" if total_hours < 10 else f"{total_hours}"
@@ -60,9 +59,9 @@ class Report(Base):
         total_minutes_str = f"0{total_minutes}" if total_minutes < 10 else f"{total_minutes}"
         text += f"Summary time: {total_hours_str}:{total_minutes_str}\n"
 
-        indent = Config.text_indent
+        indent = "  "
         tasks = (
-            Config.sqlite_session.query(Task)
+            config.sqlite_session.query(Task)
             .filter(Task.report.has(Report.id == self.id))
             .order_by(Task.kinds_id)
             .all()

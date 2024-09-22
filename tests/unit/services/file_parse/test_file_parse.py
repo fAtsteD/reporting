@@ -2,8 +2,8 @@ import dateutil.parser
 import pytest
 
 from config_app.class_config import Config
-from services.file_parse.file_parse import parse_task
-from services.file_parse.task_line import TaskLine
+from services.file_parse import TaskLine, parse_task
+from tests.conftest import ReportingConfigFixture
 
 testdata_parse_file = [
     (
@@ -74,6 +74,7 @@ def expected_id(expected_task_line: TaskLine):
 
 
 @pytest.mark.parametrize("line, expected", testdata_parse_file, ids=expected_id)
-def test_parse_line_exceptions(line: str, expected: TaskLine) -> None:
+def test_parse_line_exceptions(reporting_config: ReportingConfigFixture, line: str, expected: TaskLine) -> None:
+    reporting_config()
     task_line = parse_task(line)
     assert task_line == expected

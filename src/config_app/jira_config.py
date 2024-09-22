@@ -1,33 +1,21 @@
 import datetime
+from dataclasses import dataclass, field
 
 
+@dataclass
 class JiraConfig:
-    """
-    Config data related to the jira
-    """
-
-    is_use = False
-    report_date: str | datetime.date = "last"
+    report_date: str | datetime.date = field(default="last", init=False)
 
     # Urls
-    server = ""
+    server: str = ""
 
     # Auth
-    login = ""
-    password = ""
+    login: str = ""
+    password: str = ""
 
     # Tasks
-    issue_key_base: list[str] = []
+    issue_key_bases: list[str] = field(default_factory=lambda: [])
 
-    def set_data(self, data: dict):
-        """
-        Set data to the class from data dict (file config usually)
-        """
-        if {"server", "login", "password"}.issubset(data):
-            self.server = data["server"].strip("/") + "/"
-            self.login = data["login"]
-            self.password = data["password"]
-            self.is_use = True
-
-        if "issue-key-base" in data:
-            self.issue_key_base = data["issue-key-base"]
+    @property
+    def is_use(self) -> bool:
+        return bool(self.login and self.password and self.server)

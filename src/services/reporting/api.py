@@ -1,18 +1,17 @@
-from datetime import datetime
+import datetime
 
 from requests.sessions import Session
 
-from config_app import Config
+import config_app
 from models.kind import Kind
 from models.project import Project
 from models.task import Task
-
-from .categories import Categories
-from .corp_struct_items import CorpStructItems
-from .positions import Positions
-from .projects import Projects
-from .report import Report
-from .user import User
+from services.reporting.models.categories import Categories
+from services.reporting.models.corp_struct_items import CorpStructItems
+from services.reporting.models.positions import Positions
+from services.reporting.models.projects import Projects
+from services.reporting.models.report import Report
+from services.reporting.models.user import User
 
 
 def transform_time(seconds: int) -> int:
@@ -28,17 +27,19 @@ class ReportingApi:
     Class save connection params to reporting
     """
 
-    def __init__(self, request_session: Session) -> None:
+    def __init__(self, request_session: Session = Session()) -> None:
         """
         Connect to the server
         """
-        if not Config.reporting.is_use:
+
+        if not config.reporting.is_use:
             exit("Used reporting module without required settings")
 
+        config = config_app.config
         self._request_session = request_session
 
-        self.last_error = None
-        self.base_url = Config.reporting.url
+        self.last_error: str | None = None
+        self.base_url = config.reporting.url[:-1] if config.reporting.url.endswith("/") else config.reporting.url
         self.is_auth = False
 
         self.categories: Categories | None = None
@@ -48,13 +49,11 @@ class ReportingApi:
         self.user_data: User | None = None
 
     def login(self) -> bool:
-        """
-        Auth in the reporting
-        """
+        config = config_app.config
         self.last_error = None
-        data = {"login": Config.reporting.login, "password": Config.reporting.password}
+        data = {"login": config.reporting.login, "password": config.reporting.password}
 
-        response = self._request_session.post(self.base_url + Config.reporting.suburl_login, json=data)
+        response = self._request_session.post(f"{self.base_url}/common/login", json=data)
 
         if response.text == "":
             self.is_auth = True
@@ -70,11 +69,10 @@ class ReportingApi:
             self.last_error = response_data["errorMessage"]
             return False
 
+        return True
+
     def logout(self) -> bool:
-        """
-        Log out from the reporting
-        """
-        response = self._request_session.post(self.base_url + Config.reporting.suburl_logout)
+        response = self._request_session.post(f"{self.base_url}/common/logout")
 
         if response.text == "":
             self.is_auth = False
@@ -90,11 +88,10 @@ class ReportingApi:
             self.last_error = response_data["errorMessage"]
             return False
 
+        return True
+
     def init(self) -> bool:
-        """
-        Init request for receiving required data
-        """
-        response = self._request_session.get(self.base_url + Config.reporting.suburl_init)
+        response = self._request_session.get(f"{self.base_url}/common/init")
 
         try:
             response_data = response.json()
@@ -112,13 +109,8 @@ class ReportingApi:
         return True
 
     def load_categories(self) -> bool:
-        """
-        Load categories from server
-        """
-        response_categories = self._request_session.get(self.base_url + Config.reporting.suburl_categories)
-        response_categories_binding = self._request_session.get(
-            self.base_url + Config.reporting.suburl_categories_binding
-        )
+        response_categories = self._request_session.get(f"{self.base_url}/common/categories")
+        response_categories_binding = self._request_session.get(f"{self.base_url}/category-binding")
 
         try:
             response_data_categories = response_categories.json()
@@ -144,7 +136,7 @@ class ReportingApi:
         """
         Load projects from server
         """
-        response = self._request_session.get(self.base_url + Config.reporting.suburl_projects)
+        response = self._request_session.get(f"{self.base_url}/providers")
 
         try:
             response_data = response.json()
@@ -165,7 +157,7 @@ class ReportingApi:
         """
         Load corp struct items by user from server
         """
-        response = self._request_session.get(self.base_url + Config.reporting.suburl_corp_struct_items)
+        response = self._request_session.get(f"{self.base_url}/corp-struct-items")
 
         try:
             response_data = response.json()
@@ -186,7 +178,7 @@ class ReportingApi:
         """
         Load positions from server
         """
-        response = self._request_session.get(self.base_url + Config.reporting.suburl_positions)
+        response = self._request_session.get(f"{self.base_url}/employees/positions")
 
         try:
             response_data = response.json()
@@ -203,12 +195,14 @@ class ReportingApi:
 
         if self.user_data is not None:
             user_position = self.positions.get_by_user_id(self.user_data.get_id())
-            del user_position["id"]
-            self.user_data.update_data(user_position)
+
+            if user_position is not None:
+                del user_position["id"]
+                self.user_data.update_data(user_position)
 
         return True
 
-    def get_reports(self, date: datetime) -> list[Report] | None:
+    def get_reports(self, date: datetime.date) -> list[Report] | None:
         """
         Return report for the day
         Before the request need do init request
@@ -219,9 +213,12 @@ class ReportingApi:
             self.last_error = "You need do init request before"
             return None
 
-        data = {"date": date.strftime("%Y-%m-%d"), "employeeId": self.user_data.get_id()}
+        data: dict = {
+            "date": date.strftime("%Y-%m-%d"),
+            "employeeId": self.user_data.get_id(),
+        }
 
-        response = self._request_session.get(self.base_url + Config.reporting.suburl_get_report, params=data)
+        response = self._request_session.get(f"{self.base_url}/report", params=data)
 
         try:
             response_data = response.json()
@@ -240,7 +237,9 @@ class ReportingApi:
 
         return result
 
-    def set_report(self, date: datetime, report_id: None, have_problems=False, has_tasks=True) -> Report | None:
+    def set_report(
+        self, date: datetime.date, report_id: int | None = None, have_problems=False, has_tasks=True
+    ) -> Report | None:
         """
         Create report and return it
         """
@@ -261,7 +260,7 @@ class ReportingApi:
         if report_id is not None:
             data["id"] = report_id
 
-        response = self._request_session.put(self.base_url + Config.reporting.suburl_get_report, json=data)
+        response = self._request_session.put(f"{self.base_url}/report", json=data)
 
         try:
             response_data = response.json()
@@ -340,7 +339,7 @@ class ReportingApi:
             }
         ]
 
-        response = self._request_session.post(self.base_url + Config.reporting.suburl_add_task, json=data)
+        response = self._request_session.post(f"{self.base_url}/time-records", json=data)
 
         try:
             response_data = response.json()
@@ -361,11 +360,15 @@ class ReportingApi:
         It searches by name, but before searching it transform saved
         kind to the related report kinds
         """
+        if not self.categories:
+            return None
+
+        config = config_app.config
         kind: Kind = task.kind
         category_name = kind.name
 
-        if kind.alias in Config.reporting.kinds.keys():
-            category_name = Config.reporting.kinds[kind.alias]
+        if kind.alias in config.reporting.kinds.keys():
+            category_name = config.reporting.kinds[kind.alias]
 
         return self.categories.get_by_name(category_name, corp_struct_item_id)
 
@@ -376,13 +379,18 @@ class ReportingApi:
         It uses project for searching corp struct item
         by relational from config of app
         """
-        project: Project = task.project
+        if not self.corp_struct_items:
+            return None
 
-        if project.alias in Config.reporting.project_to_corp_struct_item.keys():
-            corp_struct_item_alias = Config.reporting.project_to_corp_struct_item[project.alias]
+        config = config_app.config
+        project: Project = task.project
+        user_corp_struct_item_id = self.user_data.get_corp_struct_item_id() if self.user_data else None
+
+        if project.alias in config.reporting.project_to_corp_struct_item.keys():
+            corp_struct_item_alias = config.reporting.project_to_corp_struct_item[project.alias]
             return self.corp_struct_items.get_by_alias(corp_struct_item_alias)
 
-        return self.corp_struct_items.get_by_id(self.user_data.get_corp_struct_item_id())
+        return self.corp_struct_items.get_by_id(user_corp_struct_item_id) if user_corp_struct_item_id else None
 
     def _get_project_by_task(self, task: Task) -> dict | None:
         """
@@ -391,10 +399,14 @@ class ReportingApi:
         It searches by name, but before searching it transform saved
         project to the related report projects
         """
+        if not self.projects:
+            return None
+
+        config = config_app.config
         project: Project = task.project
         project_name = project.name
 
-        if project.alias in Config.reporting.projects.keys():
-            project_name = Config.reporting.projects[project.alias]
+        if project.alias in config.reporting.projects.keys():
+            project_name = config.reporting.projects[project.alias]
 
         return self.projects.get_by_name(project_name)

@@ -22,7 +22,7 @@ def test_add_kind(
     app.main(["--kind", kind_raw["alias"], kind_raw["name"]])
     output = capsys.readouterr()
 
-    assert output.out == (output_expected + "\n")
+    assert output.out == (output_expected)
     saved_kind = database_session.query(Kind).first()
     assert saved_kind is not None
     assert saved_kind.alias == kind_raw["alias"]
@@ -49,7 +49,7 @@ def test_show_kinds(
     app.main(["--show-kinds"])
     output = capsys.readouterr()
 
-    assert output.out == (output_expected + "\n")
+    assert output.out == (output_expected)
 
 
 def test_show_kinds_empty(
@@ -62,7 +62,7 @@ def test_show_kinds_empty(
     app.main(["--show-kinds"])
     output = capsys.readouterr()
 
-    assert output.out == (output_expected + "\n")
+    assert output.out == (output_expected)
 
 
 def test_update_kind(
@@ -84,7 +84,7 @@ def test_update_kind(
     app.main(["--kind", kind_raw["alias"], kind_raw["name"]])
     output = capsys.readouterr()
 
-    assert output.out == (output_expected + "\n")
+    assert output.out == (output_expected)
     saved_kind = database_session.query(Kind).first()
     assert saved_kind is not None
     assert saved_kind.alias == kind_raw["alias"]

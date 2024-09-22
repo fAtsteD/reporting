@@ -64,23 +64,13 @@ Setting that can be setted:
     -   kind - only use for kind name, it has to change to alias inside
     -   project - only use for project name, it has to change to alias inside
 -   reporting - settings for reporting (have different class for them):
-    -   api-url - main url to the reporting api
     -   kinds - dictionary for transformation kinds inside to the reporting, all inside kind's keys can view in command line
     -   login - user login to the account
     -   password - password to the account
     -   projects - dictionary for transformation projects inside to the reporting, all inside project's keys can view in command line
     -   project-to-corp-struct-item - dictionary for setting related projects inside to the reporting corp struct item alias, all inside project's keys can view in command line
     -   safe-send-report-days - send report without additional question when send report
-    -   suburl-add-task - related suburl to the some of part
-    -   suburl-categories - related suburl to the some of part
-    -   suburl-categories-binding - related suburl to the some of part
-    -   suburl-corp-struct-items - related suburl to the some of part
-    -   suburl-get-report - related suburl to the some of part
-    -   suburl-init - related suburl to the some of part
-    -   suburl-login - related suburl to the some of part
-    -   suburl-logout - related suburl to the some of part
-    -   suburl-positions - related suburl to the some of part
-    -   suburl-projects - related suburl to the some of part
+    -   url - main url to the reporting api
 -   default-type - default type, setted if task does not have, set alias from inside name
 -   default-project - default project, setted if task does not have, set alias from inside name
 
@@ -108,7 +98,6 @@ Example:
         "project": {}
     },
     "reporting": {
-        "api-url": "https://reporting.example.com/api",
         "kinds": {
             "d": "Develop",
         },
@@ -121,16 +110,7 @@ Example:
             "bs": "Best Corp Struct Item Alias",
         },
         "safe-send-report-days": 1,
-        "suburl-add-task": "example/path",
-        "suburl-categories": "example/path",
-        "suburl-categories-binding": "example/path",
-        "suburl-corp-struct-items": "example/path",
-        "suburl-get-report": "example/path",
-        "suburl-init": "example/path",
-        "suburl-login": "example/path",
-        "suburl-logout" : "common/logout",
-        "suburl-positions": "example/path",
-        "suburl-projects": "example/path",
+        "url": "https://reporting.example.com/api",
     },
     "default-type": "Development",
     "default-project": "Project"
