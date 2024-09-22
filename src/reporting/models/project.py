@@ -3,15 +3,15 @@ import datetime
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from models import Base
+from reporting.models import Base
 
 
-class Kind(Base):
+class Project(Base):
     """
-    It kind of tasks, because each kind can has short, full name etc.
+    It's project of tasks, because each project can has short, name etc.
     """
 
-    __tablename__ = "kinds"
+    __tablename__ = "projects"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     alias: Mapped[str] = mapped_column(unique=True)
@@ -24,10 +24,10 @@ class Kind(Base):
     )
     created_at: Mapped[datetime.datetime] = mapped_column(
         default=sa.func.now(),
-        server_default=sa.FetchedValue(),
+        server_default=sa.FetchedValue()
     )
 
-    tasks: Mapped[list["Task"]] = relationship(back_populates="kind")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="project")
 
     def __str__(self):
         """

@@ -5,11 +5,11 @@ from os import path
 
 import dateutil.parser
 
-import config_app
-from models.kind import Kind
-from models.project import Project
-from models.report import Report
-from models.task import Task
+from reporting import config_app
+from reporting.models.kind import Kind
+from reporting.models.project import Project
+from reporting.models.report import Report
+from reporting.models.task import Task
 
 
 @dataclass

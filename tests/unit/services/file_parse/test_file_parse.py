@@ -1,8 +1,8 @@
 import dateutil.parser
 import pytest
 
-from config_app.class_config import Config
-from services.file_parse import TaskLine, parse_task
+from reporting.config_app.class_config import Config
+from reporting.services.file_parse import TaskLine, parse_task
 from tests.conftest import ReportingConfigFixture
 
 testdata_parse_file = [

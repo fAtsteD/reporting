@@ -6,10 +6,10 @@ from pathlib import Path
 
 import dateutil.parser
 
-from config_app.class_config import Command, Config
-from config_app.dictionary import Dictionary
-from config_app.jira_config import JiraConfig
-from config_app.reporting_config import ReportingConfig
+from reporting.config_app.class_config import Command, Config
+from reporting.config_app.dictionary import Dictionary
+from reporting.config_app.jira_config import JiraConfig
+from reporting.config_app.reporting_config import ReportingConfig
 
 __all__ = ["config", "load_config"]
 

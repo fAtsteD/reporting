@@ -1,5 +1,5 @@
-from models.report import Report
-from services.reporting.api import ReportingApi
+from reporting.models.report import Report
+from reporting.services.reporting.api import ReportingApi
 
 
 class ReportingException(Exception):

@@ -8,8 +8,8 @@ import pytest
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 
-from config_app.class_config import Config
-from models import Base
+from reporting.config_app.class_config import Config
+from reporting.models import Base
 
 
 class ReportingConfigFixture(Protocol):

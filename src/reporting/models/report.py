@@ -3,9 +3,9 @@ import datetime
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-import config_app
-from models import Base
-from models.task import Task
+from reporting import config_app
+from reporting.models import Base
+from reporting.models.task import Task
 
 
 class Report(Base):

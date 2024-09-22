@@ -2,16 +2,16 @@ import datetime
 
 from requests.sessions import Session
 
-import config_app
-from models.kind import Kind
-from models.project import Project
-from models.task import Task
-from services.reporting.models.categories import Categories
-from services.reporting.models.corp_struct_items import CorpStructItems
-from services.reporting.models.positions import Positions
-from services.reporting.models.projects import Projects
-from services.reporting.models.report import Report
-from services.reporting.models.user import User
+from reporting import config_app
+from reporting.models.kind import Kind
+from reporting.models.project import Project
+from reporting.models.task import Task
+from reporting.services.reporting.models.categories import Categories
+from reporting.services.reporting.models.corp_struct_items import CorpStructItems
+from reporting.services.reporting.models.positions import Positions
+from reporting.services.reporting.models.projects import Projects
+from reporting.services.reporting.models.report import Report
+from reporting.services.reporting.models.user import User
 
 
 def transform_time(seconds: int) -> int:
@@ -31,11 +31,11 @@ class ReportingApi:
         """
         Connect to the server
         """
+        config = config_app.config
 
         if not config.reporting.is_use:
             exit("Used reporting module without required settings")
 
-        config = config_app.config
         self._request_session = request_session
 
         self.last_error: str | None = None

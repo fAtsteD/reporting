@@ -6,11 +6,10 @@ from pathlib import Path
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 
-from models import Base
-
-from .dictionary import Dictionary
-from .jira_config import JiraConfig
-from .reporting_config import ReportingConfig
+from reporting.config_app.dictionary import Dictionary
+from reporting.config_app.jira_config import JiraConfig
+from reporting.config_app.reporting_config import ReportingConfig
+from reporting.models import Base
 
 
 class Command(Enum):

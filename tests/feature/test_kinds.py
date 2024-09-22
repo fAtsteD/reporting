@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy.orm import Session
 
-import app
-from models.kind import Kind
+from reporting import cli
+from reporting.models.kind import Kind
 from tests.conftest import ReportingConfigFixture
 
 
@@ -19,7 +19,7 @@ def test_add_kind(
     output_expected = "Kinds:\n"
     output_expected += f"{kind_raw['alias']} - {kind_raw['name']}\n"
 
-    app.main(["--kind", kind_raw["alias"], kind_raw["name"]])
+    cli.main(["--kind", kind_raw["alias"], kind_raw["name"]])
     output = capsys.readouterr()
 
     assert output.out == (output_expected)
@@ -46,7 +46,7 @@ def test_show_kinds(
         output_expected += f"{kind}\n"
     database_session.commit()
 
-    app.main(["--show-kinds"])
+    cli.main(["--show-kinds"])
     output = capsys.readouterr()
 
     assert output.out == (output_expected)
@@ -59,7 +59,7 @@ def test_show_kinds_empty(
     reporting_config()
     output_expected = "Kinds:\n"
 
-    app.main(["--show-kinds"])
+    cli.main(["--show-kinds"])
     output = capsys.readouterr()
 
     assert output.out == (output_expected)
@@ -81,7 +81,7 @@ def test_update_kind(
     output_expected = "Kinds:\n"
     output_expected += f"{kind_raw['alias']} - {kind_raw['name']}\n"
 
-    app.main(["--kind", kind_raw["alias"], kind_raw["name"]])
+    cli.main(["--kind", kind_raw["alias"], kind_raw["name"]])
     output = capsys.readouterr()
 
     assert output.out == (output_expected)

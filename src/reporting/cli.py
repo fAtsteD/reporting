@@ -2,14 +2,14 @@
 
 from datetime import date
 
-import config_app
-from config_app.class_config import Command
-from models.kind import Kind
-from models.project import Project
-from models.report import Report
-from services import jira
-from services.file_parse import parse_reports
-from services.reporting.actions import send_tasks
+from reporting import config_app
+from reporting.config_app.class_config import Command
+from reporting.models.kind import Kind
+from reporting.models.project import Project
+from reporting.models.report import Report
+from reporting.services import jira
+from reporting.services.file_parse import parse_reports
+from reporting.services.reporting.actions import send_tasks
 
 
 def kind_update() -> None:
