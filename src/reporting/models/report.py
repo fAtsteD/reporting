@@ -23,16 +23,12 @@ class Report(Base):
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="report")
 
+    @property
     def total_seconds(self) -> int:
         """
         Total seconds of the report's all tasks
         """
-        sum_seconds = 0
-
-        for task in self.tasks:
-            sum_seconds += task.logged_seconds if task.logged_seconds is not None and task.logged_seconds > 0 else 0
-
-        return sum_seconds
+        return sum(map(lambda task: task.logged_seconds, self.tasks))
 
     def remove_tasks(self):
         """
@@ -53,9 +49,10 @@ class Report(Base):
         config = config_app.config
         text = self.date.strftime("%d.%m.%Y") + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
 
-        total_hours = round(self.total_seconds() / 60 // 60)
+        total_seconds = self.total_seconds
+        total_hours = round(total_seconds / 60 // 60)
         total_hours_str = f"0{total_hours}" if total_hours < 10 else f"{total_hours}"
-        total_minutes = round(self.total_seconds() / 60 % 60)
+        total_minutes = round(total_seconds / 60 % 60)
         total_minutes_str = f"0{total_minutes}" if total_minutes < 10 else f"{total_minutes}"
         text += f"Summary time: {total_hours_str}:{total_minutes_str}\n"
 

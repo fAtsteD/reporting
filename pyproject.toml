@@ -16,6 +16,7 @@ version = "1.4.0"
 [project.optional-dependencies]
 dev = [
     "black",
+    "Faker",
     "mypy",
     "pytest",
     "pytest-cov",

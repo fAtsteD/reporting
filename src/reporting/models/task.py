@@ -68,9 +68,6 @@ class Task(Base):
 
         Firstly timedelta transforms to the seconds.
         """
-        if self.logged_seconds is None:
-            self.logged_seconds = 0
-
         self.logged_seconds += int(round(logged_time.total_seconds(), 0))
 
     def __str__(self):
