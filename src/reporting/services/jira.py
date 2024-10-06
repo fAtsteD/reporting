@@ -31,7 +31,7 @@ def set_worklog(report: Report) -> None:
                 jira_client.issue(issue_key)
                 jira_client.add_worklog(
                     issue_key,
-                    convert_time_to_jira_time(task.logged_rounded()),
+                    convert_time_to_jira_time(task.logged_rounded),
                 )
                 print(f"[+] {task}")
             except jira.exceptions.JIRAError:

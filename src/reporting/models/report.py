@@ -28,7 +28,7 @@ class Report(Base):
         """
         Total seconds of the report's all tasks
         """
-        return sum(map(lambda task: task.logged_seconds, self.tasks))
+        return sum(map(lambda task: task.logged_rounded, self.tasks))
 
     def remove_tasks(self):
         """
@@ -63,6 +63,11 @@ class Report(Base):
             .order_by(Task.kinds_id)
             .all()
         )
+
+        if len(tasks) == 0:
+            text += "Report does not have tasks\n"
+            return text
+
         text += "Tasks:\n"
         task_indent = indent + indent
         previous_kind = ""

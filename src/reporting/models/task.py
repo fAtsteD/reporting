@@ -31,6 +31,7 @@ class Task(Base):
     reports_id: Mapped[int] = mapped_column(sa.ForeignKey("reports.id"))
     report: Mapped["Report"] = relationship(back_populates="tasks")
 
+    @property
     def logged_rounded(self) -> int:
         """
         Round logged time to the config define minutes.
@@ -74,7 +75,7 @@ class Task(Base):
         """
         One text line present of task
         """
-        logged_rounded = self.logged_rounded()
+        logged_rounded = self.logged_rounded
         logged_hours = round(logged_rounded / 60 // 60)
         logged_hours_str = f"0{logged_hours}" if logged_hours < 10 else f"{logged_hours}"
         logged_minutes = round(logged_rounded / 60 % 60)

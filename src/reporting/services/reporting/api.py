@@ -324,7 +324,7 @@ class ReportingApi:
                 "clientId": self.user_data.get_id(),
                 "corpStructItemId": corp_struct_item["id"],
                 "description": task.summary,
-                "hours": transform_time(task.logged_rounded()),
+                "hours": transform_time(task.logged_rounded),
                 "invoiceHours": 0,
                 "orderNumber": report.next_task_order_num(),
                 "overrideEmployeeId": None,
