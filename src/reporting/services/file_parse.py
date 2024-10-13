@@ -112,7 +112,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                     and previous_task
                     and previous_task_line
                     and previous_task_line.summary
-                    and report.total_seconds < config.work_day_hours.total_seconds()
+                    and report.total_rounded_seconds < config.work_day_hours.total_seconds()
                 ):
                     previous_task.logged_timedelta(
                         datetime.timedelta(seconds=config.work_day_hours.total_seconds() - report.total_seconds)

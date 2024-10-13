@@ -18,8 +18,23 @@ from reporting.models.report import Report
 from reporting.models.task import Task
 
 
-class ReportFixture(Protocol):
+class KindFixture(Protocol):
+    def __call__(
+        self,
+        alias: str | None = None,
+        name: str | None = None,
+    ) -> Kind: ...
 
+
+class ProjectFixture(Protocol):
+    def __call__(
+        self,
+        alias: str | None = None,
+        name: str | None = None,
+    ) -> Project: ...
+
+
+class ReportFixture(Protocol):
     def __call__(
         self,
         date: datetime.date | None = None,
@@ -33,9 +48,9 @@ class ReportingConfigFixture(Protocol):
 class TaskFixture(Protocol):
     def __call__(
         self,
-        kind: str | None = None,
+        kind: str | Kind | None = None,
         logged_seconds: int | None = None,
-        project: str | None = None,
+        project: str | Project | None = None,
         report: Report | None = None,
         summary: str | None = None,
     ) -> Task: ...
@@ -44,6 +59,8 @@ class TaskFixture(Protocol):
 @pytest.fixture
 def add_task(
     database_session: Session,
+    get_kind: KindFixture,
+    get_project: ProjectFixture,
     get_report: ReportFixture,
     faker: faker.Faker,
 ) -> TaskFixture:
@@ -66,10 +83,14 @@ def add_task(
         if isinstance(project, Project):
             database_session.add(project)
             project_obj = project
+        else:
+            project_obj = get_project(name=project)
 
         if isinstance(kind, Kind):
             database_session.add(kind)
             kind_obj = kind
+        else:
+            kind_obj = get_kind(name=kind)
 
         task = Task(
             kind=kind_obj,
@@ -126,10 +147,61 @@ def database_session(
 
 
 @pytest.fixture
+def get_kind(
+    database_session: Session,
+    faker: faker.Faker,
+) -> KindFixture:
+    def generate_kind(
+        alias: str | None = None,
+        name: str | None = None,
+    ) -> Kind:
+        kind = database_session.query(Kind).filter(Kind.alias == alias).first()
+
+        if not kind:
+            kind = Kind(
+                alias=alias if alias else faker.word().lower(),
+                name=name if name else faker.name(),
+            )
+
+        kind.name = name if name else kind.name
+        database_session.add(kind)
+        database_session.commit()
+        return kind
+
+    return generate_kind
+
+
+@pytest.fixture
+def get_project(
+    database_session: Session,
+    faker: faker.Faker,
+) -> ProjectFixture:
+    def generate_project(
+        alias: str | None = None,
+        name: str | None = None,
+    ) -> Project:
+        project = database_session.query(Project).filter(Project.alias == alias).first()
+
+        if not project:
+            project = Project(
+                alias=alias if alias else faker.word().lower(),
+                name=name if name else faker.name(),
+            )
+
+        project.name = name if name else project.name
+        database_session.add(project)
+        database_session.commit()
+        return project
+
+    return generate_project
+
+
+@pytest.fixture
 def get_report(
     database_session: Session,
+    faker: faker.Faker,
 ) -> ReportFixture:
-    report_default = Report(date=datetime.date.today())
+    report_default = Report(date=faker.date_object())
     database_session.add(report_default)
     database_session.commit()
 

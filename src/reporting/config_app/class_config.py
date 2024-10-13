@@ -55,7 +55,7 @@ class Config:
     # Tasks
     default_kind = "Development"
     default_project = "Default"
-    minute_round_to = 25
+    minute_round_to = 15
     skip_tasks: list[str] = field(default_factory=lambda: [])
 
     # Jira

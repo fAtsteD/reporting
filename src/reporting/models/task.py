@@ -11,8 +11,8 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    logged_seconds: Mapped[int] = mapped_column(default=0, server_default=sa.FetchedValue())
-    summary: Mapped[str] = mapped_column(default="", server_default=sa.FetchedValue())
+    logged_seconds: Mapped[int] = mapped_column(default=0)
+    summary: Mapped[str] = mapped_column(default="")
 
     kinds_id: Mapped[int] = mapped_column(sa.ForeignKey("kinds.id"))
     kind: Mapped["Kind"] = relationship(back_populates="tasks")
@@ -44,6 +44,10 @@ class Task(Base):
         config = config_app.config
         hours = self.logged_seconds / 60 // 60
         minutes = self.logged_seconds / 60 % 60
+
+        if config.minute_round_to <= 0:
+            return self.logged_seconds
+
         frac = minutes % config.minute_round_to
 
         if frac >= int(config.minute_round_to / 2) + 1:
@@ -56,11 +60,7 @@ class Task(Base):
             minutes = minutes // config.minute_round_to * config.minute_round_to
 
         seconds: int = int(hours * 60 * 60 + minutes * 60)
-
-        if seconds > 0:
-            return seconds
-
-        return config.minute_round_to * 60
+        return seconds if seconds > 0 else config.minute_round_to * 60
 
     def logged_timedelta(self, logged_time: datetime.timedelta):
         """
@@ -69,7 +69,7 @@ class Task(Base):
 
         Firstly timedelta transforms to the seconds.
         """
-        self.logged_seconds += int(round(logged_time.total_seconds(), 0))
+        self.logged_seconds = (self.logged_seconds or 0) + int(round(logged_time.total_seconds(), 0))
 
     def __str__(self):
         """
