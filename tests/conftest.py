@@ -1,6 +1,7 @@
 import contextlib
 import datetime
 import json
+import random
 from collections.abc import Generator
 from pathlib import Path
 from typing import Protocol
@@ -144,6 +145,11 @@ def database_session(
         for table in reversed(Base.metadata.sorted_tables):
             connection.execute(table.delete())
         transaction.commit()
+
+
+@pytest.fixture(autouse=True)
+def faker_seed() -> int:
+    return round(random.random() * 1000000)
 
 
 @pytest.fixture
