@@ -1,4 +1,3 @@
-import contextlib
 import datetime
 import json
 import random
@@ -84,13 +83,13 @@ def add_task(
         if isinstance(project, Project):
             database_session.add(project)
             project_obj = project
-        else:
+        elif isinstance(project, str):
             project_obj = get_project(name=project)
 
         if isinstance(kind, Kind):
             database_session.add(kind)
             kind_obj = kind
-        else:
+        elif isinstance(kind, str):
             kind_obj = get_kind(name=kind)
 
         task = Task(
@@ -117,14 +116,12 @@ def database_path() -> str:
 
 
 @pytest.fixture(scope="session")
-def database_engine(database_path: str) -> Generator[Engine]:
+def database_engine(database_path: str) -> Engine:
     engine = create_engine(
         "sqlite:///" + database_path,
         echo=False,
     )
-    Base.metadata.create_all(engine)
-    yield engine
-    Base.metadata.drop_all(engine)
+    return engine
 
 
 @pytest.fixture
@@ -132,6 +129,7 @@ def database_session(
     database_engine: Engine,
     monkeypatch: pytest.MonkeyPatch,
 ) -> Generator[Session]:
+    Base.metadata.create_all(bind=database_engine)
     session = Session(bind=database_engine)
     monkeypatch.setattr(Config, "sqlite_session", session)
 
@@ -139,12 +137,7 @@ def database_session(
 
     session.rollback()
     session.close()
-
-    with contextlib.closing(database_engine.connect()) as connection:
-        transaction = connection.begin()
-        for table in reversed(Base.metadata.sorted_tables):
-            connection.execute(table.delete())
-        transaction.commit()
+    Base.metadata.drop_all(bind=database_engine)
 
 
 @pytest.fixture(autouse=True)
@@ -207,10 +200,6 @@ def get_report(
     database_session: Session,
     faker: faker.Faker,
 ) -> ReportFixture:
-    report_default = Report(date=faker.date_object())
-    database_session.add(report_default)
-    database_session.commit()
-
     def generate_report(
         date: datetime.date | None = None,
     ) -> Report:
@@ -223,6 +212,10 @@ def get_report(
                 database_session.commit()
 
             return report
+
+        report_default = Report(date=faker.date_object())
+        database_session.add(report_default)
+        database_session.commit()
         return report_default
 
     return generate_report
