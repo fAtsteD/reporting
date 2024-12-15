@@ -1,15 +1,17 @@
+import faker
 import pytest
 from sqlalchemy.orm import Session
 
 from reporting import cli
 from reporting.models.kind import Kind
 from tests.conftest import ReportingConfigFixture
+from tests.factories import KindFactory
 
 
 def test_add_kind(
     capsys: pytest.CaptureFixture,
-    reporting_config: ReportingConfigFixture,
     database_session: Session,
+    reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config()
     kind_raw = {
@@ -20,9 +22,10 @@ def test_add_kind(
     output_expected += f"{kind_raw['alias']} - {kind_raw['name']}\n"
 
     cli.main(["--kind", kind_raw["alias"], kind_raw["name"]])
-    output = capsys.readouterr()
 
+    output = capsys.readouterr()
     assert output.out == (output_expected)
+
     saved_kind = database_session.query(Kind).first()
     assert saved_kind is not None
     assert saved_kind.alias == kind_raw["alias"]
@@ -32,23 +35,22 @@ def test_add_kind(
 def test_show_kinds(
     capsys: pytest.CaptureFixture,
     reporting_config: ReportingConfigFixture,
-    database_session: Session,
 ) -> None:
     reporting_config()
-    kinds = [
-        Kind(alias="expert-gerbil", name="Lead Program Manager"),
-        Kind(alias="smoggy-overcoat", name="Investor Functionality Director"),
-        Kind(alias="testy-perennial", name="Future Communications Director"),
+    kinds: list[Kind] = [
+        KindFactory.create(tasks=[]),
+        KindFactory.create(tasks=[]),
+        KindFactory.create(tasks=[]),
     ]
+    kinds.sort(key=lambda kind: kind.name)
     output_expected = "Kinds:\n"
+
     for kind in kinds:
-        database_session.add(kind)
         output_expected += f"{kind}\n"
-    database_session.commit()
 
     cli.main(["--show-kinds"])
-    output = capsys.readouterr()
 
+    output = capsys.readouterr()
     assert output.out == (output_expected)
 
 
@@ -60,32 +62,29 @@ def test_show_kinds_empty(
     output_expected = "Kinds:\n"
 
     cli.main(["--show-kinds"])
-    output = capsys.readouterr()
 
+    output = capsys.readouterr()
     assert output.out == (output_expected)
 
 
 def test_update_kind(
     capsys: pytest.CaptureFixture,
-    reporting_config: ReportingConfigFixture,
     database_session: Session,
+    faker: faker.Faker,
+    reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config()
-    kind_raw = {
-        "alias": "linear-lilac",
-        "name": "Dynamic Program Specialist",
-    }
-    kind_exist = Kind(alias=kind_raw["alias"], name="Chief Tactics Producer")
-    database_session.add(kind_exist)
-    database_session.commit()
+    kind: Kind = KindFactory.create(tasks=[])
+    kind_name_new = faker.sentence(nb_words=3, variable_nb_words=True)
     output_expected = "Kinds:\n"
-    output_expected += f"{kind_raw['alias']} - {kind_raw['name']}\n"
+    output_expected += f"{kind.alias} - {kind_name_new}\n"
 
-    cli.main(["--kind", kind_raw["alias"], kind_raw["name"]])
+    cli.main(["--kind", kind.alias, kind_name_new])
+
     output = capsys.readouterr()
-
     assert output.out == (output_expected)
+
     saved_kind = database_session.query(Kind).first()
     assert saved_kind is not None
-    assert saved_kind.alias == kind_raw["alias"]
-    assert saved_kind.name == kind_raw["name"]
+    assert saved_kind.alias == kind.alias
+    assert saved_kind.name == kind_name_new

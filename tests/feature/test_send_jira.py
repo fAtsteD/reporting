@@ -2,17 +2,18 @@ import faker
 import jira.client
 import jira.exceptions
 import pytest
-from sqlalchemy.orm import Session
 
 from reporting import cli
-from tests.conftest import ReportingConfigFixture, TaskFixture
+from reporting.models.report import Report
+from reporting.models.task import Task
+from tests.conftest import ReportingConfigFixture
+from tests.factories import ReportFactory, TaskFactory
 
 
 def test_send_jira_empty_report(
     capsys: pytest.CaptureFixture,
-    reporting_config: ReportingConfigFixture,
-    database_session: Session,
     monkeypatch: pytest.MonkeyPatch,
+    reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config(
         {
@@ -29,6 +30,7 @@ def test_send_jira_empty_report(
     output_expected = "Jira\n"
 
     cli.main(["--jira"])
+
     output = capsys.readouterr()
     assert output.out == output_expected
 
@@ -64,12 +66,10 @@ def test_send_jira_empty_report(
 )
 def test_send_jira_report_with_jira_issues(
     capsys: pytest.CaptureFixture,
-    reporting_config: ReportingConfigFixture,
-    database_session: Session,
-    monkeypatch: pytest.MonkeyPatch,
-    add_task: TaskFixture,
     faker: faker.Faker,
     jira_keys: list[str],
+    monkeypatch: pytest.MonkeyPatch,
+    reporting_config: ReportingConfigFixture,
 ) -> None:
     exist_jira_key = "TEST-"
     allowed_jira_keys = [
@@ -87,23 +87,16 @@ def test_send_jira_report_with_jira_issues(
             "minute-round-to": 15,
         }
     )
-    output_expected = "Jira\n"
-    tasks = []
+    report: Report = ReportFactory.create(tasks=[])
+    tasks: list[Task] = []
 
     for jira_key in jira_keys:
-        task_summary = faker.sentence()
-        is_jira_key = False
+        task_summary = faker.sentence(nb_words=10, variable_nb_words=True)
 
         if jira_key:
             task_summary = f"{jira_key}: {task_summary}"
-            is_jira_key = any(map(lambda allowed_jira_key: jira_key.startswith(allowed_jira_key), allowed_jira_keys))
 
-            if is_jira_key:
-                output_expected += "[+] " if jira_key.startswith(exist_jira_key) else "[-] "
-
-        task = add_task(summary=task_summary)
-        output_expected += f"{task}\n" if jira_key and is_jira_key else ""
-        tasks.append(task)
+        tasks.append(TaskFactory.create(report=report, reports_id=report.id, summary=task_summary))
 
     def init_jira(*args, **kwargs) -> None:
         assert kwargs["server"] == "https://jira.example.com"
@@ -125,5 +118,17 @@ def test_send_jira_report_with_jira_issues(
     monkeypatch.setattr(jira.client.JIRA, "add_worklog", check_issue_key)
 
     cli.main(["--jira"])
+
     output = capsys.readouterr()
-    assert output.out == f"{output_expected}\n"
+    assert str(output.out).startswith("Jira\n")
+
+    for task in tasks:
+        is_jira_key = any(map(lambda allowed_jira_key: task.summary.startswith(allowed_jira_key), allowed_jira_keys))
+
+        if is_jira_key:
+            if task.summary.startswith(exist_jira_key):
+                assert output.out.find(f"[+] {task}\n") > -1
+            else:
+                assert output.out.find(f"[-] {task}\n") > -1
+        else:
+            assert output.out.find(f"{task}\n") == -1

@@ -1,19 +1,13 @@
 import datetime
 
-import faker
-from sqlalchemy.orm import Session
-
-from reporting.models.kind import Kind
 from reporting.models.project import Project
 from reporting.models.task import Task
-from tests.conftest import ReportFixture, ReportingConfigFixture
+from tests.conftest import ReportingConfigFixture
+from tests.factories import ProjectFactory, TaskFactory
 
 
 def test_task_properties(
     reporting_config: ReportingConfigFixture,
-    database_session: Session,
-    get_report: ReportFixture,
-    faker: faker.Faker,
 ) -> None:
     minute_round_to = 15
     reporting_config(
@@ -21,12 +15,14 @@ def test_task_properties(
             "minute-round-to": minute_round_to,
         }
     )
-    report = get_report()
-    kind = Kind(alias=faker.word(), name=faker.name())
-    project = Project(alias=faker.word(), name=faker.name())
-    task = Task(kind=kind, project=project, report=report, summary=faker.sentence())
-    database_session.add_all([kind, project, task])
-    database_session.commit()
+    project: Project = ProjectFactory.create(
+        tasks=[],
+    )
+    task: Task = TaskFactory.create(
+        logged_seconds=0,
+        project=project,
+        projects_id=project.id,
+    )
 
     assert task.logged_rounded == 0
     assert str(task) == f"00:00 - {task.summary} - {project.name}"

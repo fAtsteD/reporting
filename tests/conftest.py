@@ -1,113 +1,19 @@
-import datetime
 import json
 import random
 from collections.abc import Generator
 from pathlib import Path
 from typing import Protocol
 
-import faker
 import pytest
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 
 from reporting.config_app.class_config import Config
 from reporting.models import Base
-from reporting.models.kind import Kind
-from reporting.models.project import Project
-from reporting.models.report import Report
-from reporting.models.task import Task
-
-
-class KindFixture(Protocol):
-    def __call__(
-        self,
-        alias: str | None = None,
-        name: str | None = None,
-    ) -> Kind: ...
-
-
-class ProjectFixture(Protocol):
-    def __call__(
-        self,
-        alias: str | None = None,
-        name: str | None = None,
-    ) -> Project: ...
-
-
-class ReportFixture(Protocol):
-    def __call__(
-        self,
-        date: datetime.date | None = None,
-    ) -> Report: ...
 
 
 class ReportingConfigFixture(Protocol):
     def __call__(self, config: dict = {}) -> None: ...
-
-
-class TaskFixture(Protocol):
-    def __call__(
-        self,
-        kind: str | Kind | None = None,
-        logged_seconds: int | None = None,
-        project: str | Project | None = None,
-        report: Report | None = None,
-        summary: str | None = None,
-    ) -> Task: ...
-
-
-@pytest.fixture
-def add_task(
-    database_session: Session,
-    get_kind: KindFixture,
-    get_project: ProjectFixture,
-    get_report: ReportFixture,
-    faker: faker.Faker,
-) -> TaskFixture:
-    kind_default = Kind(alias="tk", name="Test Kind")
-    project_default = Project(alias="tp", name="Test Project")
-    database_session.add_all([kind_default, project_default])
-    database_session.commit()
-    report_default = get_report()
-
-    def generate_task(
-        kind: str | Kind | None = None,
-        logged_seconds: int | None = None,
-        project: str | Project | None = None,
-        report: Report | None = None,
-        summary: str | None = None,
-    ) -> Task:
-        project_obj = project_default
-        kind_obj = kind_default
-
-        if isinstance(project, Project):
-            database_session.add(project)
-            project_obj = project
-        elif isinstance(project, str):
-            project_obj = get_project(name=project)
-
-        if isinstance(kind, Kind):
-            database_session.add(kind)
-            kind_obj = kind
-        elif isinstance(kind, str):
-            kind_obj = get_kind(name=kind)
-
-        task = Task(
-            kind=kind_obj,
-            logged_seconds=(
-                logged_seconds
-                if isinstance(logged_seconds, int) and logged_seconds >= 0
-                else faker.random_int(0, 2 * 60 * 60, 60)
-            ),
-            project=project_obj,
-            report=report if report else report_default,
-            summary=summary if summary else faker.sentence(),
-        )
-        database_session.add(task)
-        database_session.commit()
-        return task
-
-    return generate_task
 
 
 @pytest.fixture(scope="session")
@@ -124,7 +30,7 @@ def database_engine(database_path: str) -> Engine:
     return engine
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)  # autouse for factory usage in any moment
 def database_session(
     database_engine: Engine,
     monkeypatch: pytest.MonkeyPatch,
@@ -144,81 +50,9 @@ def database_session(
 def faker_seed() -> int:
     return round(random.random() * 1000000)
 
-
 @pytest.fixture
-def get_kind(
-    database_session: Session,
-    faker: faker.Faker,
-) -> KindFixture:
-    def generate_kind(
-        alias: str | None = None,
-        name: str | None = None,
-    ) -> Kind:
-        kind = database_session.query(Kind).filter(Kind.alias == alias).first()
-
-        if not kind:
-            kind = Kind(
-                alias=alias if alias else faker.word().lower(),
-                name=name if name else faker.name(),
-            )
-
-        kind.name = name if name else kind.name
-        database_session.add(kind)
-        database_session.commit()
-        return kind
-
-    return generate_kind
-
-
-@pytest.fixture
-def get_project(
-    database_session: Session,
-    faker: faker.Faker,
-) -> ProjectFixture:
-    def generate_project(
-        alias: str | None = None,
-        name: str | None = None,
-    ) -> Project:
-        project = database_session.query(Project).filter(Project.alias == alias).first()
-
-        if not project:
-            project = Project(
-                alias=alias if alias else faker.word().lower(),
-                name=name if name else faker.name(),
-            )
-
-        project.name = name if name else project.name
-        database_session.add(project)
-        database_session.commit()
-        return project
-
-    return generate_project
-
-
-@pytest.fixture
-def get_report(
-    database_session: Session,
-    faker: faker.Faker,
-) -> ReportFixture:
-    def generate_report(
-        date: datetime.date | None = None,
-    ) -> Report:
-        if date:
-            report = database_session.query(Report).filter(Report.date == date).first()
-
-            if not report:
-                report = Report(date=date)
-                database_session.add(report)
-                database_session.commit()
-
-            return report
-
-        report_default = Report(date=faker.date_object())
-        database_session.add(report_default)
-        database_session.commit()
-        return report_default
-
-    return generate_report
+def portal_mock() -> None:
+    pass
 
 
 @pytest.fixture(scope="session")

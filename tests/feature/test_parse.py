@@ -7,14 +7,12 @@ import pytest
 from sqlalchemy.orm import Session
 
 from reporting import cli
+from reporting.models.kind import Kind
+from reporting.models.project import Project
 from reporting.models.report import Report
 from reporting.models.task import Task
-from tests.conftest import (
-    KindFixture,
-    ProjectFixture,
-    ReportFixture,
-    ReportingConfigFixture,
-)
+from tests.conftest import ReportingConfigFixture
+from tests.factories import KindFactory, ProjectFactory, ReportFactory
 
 
 class TrackingFileFixture(Protocol):
@@ -58,26 +56,23 @@ def test_parse_last_report_with_remove_tasks(
     database_session: Session,
     faker: faker.Faker,
     generate_tracking_file: TrackingFileFixture,
-    get_kind: KindFixture,
-    get_project: ProjectFixture,
-    get_report: ReportFixture,
     reporting_config: ReportingConfigFixture,
 ) -> None:
     report_date = faker.date_object()
-    projects = [
-        get_project(),
-        get_project(),
+    projects: list[Project] = [
+        ProjectFactory.create(tasks=[]),
+        ProjectFactory.create(tasks=[]),
     ]
-    types = [
-        get_kind(),
-        get_kind(),
-        get_kind(),
+    types: list[Kind] = [
+        KindFactory.create(tasks=[]),
+        KindFactory.create(tasks=[]),
+        KindFactory.create(tasks=[]),
     ]
     summaries = [
-        faker.sentence(),
-        faker.sentence(),
-        faker.sentence(),
-        faker.sentence(),
+        faker.sentence(nb_words=10, variable_nb_words=True),
+        faker.sentence(nb_words=10, variable_nb_words=True),
+        faker.sentence(nb_words=10, variable_nb_words=True),
+        faker.sentence(nb_words=10, variable_nb_words=True),
     ]
     tracking_file_path = generate_tracking_file(
         [
@@ -114,14 +109,14 @@ def test_parse_last_report_with_remove_tasks(
             ],
         }
     )
-    get_report(date=report_date)
+    ReportFactory.create(date=report_date)
 
     cli.main(["--parse"])
-    output = capsys.readouterr()
 
+    output = capsys.readouterr()
     assert str(output.out).startswith("Parsed 1\n")
     assert database_session.query(Report).filter(Report.date == report_date).count() == 1
-    assert database_session.query(Task).count() == 4
+    assert database_session.query(Task).count() == len(summaries)
 
     database_tasks = list(
         filter(
@@ -134,9 +129,7 @@ def test_parse_last_report_with_remove_tasks(
             ],
         )
     )
-
     assert len(database_tasks) == len(summaries)
-
     assert database_tasks[0].logged_seconds == (3 * 60 + 35) * 60
     assert database_tasks[0].kinds_id == types[1].id
     assert database_tasks[0].projects_id == projects[0].id
@@ -156,9 +149,6 @@ def test_parse_n_reports(
     database_session: Session,
     faker: faker.Faker,
     generate_tracking_file: TrackingFileFixture,
-    get_kind: KindFixture,
-    get_project: ProjectFixture,
-    get_report: ReportFixture,
     reporting_config: ReportingConfigFixture,
 ) -> None:
     def filter_date(date) -> TypeGuard[datetime.date]:
@@ -174,21 +164,21 @@ def test_parse_n_reports(
             ],
         )
     )
-    get_report(date=report_dates[1])
-    projects = [
-        get_project(),
-        get_project(),
+    ReportFactory.create(date=report_dates[1])
+    projects: list[Project] = [
+        ProjectFactory.create(tasks=[]),
+        ProjectFactory.create(tasks=[]),
     ]
-    types = [
-        get_kind(),
-        get_kind(),
-        get_kind(),
+    types: list[Kind] = [
+        KindFactory.create(tasks=[]),
+        KindFactory.create(tasks=[]),
+        KindFactory.create(tasks=[]),
     ]
     summaries = [
-        faker.sentence(),
-        faker.sentence(),
-        faker.sentence(),
-        faker.sentence(),
+        faker.sentence(nb_words=10, variable_nb_words=True),
+        faker.sentence(nb_words=10, variable_nb_words=True),
+        faker.sentence(nb_words=10, variable_nb_words=True),
+        faker.sentence(nb_words=10, variable_nb_words=True),
     ]
     tracking_file_path = generate_tracking_file(
         [
@@ -252,8 +242,8 @@ def test_parse_n_reports(
     )
 
     cli.main(["--parse", "3"])
-    output = capsys.readouterr()
 
+    output = capsys.readouterr()
     assert str(output.out).startswith("Parsed 3\n")
     assert database_session.query(Report).count() == 3
     assert database_session.query(Task).count() == 12

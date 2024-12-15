@@ -25,7 +25,7 @@ def kind_update() -> None:
 
 def kinds_show() -> None:
     config = config_app.config
-    kinds = config.sqlite_session.query(Kind).all()
+    kinds = config.sqlite_session.query(Kind).order_by(Kind.name).all()
     print("Kinds:")
     for kind in kinds:
         print(kind)
@@ -46,7 +46,7 @@ def project_update() -> None:
 
 def projects_show() -> None:
     config = config_app.config
-    projects = config.sqlite_session.query(Project).all()
+    projects = config.sqlite_session.query(Project).order_by(Project.name).all()
     print("Projects:")
     for project in projects:
         print(project)

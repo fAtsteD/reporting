@@ -61,7 +61,7 @@ class Report(Base):
         tasks = (
             config.sqlite_session.query(Task)
             .filter(Task.report.has(Report.id == self.id))
-            .order_by(Task.kinds_id)
+            .order_by(Task.kinds_id, Task.summary)
             .all()
         )
 
