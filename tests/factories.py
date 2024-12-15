@@ -1,3 +1,5 @@
+import datetime
+
 import factory
 
 from reporting.models.kind import Kind
@@ -25,9 +27,9 @@ class KindFactory(BaseFactory):
     class Meta:
         model = Kind
 
-    alias = factory.Faker("word")
+    alias = factory.Sequence(lambda index: f"kind_alias_{index}")
     created_at = factory.Faker("date_time")
-    id = factory.Faker("random_int", min=1, max=10000)
+    id = factory.Sequence(lambda index: index + 100)
     name = factory.Faker("sentence", nb_words=3, variable_nb_words=True)
     tasks = factory.RelatedFactoryList(
         factory=f"{_current_module}.TaskFactory",
@@ -41,9 +43,9 @@ class ProjectFactory(BaseFactory):
     class Meta:
         model = Project
 
-    alias = factory.Faker("word")
+    alias = factory.Sequence(lambda index: f"project_alias_{index}")
     created_at = factory.Faker("date_time")
-    id = factory.Faker("random_int", min=1, max=10000)
+    id = factory.Sequence(lambda index: index + 100)
     name = factory.Faker("sentence", nb_words=3, variable_nb_words=True)
     tasks = factory.RelatedFactoryList(
         factory=f"{_current_module}.TaskFactory",
@@ -58,8 +60,8 @@ class ReportFactory(BaseFactory):
         model = Report
 
     created_at = factory.Faker("date_time")
-    date = factory.Faker("date_time")
-    id = factory.Faker("random_int", min=1, max=10000)
+    date = factory.Sequence(lambda index: datetime.datetime.now() - datetime.timedelta(days=index + 100))
+    id = factory.Sequence(lambda index: index + 100)
     tasks = factory.RelatedFactoryList(
         factory=f"{_current_module}.TaskFactory",
         factory_related_name="report",
@@ -74,25 +76,25 @@ class TaskFactory(BaseFactory):
         model = Task
 
     created_at = factory.Faker("date_time")
-    id = factory.Faker("random_int", min=1, max=10000)
+    id = factory.Sequence(lambda index: index + 100)
     kind = factory.RelatedFactory(
         factory=f"{_current_module}.KindFactory",
         factory_related_name="tasks",
         id=factory.SelfAttribute("..kinds_id"),
     )
-    kinds_id = factory.Faker("random_int", min=1, max=10000)
+    kinds_id = factory.Sequence(lambda index: index + 100)
     logged_seconds = factory.Faker("random_int", min=60, max=60000)
     project = factory.RelatedFactory(
         factory=f"{_current_module}.ProjectFactory",
         factory_related_name="tasks",
         id=factory.SelfAttribute("..projects_id"),
     )
-    projects_id = factory.Faker("random_int", min=1, max=10000)
+    projects_id = factory.Sequence(lambda index: index + 100)
     report = factory.RelatedFactory(
         factory=f"{_current_module}.ReportFactory",
         factory_related_name="tasks",
         id=factory.SelfAttribute("..reports_id"),
     )
-    reports_id = factory.Faker("random_int", min=1, max=10000)
+    reports_id = factory.Sequence(lambda index: index + 100)
     summary = factory.Faker("sentence", nb_words=10, variable_nb_words=True)
     updated_at = factory.Faker("date_time")
