@@ -1,4 +1,5 @@
 import json
+import os
 import random
 from collections.abc import Generator
 from pathlib import Path
@@ -10,6 +11,13 @@ from sqlalchemy.orm import Session
 
 from reporting.config_app.class_config import Config
 from reporting.models import Base
+
+
+class PortalFixture(Protocol):
+    def __call__(
+        self,
+        init: dict = {},
+    ) -> None: ...
 
 
 class ReportingConfigFixture(Protocol):
@@ -50,6 +58,7 @@ def database_session(
 def faker_seed() -> int:
     return round(random.random() * 1000000)
 
+
 @pytest.fixture
 def portal_mock() -> None:
     pass
@@ -66,8 +75,8 @@ def reporting_base_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def reporting_config(
     database_path: str,
     reporting_base_dir: Path,
-) -> ReportingConfigFixture:
-    config_path = reporting_base_dir / "config.json"
+) -> Generator[ReportingConfigFixture]:
+    config_path = Path(reporting_base_dir, "config.json")
     config_default = {
         "hour-report-path": "",
         "sqlite-database-path": database_path,
@@ -82,7 +91,8 @@ def reporting_config(
 
     def config_save(config: dict = {}) -> None:
         config_union = dict(config_default, **config)
-        with config_path.open("w", encoding="utf-8") as config_file:
-            json.dump(config_union, config_file)
+        config_path.write_text(json.dumps(config_union), encoding="utf-8")
 
-    return config_save
+    yield config_save
+
+    os.remove(config_path)

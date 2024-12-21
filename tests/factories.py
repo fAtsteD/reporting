@@ -77,24 +77,21 @@ class TaskFactory(BaseFactory):
 
     created_at = factory.Faker("date_time")
     id = factory.Sequence(lambda index: index + 100)
-    kind = factory.RelatedFactory(
+    kind = factory.SubFactory(
         factory=f"{_current_module}.KindFactory",
-        factory_related_name="tasks",
-        id=factory.SelfAttribute("..kinds_id"),
+        tasks=[],
     )
-    kinds_id = factory.Sequence(lambda index: index + 100)
+    kinds_id = factory.SelfAttribute("kind.id")
     logged_seconds = factory.Faker("random_int", min=60, max=60000)
-    project = factory.RelatedFactory(
+    project = factory.SubFactory(
         factory=f"{_current_module}.ProjectFactory",
-        factory_related_name="tasks",
-        id=factory.SelfAttribute("..projects_id"),
+        tasks=[],
     )
-    projects_id = factory.Sequence(lambda index: index + 100)
-    report = factory.RelatedFactory(
+    projects_id = factory.SelfAttribute("project.id")
+    report = factory.SubFactory(
         factory=f"{_current_module}.ReportFactory",
-        factory_related_name="tasks",
-        id=factory.SelfAttribute("..reports_id"),
+        tasks=[],
     )
-    reports_id = factory.Sequence(lambda index: index + 100)
+    reports_id = factory.SelfAttribute("report.id")
     summary = factory.Faker("sentence", nb_words=10, variable_nb_words=True)
     updated_at = factory.Faker("date_time")
