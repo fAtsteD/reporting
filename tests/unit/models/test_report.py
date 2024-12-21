@@ -1,21 +1,14 @@
 import datetime
 
+from reporting import config_app
 from reporting.models.kind import Kind
 from reporting.models.report import Report
 from reporting.models.task import Task
-from tests.conftest import ReportingConfigFixture
 from tests.factories import KindFactory, ReportFactory, TaskFactory
 
 
-def test_report_properties(
-    reporting_config: ReportingConfigFixture,
-) -> None:
-    minute_round_to = 15
-    reporting_config(
-        {
-            "minute-round-to": minute_round_to,
-        }
-    )
+def test_report_properties() -> None:
+    config_app.config.minute_round_to = 15
     report_date = datetime.date(2000, 1, 1)
     report_date_str = report_date.strftime("%d.%m.%Y")
     report: Report = ReportFactory.create(date=report_date, tasks=[])

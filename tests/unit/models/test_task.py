@@ -1,20 +1,14 @@
 import datetime
 
+from reporting import config_app
 from reporting.models.project import Project
 from reporting.models.task import Task
-from tests.conftest import ReportingConfigFixture
 from tests.factories import ProjectFactory, TaskFactory
 
 
-def test_task_properties(
-    reporting_config: ReportingConfigFixture,
-) -> None:
+def test_task_properties() -> None:
     minute_round_to = 15
-    reporting_config(
-        {
-            "minute-round-to": minute_round_to,
-        }
-    )
+    config_app.config.minute_round_to = minute_round_to
     project: Project = ProjectFactory.create(
         tasks=[],
     )
