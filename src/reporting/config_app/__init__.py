@@ -6,23 +6,26 @@ from pathlib import Path
 
 import dateutil.parser
 
-from reporting.config_app.class_config import Command, Config
+from reporting import database
+from reporting.config_app.app import AppConfig, Command
 from reporting.config_app.dictionary import Dictionary
-from reporting.config_app.jira_config import JiraConfig
-from reporting.config_app.reporting_config import ReportingConfig
+from reporting.config_app.jira import JiraConfig
+from reporting.config_app.reporting import ReportingConfig
 
-__all__ = ["config", "load_config"]
-
-config: Config = Config()
+app: AppConfig = AppConfig()
+commands: list[Command] = []
+dictionary = Dictionary()
+jira = JiraConfig()
+reporting = ReportingConfig()
 
 
 def load_config(cli_args: list[str] | None = None):
     """
     Parse config file and set settings
     """
-    global config
-    config = Config()
-    config_file = Path(config.program_dir, "config.json").expanduser()
+    global app, dictionary, jira, reporting
+    app = AppConfig()
+    config_file = Path(app.program_dir, "config.json").expanduser()
     config_file.parent.mkdir(parents=True, exist_ok=True)
 
     if not config_file.is_file():
@@ -31,9 +34,9 @@ def load_config(cli_args: list[str] | None = None):
     data = json.load(config_file.open("r", encoding="utf-8"))
 
     if "default-project" in data:
-        config.default_project = data["default-project"]
+        app.default_project = data["default-project"]
     if "default-type" in data:
-        config.default_kind = data["default-type"]
+        app.default_kind = data["default-type"]
     if "dictionary" in data:
         dictionary_dict = {}
         if "task" in data["dictionary"]:
@@ -42,20 +45,20 @@ def load_config(cli_args: list[str] | None = None):
             dictionary_dict["kinds"] = data["dictionary"]["type"]
         if "project" in data["dictionary"]:
             dictionary_dict["projects"] = data["dictionary"]["project"]
-        config.dictionary = Dictionary(**dictionary_dict)
+        dictionary = Dictionary(**dictionary_dict)
     if "hour-report-path" in data and os.path.isfile(data["hour-report-path"]):
-        config.input_file_hours = os.path.normpath(data["hour-report-path"])
+        app.input_file_hours = os.path.normpath(data["hour-report-path"])
     if "minute-round-to" in data and isinstance(data["minute-round-to"], int):
-        config.minute_round_to = int(data["minute-round-to"])
+        app.minute_round_to = int(data["minute-round-to"])
     if "omit-task" in data:
         skip_tasks = data["omit-task"]
         for task_name in skip_tasks:
-            config.skip_tasks.append(config.dictionary.translate_task(task_name))
+            app.skip_tasks.append(dictionary.translate_task(task_name))
     if "sqlite-database-path" in data:
-        config.sqlite_database_path = os.path.normpath(data["sqlite-database-path"])
+        database.reconnect(os.path.normpath(data["sqlite-database-path"]))
 
     if "jira" in data:
-        config.jira = JiraConfig(
+        jira = JiraConfig(
             issue_key_bases=data["jira"]["issue-key-base"] if "issue-key-base" in data["jira"] else [],
             login=data["jira"]["login"] if "login" in data["jira"] else "",
             password=data["jira"]["password"] if "password" in data["jira"] else "",
@@ -66,7 +69,7 @@ def load_config(cli_args: list[str] | None = None):
         reporting_dict = {}
         if "project-to-corp-struct-item" in data["reporting"]:
             reporting_dict["project_to_corp_struct_item"] = data["reporting"]["project-to-corp-struct-item"]
-        config.reporting = ReportingConfig(
+        reporting = ReportingConfig(
             safe_send_report_days=(
                 data["reporting"]["safe-send-report-days"]
                 if "safe-send-report-days" in data["reporting"] and data["reporting"]["safe-send-report-days"] > 0
@@ -91,7 +94,8 @@ def _config_arguments(cli_args: list[str] | None):
     """
     Parse params from arguments to program
     """
-    global config
+    global commands
+    commands = []
     parser = argparse.ArgumentParser(
         description="Parse file with day (days) of tasks begins in some time and save it is in many systems"
     )
@@ -172,36 +176,36 @@ def _config_arguments(cli_args: list[str] | None):
     regex_date = "^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})$"
 
     if args.show is not None:
-        config.commands.append(Command.REPORT_SHOW)
+        commands.append(Command.REPORT_SHOW)
         if re.search(regex_date, args.show.strip()):
-            config.show_date = dateutil.parser.parse(args.show, dayfirst=True).date()
+            app.show_date = dateutil.parser.parse(args.show, dayfirst=True).date()
 
     if args.parse is not None and int(args.parse) >= 0:
-        config.commands.append(Command.REPORT_PARSE)
-        config.parse_days = int(args.parse)
+        commands.append(Command.REPORT_PARSE)
+        app.parse_days = int(args.parse)
 
     if args.jira is not None:
-        config.commands.append(Command.JIRA)
+        commands.append(Command.JIRA)
         if re.search(regex_date, args.jira.strip()):
-            config.jira.report_date = dateutil.parser.parse(args.jira, dayfirst=True).date()
+            jira.report_date = dateutil.parser.parse(args.jira, dayfirst=True).date()
 
     if args.reporting is not None:
-        config.commands.append(Command.REPORTING)
+        commands.append(Command.REPORTING)
         if re.search(regex_date, args.reporting.strip()):
-            config.reporting.report_date = dateutil.parser.parse(args.reporting, dayfirst=True).date()
+            reporting.report_date = dateutil.parser.parse(args.reporting, dayfirst=True).date()
 
     if args.kind:
-        config.commands.append(Command.KIND_UPDATE)
-        config.commands.append(Command.KIND_SHOW)
-        config.kind_data = args.kind
+        commands.append(Command.KIND_UPDATE)
+        commands.append(Command.KIND_SHOW)
+        app.kind_data = args.kind
 
     if args.show_kinds:
-        config.commands.append(Command.KIND_SHOW)
+        commands.append(Command.KIND_SHOW)
 
     if args.project:
-        config.commands.append(Command.PROJECT_UPDATE)
-        config.commands.append(Command.PROJECT_SHOW)
-        config.project_data = args.project
+        commands.append(Command.PROJECT_UPDATE)
+        commands.append(Command.PROJECT_SHOW)
+        app.project_data = args.project
 
     if args.show_projects:
-        config.commands.append(Command.PROJECT_SHOW)
+        commands.append(Command.PROJECT_SHOW)

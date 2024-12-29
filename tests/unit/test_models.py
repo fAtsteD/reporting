@@ -20,7 +20,7 @@ def test_project_str() -> None:
 
 
 def test_report_properties() -> None:
-    config_app.config.minute_round_to = 15
+    config_app.app.minute_round_to = 15
     report_date = datetime.date(2000, 1, 1)
     report_date_str = report_date.strftime("%d.%m.%Y")
     report: Report = ReportFactory.create(date=report_date, tasks=[])
@@ -67,7 +67,7 @@ def test_report_properties() -> None:
 
 def test_task_properties() -> None:
     minute_round_to = 15
-    config_app.config.minute_round_to = minute_round_to
+    config_app.app.minute_round_to = minute_round_to
     project: Project = ProjectFactory.create(
         tasks=[],
     )

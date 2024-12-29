@@ -29,15 +29,13 @@ class ReportingApi:
         """
         Connect to the server
         """
-        config = config_app.config
-
-        if not config.reporting.is_use:
+        if not config_app.reporting.is_use:
             exit("Used reporting module without required settings")
 
         self._request_session = request_session
 
         self.last_error: str | None = None
-        self.base_url = config.reporting.url[:-1] if config.reporting.url.endswith("/") else config.reporting.url
+        self.base_url = config_app.reporting.url[:-1] if config_app.reporting.url.endswith("/") else config_app.reporting.url
         self.is_auth = False
 
         self.categories: Categories | None = None
@@ -47,9 +45,8 @@ class ReportingApi:
         self.user_data: User | None = None
 
     def login(self) -> bool:
-        config = config_app.config
         self.last_error = None
-        data = {"login": config.reporting.login, "password": config.reporting.password}
+        data = {"login": config_app.reporting.login, "password": config_app.reporting.password}
 
         response = self._request_session.post(f"{self.base_url}/common/login", json=data)
 
@@ -361,12 +358,11 @@ class ReportingApi:
         if not self.categories:
             return None
 
-        config = config_app.config
         kind: Kind = task.kind
         category_name = kind.name
 
-        if kind.alias in config.reporting.kinds.keys():
-            category_name = config.reporting.kinds[kind.alias]
+        if kind.alias in config_app.reporting.kinds.keys():
+            category_name = config_app.reporting.kinds[kind.alias]
 
         return self.categories.get_by_name(category_name, corp_struct_item_id)
 
@@ -380,12 +376,11 @@ class ReportingApi:
         if not self.corp_struct_items:
             return None
 
-        config = config_app.config
         project: Project = task.project
         user_corp_struct_item_id = self.user_data.get_corp_struct_item_id() if self.user_data else None
 
-        if project.alias in config.reporting.project_to_corp_struct_item.keys():
-            corp_struct_item_alias = config.reporting.project_to_corp_struct_item[project.alias]
+        if project.alias in config_app.reporting.project_to_corp_struct_item.keys():
+            corp_struct_item_alias = config_app.reporting.project_to_corp_struct_item[project.alias]
             return self.corp_struct_items.get_by_alias(corp_struct_item_alias)
 
         return self.corp_struct_items.get_by_id(user_corp_struct_item_id) if user_corp_struct_item_id else None
@@ -400,11 +395,10 @@ class ReportingApi:
         if not self.projects:
             return None
 
-        config = config_app.config
         project: Project = task.project
         project_name = project.name
 
-        if project.alias in config.reporting.projects.keys():
-            project_name = config.reporting.projects[project.alias]
+        if project.alias in config_app.reporting.projects.keys():
+            project_name = config_app.reporting.projects[project.alias]
 
         return self.projects.get_by_name(project_name)

@@ -5,7 +5,7 @@ from os import path
 
 import dateutil.parser
 
-from reporting import config_app
+from reporting import config_app, database
 from reporting.models import Kind, Project, Report, Task
 
 
@@ -25,7 +25,6 @@ def parse_task(task_str: str) -> TaskLine:
     """
     Parse line from file to task object
     """
-    config = config_app.config
     task = TaskLine()
     split_str = task_str.split(" - ")
 
@@ -34,19 +33,21 @@ def parse_task(task_str: str) -> TaskLine:
         task.time_begin = dateutil.parser.parse(split_str[0].strip().replace(" ", ":"))
 
     if len(split_str) >= 2 and split_str[1]:
-        task.summary = config.dictionary.translate_task(split_str[1].strip().replace("\\-", "-")).replace("\\\\", "\\")
+        task.summary = config_app.dictionary.translate_task(split_str[1].strip().replace("\\-", "-")).replace(
+            "\\\\", "\\"
+        )
 
     if len(split_str) >= 3 and split_str[2]:
-        task.kind = config.dictionary.translate_kind(split_str[2].strip().replace("\\-", "-").replace("\\\\", "\\"))
+        task.kind = config_app.dictionary.translate_kind(split_str[2].strip().replace("\\-", "-").replace("\\\\", "\\"))
     else:
-        task.kind = config.default_kind
+        task.kind = config_app.app.default_kind
 
     if len(split_str) >= 4 and split_str[3]:
-        task.project = config.dictionary.translate_project(
+        task.project = config_app.dictionary.translate_project(
             split_str[3].strip().replace("\\-", "-").replace("\\\\", "\\")
         )
     else:
-        task.project = config.default_project
+        task.project = config_app.app.default_project
 
     return task
 
@@ -70,15 +71,14 @@ def parse_reports(read_days: int = 1) -> list[Report]:
 
     Return reports
     """
-    config = config_app.config
     reports: list[Report] = []
 
-    if not path.isfile(config.input_file_hours):
+    if not path.isfile(config_app.app.input_file_hours):
         return reports
 
-    config.sqlite_session.autoflush = False
+    database.session.autoflush = False
 
-    with open(config.input_file_hours, "r", encoding="utf-8") as input_file_hours:
+    with open(config_app.app.input_file_hours, "r", encoding="utf-8") as input_file_hours:
         # Need for double new line finding
         report: Report | None = None
         day_index = 0
@@ -89,11 +89,11 @@ def parse_reports(read_days: int = 1) -> list[Report]:
         for line in input_file_hours:
             if re.search("^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})\n$", line):
                 report_date = dateutil.parser.parse(line, dayfirst=True).date()
-                report = config.sqlite_session.query(Report).filter(Report.date == report_date).first()
+                report = database.session.query(Report).filter(Report.date == report_date).first()
 
                 if report is None:
                     report = Report(date=report_date)
-                    config.sqlite_session.add(report)
+                    database.session.add(report)
 
                 report.remove_tasks()
                 reports.append(report)
@@ -102,17 +102,17 @@ def parse_reports(read_days: int = 1) -> list[Report]:
 
             if previous_line == "\n" and line == "\n":
                 day_index += 1
-                config.sqlite_session.commit()
+                database.session.commit()
 
                 if (
                     report
                     and previous_task
                     and previous_task_line
                     and previous_task_line.summary
-                    and report.total_rounded_seconds < config.work_day_hours.total_seconds()
+                    and report.total_rounded_seconds < config_app.app.work_day_hours.total_seconds()
                 ):
                     previous_task.logged_timedelta(
-                        datetime.timedelta(seconds=config.work_day_hours.total_seconds() - report.total_seconds)
+                        datetime.timedelta(seconds=config_app.app.work_day_hours.total_seconds() - report.total_seconds)
                     )
 
                 if day_index < read_days or read_days == 0:
@@ -135,7 +135,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
             if previous_task_line is not None and previous_task is not None:
                 previous_task.logged_timedelta(task_line.time_begin - previous_task_line.time_begin)
 
-            if task_line.summary.strip() and task_line.summary not in config.skip_tasks:
+            if task_line.summary.strip() and task_line.summary not in config_app.app.skip_tasks:
                 for report_task in report.tasks:
                     if (
                         report_task.summary == task_line.summary
@@ -150,7 +150,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                     task.report = report
 
                     if task_line.kind:
-                        kind = config.sqlite_session.query(Kind).filter(Kind.alias == task_line.kind).first()
+                        kind = database.session.query(Kind).filter(Kind.alias == task_line.kind).first()
 
                         if kind is None:
                             exit(f"Kind {task_line.kind} does not exist")
@@ -158,19 +158,17 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                         task.kind = kind
 
                     if task_line.project:
-                        project = (
-                            config.sqlite_session.query(Project).filter(Project.alias == task_line.project).first()
-                        )
+                        project = database.session.query(Project).filter(Project.alias == task_line.project).first()
 
                         if project is None:
                             exit(f"Project {task_line.project} does not exist")
 
                         task.project = project
 
-                    config.sqlite_session.add(task)
+                    database.session.add(task)
 
             previous_task = task
             previous_task_line = task_line
 
-    config.sqlite_session.commit()
+    database.session.commit()
     return reports

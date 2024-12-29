@@ -37,11 +37,7 @@ def test_show_kinds(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config()
-    kinds: list[Kind] = [
-        KindFactory.create(tasks=[]),
-        KindFactory.create(tasks=[]),
-        KindFactory.create(tasks=[]),
-    ]
+    kinds: list[Kind] = KindFactory.create_batch(3, tasks=[])
     kinds.sort(key=lambda kind: kind.name)
     output_expected = "Kinds:\n"
 

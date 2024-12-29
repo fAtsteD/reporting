@@ -3,7 +3,7 @@ import datetime
 import sqlalchemy as sa
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from reporting import config_app
+from reporting import config_app, database
 
 
 class Base(DeclarativeBase):
@@ -94,19 +94,16 @@ class Report(Base):
         """
         Remove tasks in the report
         """
-        config = config_app.config
-
         for task in self.tasks:
             self.updated_at = sa.func.now()
-            config.sqlite_session.delete(task)
+            database.session.delete(task)
 
-        config.sqlite_session.commit()
+        database.session.commit()
 
     def __str__(self):
         """
         Report to the text present, it is multiline
         """
-        config = config_app.config
         text = self.date.strftime("%d.%m.%Y") + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
 
         total_seconds = self.total_rounded_seconds
@@ -118,7 +115,7 @@ class Report(Base):
 
         indent = "  "
         tasks = (
-            config.sqlite_session.query(Task)
+            database.session.query(Task)
             .filter(Task.report.has(Report.id == self.id))
             .order_by(Task.kinds_id, Task.summary)
             .all()
@@ -176,26 +173,25 @@ class Task(Base):
         if self.logged_seconds <= 0:
             return 0
 
-        config = config_app.config
         hours = self.logged_seconds / 60 // 60
         minutes = self.logged_seconds / 60 % 60
 
-        if config.minute_round_to <= 0:
+        if config_app.app.minute_round_to <= 0:
             return self.logged_seconds
 
-        frac = minutes % config.minute_round_to
+        frac = minutes % config_app.app.minute_round_to
 
-        if frac >= int(config.minute_round_to / 2) + 1:
-            minutes = (minutes // config.minute_round_to + 1) * config.minute_round_to
+        if frac >= int(config_app.app.minute_round_to / 2) + 1:
+            minutes = (minutes // config_app.app.minute_round_to + 1) * config_app.app.minute_round_to
 
             if minutes == 100:
                 hours += 1
                 minutes = 0
         else:
-            minutes = minutes // config.minute_round_to * config.minute_round_to
+            minutes = minutes // config_app.app.minute_round_to * config_app.app.minute_round_to
 
         seconds: int = int(hours * 60 * 60 + minutes * 60)
-        return seconds if seconds > 0 else config.minute_round_to * 60
+        return seconds if seconds > 0 else config_app.app.minute_round_to * 60
 
     def logged_timedelta(self, logged_time: datetime.timedelta):
         """

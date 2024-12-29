@@ -11,7 +11,7 @@ def set_worklog(report: Report) -> None:
     """
     Set worklog time to the task
     """
-    config_jira = config_app.config.jira
+    config_jira = config_app.jira
 
     if not config_jira.is_use:
         return

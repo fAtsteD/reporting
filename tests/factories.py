@@ -2,6 +2,7 @@ import datetime
 
 import factory
 
+from reporting import database
 from reporting.models import Kind, Project, Report, Task
 
 # Use if for relational factories
@@ -15,9 +16,7 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
 
         @staticmethod
         def sqlalchemy_session_factory():
-            from reporting.config_app import config
-
-            return config.sqlite_session
+            return database.session
 
 
 class KindFactory(BaseFactory):
