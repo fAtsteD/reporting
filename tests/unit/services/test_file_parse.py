@@ -1,7 +1,7 @@
 import dateutil.parser
 import pytest
 
-from reporting.config_app.app import AppConfig
+from reporting.config.app import AppConfig
 from reporting.services.file_parse import TaskLine, parse_task
 from tests.conftest import ReportingConfigFixture
 

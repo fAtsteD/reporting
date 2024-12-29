@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from reporting import database
-from reporting.config_app.app import AppConfig
+from reporting.config.app import AppConfig
 from reporting.models import Base
 
 

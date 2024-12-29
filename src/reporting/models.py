@@ -3,7 +3,7 @@ import datetime
 import sqlalchemy as sa
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from reporting import config_app, database
+from reporting import config, database
 
 
 class Base(DeclarativeBase):
@@ -176,22 +176,22 @@ class Task(Base):
         hours = self.logged_seconds / 60 // 60
         minutes = self.logged_seconds / 60 % 60
 
-        if config_app.app.minute_round_to <= 0:
+        if config.app.minute_round_to <= 0:
             return self.logged_seconds
 
-        frac = minutes % config_app.app.minute_round_to
+        frac = minutes % config.app.minute_round_to
 
-        if frac >= int(config_app.app.minute_round_to / 2) + 1:
-            minutes = (minutes // config_app.app.minute_round_to + 1) * config_app.app.minute_round_to
+        if frac >= int(config.app.minute_round_to / 2) + 1:
+            minutes = (minutes // config.app.minute_round_to + 1) * config.app.minute_round_to
 
             if minutes == 100:
                 hours += 1
                 minutes = 0
         else:
-            minutes = minutes // config_app.app.minute_round_to * config_app.app.minute_round_to
+            minutes = minutes // config.app.minute_round_to * config.app.minute_round_to
 
         seconds: int = int(hours * 60 * 60 + minutes * 60)
-        return seconds if seconds > 0 else config_app.app.minute_round_to * 60
+        return seconds if seconds > 0 else config.app.minute_round_to * 60
 
     def logged_timedelta(self, logged_time: datetime.timedelta):
         """

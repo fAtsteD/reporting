@@ -3,7 +3,7 @@ import re
 import jira.client
 import jira.exceptions
 
-from reporting import config_app
+from reporting import config
 from reporting.models import Report
 
 
@@ -11,7 +11,7 @@ def set_worklog(report: Report) -> None:
     """
     Set worklog time to the task
     """
-    config_jira = config_app.jira
+    config_jira = config.jira
 
     if not config_jira.is_use:
         return

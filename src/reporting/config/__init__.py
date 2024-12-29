@@ -7,10 +7,10 @@ from pathlib import Path
 import dateutil.parser
 
 from reporting import database
-from reporting.config_app.app import AppConfig, Command
-from reporting.config_app.dictionary import Dictionary
-from reporting.config_app.jira import JiraConfig
-from reporting.config_app.reporting import ReportingConfig
+from reporting.config.app import AppConfig, Command
+from reporting.config.dictionary import Dictionary
+from reporting.config.jira import JiraConfig
+from reporting.config.reporting import ReportingConfig
 
 app: AppConfig = AppConfig()
 commands: list[Command] = []
