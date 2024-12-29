@@ -49,6 +49,7 @@ def portal_mock(responses: RequestsMock) -> PortalFixture:
         report_put: dict | None = None,
         time_record_post: dict | None = None,
     ) -> None:
+        responses.assert_all_requests_are_fired = False
         base_url = base_url.rstrip("/")
 
         if categories is not None:
