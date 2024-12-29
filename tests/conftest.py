@@ -13,13 +13,6 @@ from reporting.config_app.class_config import Config
 from reporting.models import Base
 
 
-class PortalFixture(Protocol):
-    def __call__(
-        self,
-        init: dict = {},
-    ) -> None: ...
-
-
 class ReportingConfigFixture(Protocol):
     def __call__(self, config: dict = {}) -> None: ...
 
@@ -57,11 +50,6 @@ def database_session(
 @pytest.fixture(autouse=True)
 def faker_seed() -> int:
     return round(random.random() * 1000000)
-
-
-@pytest.fixture
-def portal_mock() -> None:
-    pass
 
 
 @pytest.fixture(scope="session")
