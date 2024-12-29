@@ -1,4 +1,4 @@
-from reporting.models.report import Report
+from reporting.models import Report
 from reporting.services.reporting.api import ReportingApi
 
 

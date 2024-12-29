@@ -1,10 +1,22 @@
 import datetime
 
 from reporting import config_app
-from reporting.models.kind import Kind
-from reporting.models.report import Report
-from reporting.models.task import Task
-from tests.factories import KindFactory, ReportFactory, TaskFactory
+from reporting.models import Kind, Project, Report, Task
+from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
+
+
+def test_kind_str() -> None:
+    alias = "tk"
+    name = "Test Kind"
+    kind = Kind(alias=alias, name=name)
+    assert str(kind) == f"{alias} - {name}"
+
+
+def test_project_str() -> None:
+    alias = "tp"
+    name = "Test Project"
+    kind = Project(alias=alias, name=name)
+    assert str(kind) == f"{alias} - {name}"
 
 
 def test_report_properties() -> None:
@@ -51,3 +63,31 @@ def test_report_properties() -> None:
     assert report.total_rounded_seconds == 0
     assert report.total_seconds == 0
     assert str(report) == f"{report_date_str} ({current_date_str})\nSummary time: 00:00\nReport does not have tasks\n"
+
+
+def test_task_properties() -> None:
+    minute_round_to = 15
+    config_app.config.minute_round_to = minute_round_to
+    project: Project = ProjectFactory.create(
+        tasks=[],
+    )
+    task: Task = TaskFactory.create(
+        logged_seconds=0,
+        project=project,
+        projects_id=project.id,
+    )
+
+    assert task.logged_rounded == 0
+    assert str(task) == f"00:00 - {task.summary} - {project.name}"
+
+    task.logged_timedelta(datetime.timedelta(minutes=5))
+    assert task.logged_rounded == minute_round_to * 60
+    assert str(task) == f"00:{minute_round_to} - {task.summary} - {project.name}"
+
+    task.logged_timedelta(datetime.timedelta(minutes=15))
+    assert task.logged_rounded == minute_round_to * 60
+    assert str(task) == f"00:{minute_round_to} - {task.summary} - {project.name}"
+
+    task.logged_timedelta(datetime.timedelta(hours=1, minutes=40))
+    assert task.logged_rounded == 2 * 60 * 60
+    assert str(task) == f"02:00 - {task.summary} - {project.name}"

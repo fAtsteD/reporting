@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from reporting import cli
-from reporting.models.kind import Kind
+from reporting.models import Kind
 from tests.conftest import ReportingConfigFixture
 from tests.factories import KindFactory
 

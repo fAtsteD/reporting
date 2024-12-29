@@ -3,9 +3,7 @@ import datetime
 from requests.sessions import Session
 
 from reporting import config_app
-from reporting.models.kind import Kind
-from reporting.models.project import Project
-from reporting.models.task import Task
+from reporting.models import Kind, Project, Task
 from reporting.services.reporting.models.categories import Categories
 from reporting.services.reporting.models.corp_struct_items import CorpStructItems
 from reporting.services.reporting.models.positions import Positions

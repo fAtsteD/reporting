@@ -4,8 +4,7 @@ import jira.exceptions
 import pytest
 
 from reporting import cli
-from reporting.models.report import Report
-from reporting.models.task import Task
+from reporting.models import Report, Task
 from tests.conftest import ReportingConfigFixture
 from tests.factories import ReportFactory, TaskFactory
 

@@ -4,7 +4,7 @@ import jira.client
 import jira.exceptions
 
 from reporting import config_app
-from reporting.models.report import Report
+from reporting.models import Report
 
 
 def set_worklog(report: Report) -> None:

@@ -8,9 +8,7 @@ from responses import RequestsMock, matchers
 from sqlalchemy.orm import Session
 
 from reporting import cli
-from reporting.models.kind import Kind
-from reporting.models.project import Project
-from reporting.models.report import Report
+from reporting.models import Kind, Project, Report
 from tests.conftest import ReportingConfigFixture
 from tests.factories import ReportFactory
 
