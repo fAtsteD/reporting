@@ -11,7 +11,7 @@ dependencies = [
 ]
 name = "reporting"
 requires-python = ">=3.10"
-version = "1.4.0"
+version = "1.4.1"
 
 [project.optional-dependencies]
 dev = [
