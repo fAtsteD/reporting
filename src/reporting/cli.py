@@ -5,9 +5,7 @@ from datetime import date
 from reporting import config, database
 from reporting.config.app import Command
 from reporting.models import Kind, Project, Report
-from reporting.services import jira
-from reporting.services.file_parse import parse_reports
-from reporting.services.reporting.actions import send_tasks
+from reporting.services import file_parse, jira, reporting
 
 
 def kind_update() -> None:
@@ -51,7 +49,7 @@ def projects_show() -> None:
 
 
 def report_parse() -> None:
-    reports = parse_reports(config.app.parse_days or 1)
+    reports = file_parse.parse_reports(config.app.parse_days or 1)
     print(f"Parsed {len(reports)}")
 
     if len(reports) < 10:
@@ -95,9 +93,7 @@ def send_to_reporting() -> None:
     if config.reporting.report_date == "last":
         report = database.session.query(Report).order_by(Report.date.desc()).first()
     else:
-        report = (
-            database.session.query(Report).filter(Report.date == config.reporting.report_date).first()
-        )
+        report = database.session.query(Report).filter(Report.date == config.reporting.report_date).first()
 
     if report:
         if (current_date - report.date).days > config.reporting.safe_send_report_days:
@@ -107,7 +103,7 @@ def send_to_reporting() -> None:
             )
 
         if reporting_send_task == "y":
-            send_tasks(report)
+            reporting.send_tasks(report)
 
 
 def main(cli_args: list[str] | None = None) -> None:

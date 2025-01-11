@@ -27,13 +27,16 @@ class PortalFixture(Protocol):
         logout: dict | None = None,
         providers: dict | None = None,
         report: dict | list | None = None,
-        report_put: dict | None = None,
-        time_record_post: dict | None = None,
+        report_put: bool = False,
+        time_records_post: bool = False,
     ) -> None: ...
 
 
 @pytest.fixture
-def portal_mock(responses: RequestsMock) -> PortalFixture:
+def portal_mock(
+    responses: RequestsMock,
+    faker: faker.Faker,
+) -> PortalFixture:
 
     def requests_mock_portal(
         base_url: str,
@@ -46,11 +49,17 @@ def portal_mock(responses: RequestsMock) -> PortalFixture:
         logout: dict | None = None,
         providers: dict | None = None,
         report: dict | list | None = None,
-        report_put: dict | None = None,
-        time_record_post: dict | None = None,
+        report_put: bool = False,
+        time_records_post: bool = False,
     ) -> None:
         responses.assert_all_requests_are_fired = False
-        base_url = base_url.rstrip("/")
+        base_url = base_url.rstrip("/") + "/reporting/api"
+
+        responses.add(
+            responses.GET,
+            f"{base_url}/ping",
+            status=204,
+        )
 
         if categories is not None:
             responses.add(
@@ -129,19 +138,40 @@ def portal_mock(responses: RequestsMock) -> PortalFixture:
                 ),
                 status=200,
             )
-        if report_put is not None:
-            responses.add(
+        if report_put:
+
+            def report_put_callback(request):
+                request_body = json.loads(request.body)
+                request_body["id"] = (
+                    request_body["id"]
+                    if "id" in request_body and request_body["id"] and request_body["id"] > 0
+                    else faker.random_int(min=1)
+                )
+                return 200, {}, json.dumps(request_body)
+
+            responses.add_callback(
                 responses.PUT,
                 f"{base_url}/report",
-                json=report_put,
-                status=200,
+                callback=report_put_callback,
+                content_type="application/json",
             )
-        if time_record_post is not None:
-            responses.add(
+        if time_records_post:
+
+            def time_records_post_callback(request):
+                request_body = json.loads(request.body)
+                for time_record in request_body:
+                    time_record["id"] = (
+                        time_record["id"]
+                        if "id" in time_record and time_record["id"] and time_record["id"] > 0
+                        else faker.random_int(min=1)
+                    )
+                return 200, {}, json.dumps(request_body)
+
+            responses.add_callback(
                 responses.POST,
                 f"{base_url}/time-records",
-                json=time_record_post,
-                status=200,
+                callback=time_records_post_callback,
+                content_type="application/json",
             )
 
     return requests_mock_portal
@@ -181,10 +211,12 @@ def test_send_reporting_first_day_report(
     projects_0_corp_struct_item = {
         "alias": faker.domain_word().upper(),
         "id": faker.random_int(min=1),
+        "name": faker.sentence(nb_words=3, variable_nb_words=True),
     }
     current_user_corp_struct_item = {
         "alias": faker.domain_word().upper(),
         "id": faker.random_int(min=1),
+        "name": faker.sentence(nb_words=3, variable_nb_words=True),
     }
     current_user_id = faker.random_int(min=1)
     reporting_config(
@@ -205,36 +237,57 @@ def test_send_reporting_first_day_report(
     )
     portal_api_categories = [
         {
+            "alias": faker.domain_word().upper(),
+            "deleted": False,
             "id": faker.random_int(min=1),
             "name": kind_name,
             "salaryCoefficient": faker.random_int(min=1),
         }
         for kind_name in kinds_config.values()
     ]
-    portal_api_corp_struct_items = [
-        {
-            "alias": faker.domain_word().upper(),
-            "id": faker.random_int(min=1),
-        },
-        current_user_corp_struct_item,
-        projects_0_corp_struct_item,
-    ]
     portal_api_category_bindings = [
         {
             "categoryId": portal_api_category["id"],
             "corpStructItemId": current_user_corp_struct_item["id"],
+            "id": faker.random_int(min=1),
+            "positionId": faker.random_int(min=1),
+            "roleId": faker.random_int(min=1),
         }
         for portal_api_category in portal_api_categories
+    ]
+    portal_api_corp_struct_items = [
+        {
+            "alias": faker.domain_word().upper(),
+            "id": faker.random_int(min=1),
+            "name": faker.sentence(nb_words=3, variable_nb_words=True),
+        },
+        current_user_corp_struct_item,
+        projects_0_corp_struct_item,
     ]
     portal_api_category_bindings.extend(
         [
             {
                 "categoryId": portal_api_category["id"],
                 "corpStructItemId": projects_0_corp_struct_item["id"],
+                "id": faker.random_int(min=1),
+                "positionId": faker.random_int(min=1),
+                "roleId": faker.random_int(min=1),
             }
             for portal_api_category in portal_api_categories
         ]
     )
+    portal_api_employees_positions = [
+        {
+            "acting": False,
+            "alias": faker.domain_word().upper(),
+            "corpStructItemId": corp_struct_item["id"],
+            "corpStructItemAlias": corp_struct_item["alias"],
+            "employeeId": current_user_id,
+            "id": faker.random_int(min=1),
+            "positionId": faker.random_int(min=1),
+        }
+        for corp_struct_item in portal_api_corp_struct_items
+    ]
     portal_mock(
         base_url=reporting_base_url,
         categories=portal_api_categories,
@@ -243,15 +296,19 @@ def test_send_reporting_first_day_report(
         init={
             "currentUser": {
                 "user": {
-                    "corpStructItemId": current_user_corp_struct_item["id"],
+                    "email": faker.email(),
                     "employeeId": current_user_id,
+                    "firstName": faker.first_name(),
+                    "lastName": faker.last_name(),
+                    "login": faker.domain_word(),
                 },
             },
         },
-        employees_positions=[],
+        employees_positions=portal_api_employees_positions,
         login={},
         logout={},
         providers={
+            "clients": [],
             "projects": [
                 {
                     "active": True,
@@ -262,11 +319,8 @@ def test_send_reporting_first_day_report(
             ],
         },
         report=[],
-        report_put={
-            "id": faker.random_int(min=1),
-            "timeRecords": [],
-        },
-        time_record_post={},
+        report_put=True,
+        time_records_post=True,
     )
     if not report_date_today:
         monkeypatch.setattr("builtins.input", lambda _: "y")
@@ -305,10 +359,12 @@ def test_send_reporting_empty_required_data(
     projects_0_corp_struct_item = {
         "alias": faker.domain_word().upper(),
         "id": faker.random_int(min=1),
+        "name": faker.sentence(nb_words=3, variable_nb_words=True),
     }
     current_user_corp_struct_item = {
         "alias": faker.domain_word().upper(),
         "id": faker.random_int(min=1),
+        "name": faker.sentence(nb_words=3, variable_nb_words=True),
     }
     current_user_id = faker.random_int(min=1)
     reporting_config(
@@ -339,6 +395,7 @@ def test_send_reporting_empty_required_data(
         {
             "alias": faker.domain_word().upper(),
             "id": faker.random_int(min=1),
+            "name": faker.sentence(nb_words=3, variable_nb_words=True),
         },
         current_user_corp_struct_item,
         projects_0_corp_struct_item,
@@ -347,6 +404,9 @@ def test_send_reporting_empty_required_data(
         {
             "categoryId": portal_api_category["id"],
             "corpStructItemId": current_user_corp_struct_item["id"],
+            "id": faker.random_int(min=1),
+            "positionId": faker.random_int(min=1),
+            "roleId": faker.random_int(min=1),
         }
         for portal_api_category in portal_api_categories
     ]
@@ -355,10 +415,25 @@ def test_send_reporting_empty_required_data(
             {
                 "categoryId": portal_api_category["id"],
                 "corpStructItemId": projects_0_corp_struct_item["id"],
+                "id": faker.random_int(min=1),
+                "positionId": faker.random_int(min=1),
+                "roleId": faker.random_int(min=1),
             }
             for portal_api_category in portal_api_categories
         ]
     )
+    portal_api_employees_positions = [
+        {
+            "acting": False,
+            "alias": faker.domain_word().upper(),
+            "corpStructItemId": corp_struct_item["id"],
+            "corpStructItemAlias": corp_struct_item["alias"],
+            "employeeId": current_user_id,
+            "id": faker.random_int(min=1),
+            "positionId": faker.random_int(min=1),
+        }
+        for corp_struct_item in portal_api_corp_struct_items
+    ]
     portal_mock(
         base_url=reporting_base_url,
         categories=portal_api_categories if "categories" in empty_response_data else [],
@@ -367,16 +442,20 @@ def test_send_reporting_empty_required_data(
         init={
             "currentUser": {
                 "user": {
-                    "corpStructItemId": current_user_corp_struct_item["id"],
+                    "email": faker.email(),
                     "employeeId": current_user_id,
+                    "firstName": faker.first_name(),
+                    "lastName": faker.last_name(),
+                    "login": faker.domain_word(),
                 },
             },
         },
-        employees_positions=[],
+        employees_positions=portal_api_employees_positions,
         login={},
         logout={},
         providers=(
             {
+                "clients": [],
                 "projects": (
                     [
                         {
@@ -392,11 +471,8 @@ def test_send_reporting_empty_required_data(
             }
         ),
         report=[],
-        report_put={
-            "id": faker.random_int(min=1),
-            "timeRecords": [],
-        },
-        time_record_post={},
+        report_put=True,
+        time_records_post=True,
     )
 
     cli.main(["--reporting"])

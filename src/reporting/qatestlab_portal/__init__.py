@@ -1,0 +1,2 @@
+class PortalAPIException(Exception):
+    pass
