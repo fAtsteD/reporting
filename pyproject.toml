@@ -4,10 +4,11 @@ requires = ["setuptools"]
 
 [project]
 dependencies = [
-    'jira == 3.*',
-    'python-dateutil == 2.*',
-    'requests == 2.*',
-    'SQLAlchemy == 2.*',
+    'alembic==1.14.*',
+    'jira == 3.8.*',
+    'python-dateutil == 2.9.*',
+    'requests == 2.32.*',
+    'SQLAlchemy == 2.0.*',
 ]
 name = "reporting"
 requires-python = ">=3.10"

@@ -20,7 +20,6 @@ class ReportingConfigFixture(Protocol):
 @pytest.fixture(autouse=True)  # autouse for factory usage in any moment
 def database_session(monkeypatch: pytest.MonkeyPatch) -> Generator[Session]:
     database.reconnect(":memory:")
-    Base.metadata.create_all(bind=database.engine)
 
     yield database.session()
 
