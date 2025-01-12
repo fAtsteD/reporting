@@ -39,24 +39,15 @@ def load_config(cli_args: list[str] | None = None):
         app.default_kind = data["default-type"]
     if "dictionary" in data:
         dictionary_dict = {}
+        if "project" in data["dictionary"]:
+            dictionary_dict["projects"] = data["dictionary"]["project"]
         if "task" in data["dictionary"]:
             dictionary_dict["tasks"] = data["dictionary"]["task"]
         if "type" in data["dictionary"]:
             dictionary_dict["kinds"] = data["dictionary"]["type"]
-        if "project" in data["dictionary"]:
-            dictionary_dict["projects"] = data["dictionary"]["project"]
         dictionary = Dictionary(**dictionary_dict)
     if "hour-report-path" in data and os.path.isfile(data["hour-report-path"]):
         app.input_file_hours = os.path.normpath(data["hour-report-path"])
-    if "minute-round-to" in data and isinstance(data["minute-round-to"], int):
-        app.minute_round_to = int(data["minute-round-to"])
-    if "omit-task" in data:
-        skip_tasks = data["omit-task"]
-        for task_name in skip_tasks:
-            app.skip_tasks.append(dictionary.translate_task(task_name))
-    if "sqlite-database-path" in data:
-        database.reconnect(os.path.normpath(data["sqlite-database-path"]))
-
     if "jira" in data:
         jira = JiraConfig(
             issue_key_bases=data["jira"]["issue-key-base"] if "issue-key-base" in data["jira"] else [],
@@ -64,17 +55,17 @@ def load_config(cli_args: list[str] | None = None):
             password=data["jira"]["password"] if "password" in data["jira"] else "",
             server=data["jira"]["server"] if "server" in data["jira"] else "",
         )
-
+    if "minute-round-to" in data and isinstance(data["minute-round-to"], int):
+        app.minute_round_to = int(data["minute-round-to"])
+    if "omit-task" in data:
+        skip_tasks = data["omit-task"]
+        for task_name in skip_tasks:
+            app.skip_tasks.append(dictionary.translate_task(task_name))
     if "reporting" in data:
         reporting_dict = {}
         if "project-to-corp-struct-item" in data["reporting"]:
             reporting_dict["project_to_corp_struct_item"] = data["reporting"]["project-to-corp-struct-item"]
         reporting = ReportingConfig(
-            safe_send_report_days=(
-                data["reporting"]["safe-send-report-days"]
-                if "safe-send-report-days" in data["reporting"] and data["reporting"]["safe-send-report-days"] > 0
-                else 0
-            ),
             kinds=data["reporting"]["kinds"] if "kinds" in data["reporting"] else {},
             login=data["reporting"]["login"] if "login" in data["reporting"] else "",
             password=data["reporting"]["password"] if "password" in data["reporting"] else "",
@@ -84,8 +75,15 @@ def load_config(cli_args: list[str] | None = None):
                 if "project-to-corp-struct-item" in data["reporting"]
                 else {}
             ),
+            safe_send_report_days=(
+                data["reporting"]["safe-send-report-days"]
+                if "safe-send-report-days" in data["reporting"] and data["reporting"]["safe-send-report-days"] > 0
+                else 0
+            ),
             url=data["reporting"]["url"] if "url" in data["reporting"] else "",
         )
+    if "sqlite-database-path" in data:
+        database.reconnect(os.path.normpath(data["sqlite-database-path"]))
 
     _config_arguments(cli_args)
 

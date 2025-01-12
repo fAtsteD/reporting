@@ -47,6 +47,3 @@ class AppConfig:
 
     # Parameters for program
     work_day_hours = datetime.timedelta(hours=8, minutes=0)
-
-    # SQLite
-    sqlite_database_path = Path("./report.db")
