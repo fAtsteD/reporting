@@ -99,7 +99,6 @@ class ReportingApi:
             first_name=response_data["currentUser"]["user"]["firstName"],
             id=response_data["currentUser"]["user"]["employeeId"],
             last_name=response_data["currentUser"]["user"]["lastName"],
-            login=response_data["currentUser"]["user"]["login"],
         )
 
     def login(self, login: str, password: str) -> bool:

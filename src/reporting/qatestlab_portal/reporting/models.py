@@ -39,7 +39,6 @@ class Employee:
     first_name: str
     id: int
     last_name: str
-    login: str
 
     @property
     def full_name(self) -> str:
