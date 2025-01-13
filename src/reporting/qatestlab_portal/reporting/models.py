@@ -70,24 +70,24 @@ class Report:
     have_problems: bool
     no_tasks: bool
     problems: str
-    tasks: list["TimeRecord"]
+    timeRecords: list["TimeRecord"]
     id: int | None = None
 
     @property
     def next_time_record_order_number(self) -> int:
-        return max((time_record.order_number for time_record in self.tasks), default=0) + 1
+        return max((time_record.order_number for time_record in self.timeRecords), default=0) + 1
 
 
 @dataclass(frozen=True)
 class TimeRecord:
     category_id: int
-    client_id: int
+    client_id: int | None
     corp_struct_item_id: int
     description: str
     hours: float
     invoice_hours: int
     order_number: int
-    project_id: int
+    project_id: int | None
     report_id: int
     salary_coefficient: int
     salary_coefficient_type: int

@@ -17,13 +17,13 @@ class CategoryRepository:
     categories_binding: list[CategoryBinding]
 
     def get_by_name_and_corp_struct_item(self, name: str, corp_struct_item_id: int) -> Category | None:
-        allowed_category_ids = map(
+        allowed_category_ids = list(map(
             lambda category_binding: category_binding.category_id,
             filter(
                 lambda category_binding: category_binding.corp_struct_item_id == corp_struct_item_id,
                 self.categories_binding,
             ),
-        )
+        ))
         categories = filter(lambda category: category.id in allowed_category_ids, self.categories)
 
         for category in categories:

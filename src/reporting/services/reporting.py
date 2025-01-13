@@ -20,7 +20,7 @@ def send_tasks(report: Report) -> None:
             id=portal_reports[0].id if len(portal_reports) else None,
             no_tasks=True,
             problems="",
-            tasks=[],
+            timeRecords=[],
         )
     )
 
@@ -77,7 +77,7 @@ def send_tasks(report: Report) -> None:
         time_records.append(
             reporting_models.TimeRecord(
                 category_id=category.id,
-                client_id=reporting_client.employee.id,
+                client_id=None,
                 corp_struct_item_id=corp_struct_item.id,
                 description=task.summary,
                 hours=round(task.logged_rounded / 60 / 60 * 100),

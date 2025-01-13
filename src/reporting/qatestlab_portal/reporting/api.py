@@ -199,7 +199,7 @@ class ReportingApi:
                 id=report["id"],
                 no_tasks=report["noTasks"],
                 problems=report["problems"],
-                tasks=list(
+                timeRecords=list(
                     map(
                         lambda task: TimeRecord(
                             category_id=task["categoryId"],
@@ -215,7 +215,7 @@ class ReportingApi:
                             salary_coefficient=task["salaryCoefficient"],
                             salary_coefficient_type=task["salaryCoefficientType"],
                         ),
-                        report["tasks"],
+                        report["timeRecords"],
                     )
                 ),
             ),
@@ -242,7 +242,7 @@ class ReportingApi:
             id=response_data["id"],
             no_tasks=response_data["noTasks"],
             problems=response_data["problems"],
-            tasks=report.tasks,
+            timeRecords=report.timeRecords,
         )
 
     def time_record_save(self, time_records: Iterable[TimeRecord]) -> Iterable[TimeRecord]:
@@ -300,6 +300,9 @@ class ReportingApi:
                 f"Portal reporting API {endpoint} has bad status code: {response.status_code}",
                 response=response,
             )
+
+        if response.status_code == 204:
+            return {}
 
         try:
             response_data = response.json()
