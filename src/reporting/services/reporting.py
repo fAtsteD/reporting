@@ -18,7 +18,7 @@ def send_tasks(report: Report) -> None:
             employee_id=reporting_client.employee.id,
             have_problems=False,
             id=portal_reports[0].id if len(portal_reports) else None,
-            no_tasks=True,
+            no_tasks=False,
             problems="",
             timeRecords=[],
         )
