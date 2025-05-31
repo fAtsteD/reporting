@@ -33,9 +33,7 @@ def parse_task(task_str: str) -> TaskLine:
         task.time_begin = dateutil.parser.parse(split_str[0].strip().replace(" ", ":"))
 
     if len(split_str) >= 2 and split_str[1]:
-        task.summary = config.dictionary.translate_task(split_str[1].strip().replace("\\-", "-")).replace(
-            "\\\\", "\\"
-        )
+        task.summary = config.dictionary.translate_task(split_str[1].strip().replace("\\-", "-")).replace("\\\\", "\\")
 
     if len(split_str) >= 3 and split_str[2]:
         task.kind = config.dictionary.translate_kind(split_str[2].strip().replace("\\-", "-").replace("\\\\", "\\"))

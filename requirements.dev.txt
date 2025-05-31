@@ -1,0 +1,12 @@
+black
+factory_boy
+Faker
+isort
+mypy
+pyright
+pytest
+pytest-cov
+pytest-responses
+responses
+types-python-dateutil
+types-requests

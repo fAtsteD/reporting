@@ -3,16 +3,19 @@
 ## Development
 
 Install virtual environment (venv) and install dev packages locally:
+
 ```bash
-pip install -e '.[dev]'
+make init
 ```
 
 Run tests:
+
 ```bash
 pytest
 ```
 
 Run with coverage:
+
 ```bash
 pytest --cov=src
 ```

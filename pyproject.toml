@@ -3,31 +3,10 @@ build-backend = "setuptools.build_meta"
 requires = ["setuptools"]
 
 [project]
-dependencies = [
-    'alembic==1.14.*',
-    'jira == 3.8.*',
-    'python-dateutil == 2.9.*',
-    'requests == 2.32.*',
-    'SQLAlchemy == 2.0.*',
-]
+dynamic = ["dependencies", "optional-dependencies"]
 name = "reporting"
 requires-python = ">=3.10"
 version = "1.4.4"
-
-[project.optional-dependencies]
-dev = [
-    "black",
-    "factory_boy",
-    "Faker",
-    "isort",
-    "mypy",
-    "pytest",
-    "pytest-cov",
-    "pytest-responses",
-    "responses",
-    "types-python-dateutil",
-    "types-requests",
-]
 
 [project.scripts]
 reporting = "reporting.cli:main"
@@ -38,6 +17,12 @@ line-length = 120
 [tool.isort]
 profile = "black"
 
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+useLibraryCodeForTypes = true
+typeCheckingMode = "standard"
+
 [[tool.mypy.overrides]]
 module = ["factory", "responses"]
 ignore_missing_imports = true
@@ -45,7 +30,12 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 addopts = "-ra"
 minversion = "8.0"
+pythonpath = ["src"]
 testpaths = ["tests"]
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+optional-dependencies = { dev = { file = ["requirements.dev.txt"] } }

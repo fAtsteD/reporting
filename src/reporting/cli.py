@@ -97,7 +97,7 @@ def send_to_reporting() -> None:
 
     if report:
         if (current_date - report.date).days > config.reporting.safe_send_report_days:
-            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\Current date: {current_date.strftime('%d.%m.%Y')}")
+            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\\Current date: {current_date.strftime('%d.%m.%Y')}")
             reporting_send_task = input(
                 f"The date difference more than {config.reporting.safe_send_report_days} day(s). Do you want send tasks? (y/n) "
             )

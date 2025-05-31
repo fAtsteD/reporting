@@ -1,0 +1,5 @@
+alembic==1.14.*
+jira==3.8.*
+python-dateutil==2.9.*
+requests==2.32.*
+SQLAlchemy==2.0.*
