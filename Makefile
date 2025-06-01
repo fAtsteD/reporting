@@ -23,9 +23,11 @@ lint:
 
 mypy:
 	mypy src
+	mypy tests
 
 pyright:
 	pyright src
+	pyright tests
 
 test:
 	pytest
