@@ -5,7 +5,7 @@ requires = ["setuptools"]
 [project]
 dynamic = ["dependencies", "optional-dependencies"]
 name = "reporting"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 version = "1.4.4"
 
 [project.scripts]
@@ -20,8 +20,9 @@ profile = "black"
 [tool.pyright]
 include = ["src", "tests"]
 pythonVersion = "3.12"
-useLibraryCodeForTypes = true
+reportUnusedImport = true
 typeCheckingMode = "standard"
+useLibraryCodeForTypes = true
 
 [[tool.mypy.overrides]]
 module = ["factory", "responses"]
