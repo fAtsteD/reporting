@@ -2,7 +2,8 @@
 
 ## Development
 
-Install virtual environment (venv) and install dev packages locally:
+It requires uv installed before.
+Initialize project:
 
 ```bash
 make init
@@ -24,13 +25,13 @@ pytest --cov=src
 
 Each line has time, name, type and project they are divided by space-dash-space:
 
-```
+```plain
 [hour] [minute] - [name of task] - [name of type] - [name of project]
 ```
 
 Example:
 
-```
+```plain
 09 00 - 0123456: Do something - develop - project of my life
 10 45 - 0123456: Do something \- harder - train - project of my life
 12 33 - lunch
@@ -53,29 +54,29 @@ Create config file in the home folder `~/.reporting/config.json`
 
 Setting that can be setted:
 
--   hour-report-path - path to file with tasks by hours
--   sqlite-database-path - path to file with database SQLite
--   omit-task - name of tasks that will be skipped
--   minute_round_to - for what number round minutes in the report. Default 25
--   jira - settings related for working with Jira:
-    -   server - url to the server with Jira
-    -   login - user login to the account
-    -   password - user password to the account
-    -   issue-key-base - (optional) prefix for all issue key. Default empty array
--   dictionary - dictionary with shorter version of origin or reworded (can be used in omit task):
-    -   task - only use for task name
-    -   kind - only use for kind name, it has to change to alias inside
-    -   project - only use for project name, it has to change to alias inside
--   reporting - settings for reporting (have different class for them):
-    -   kinds - dictionary for transformation kinds inside to the reporting, all inside kind's keys can view in command line
-    -   login - user login to the account
-    -   password - password to the account
-    -   projects - dictionary for transformation projects inside to the reporting, all inside project's keys can view in command line
-    -   project-to-corp-struct-item - dictionary for setting related projects inside to the reporting corp struct item alias, all inside project's keys can view in command line
-    -   safe-send-report-days - send report without additional question when send report
-    -   url - main url to the reporting api
--   default-type - default type, setted if task does not have, set alias from inside name
--   default-project - default project, setted if task does not have, set alias from inside name
+- hour-report-path - path to file with tasks by hours
+- sqlite-database-path - path to file with database SQLite
+- omit-task - name of tasks that will be skipped
+- minute_round_to - for what number round minutes in the report. Default 25
+- jira - settings related for working with Jira:
+  - server - url to the server with Jira
+  - login - user login to the account
+  - password - user password to the account
+  - issue-key-base - (optional) prefix for all issue key. Default empty array
+- dictionary - dictionary with shorter version of origin or reworded (can be used in omit task):
+  - task - only use for task name
+  - kind - only use for kind name, it has to change to alias inside
+  - project - only use for project name, it has to change to alias inside
+- reporting - settings for reporting (have different class for them):
+  - kinds - dictionary for transformation kinds inside to the reporting, all inside kind's keys can view in command line
+  - login - user login to the account
+  - password - password to the account
+  - projects - dictionary for transformation projects inside to the reporting, all inside project's keys can view in command line
+  - project-to-corp-struct-item - dictionary for setting related projects inside to the reporting corp struct item alias, all inside project's keys can view in command line
+  - safe-send-report-days - send report without additional question when send report
+  - url - main url to the reporting api
+- default-type - default type, setted if task does not have, set alias from inside name
+- default-project - default project, setted if task does not have, set alias from inside name
 
 Example:
 

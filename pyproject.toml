@@ -3,10 +3,32 @@ build-backend = "setuptools.build_meta"
 requires = ["setuptools"]
 
 [project]
-dynamic = ["dependencies", "optional-dependencies"]
 name = "reporting"
 requires-python = ">=3.12"
 version = "1.4.4"
+dependencies = [
+    "alembic==1.14.*",
+    "jira==3.8.*",
+    "python-dateutil==2.9.*",
+    "requests==2.32.*",
+    "sqlalchemy==2.0.*",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "factory-boy>=3.3.3",
+    "faker>=37.3.0",
+    "isort>=6.0.1",
+    "mypy>=1.16.0",
+    "pyright>=1.1.401",
+    "pytest>=8.4.0",
+    "pytest-cov>=6.1.1",
+    "pytest-responses>=0.5.1",
+    "responses>=0.25.7",
+    "types-python-dateutil>=2.9.0.20250516",
+    "types-requests>=2.32.0.20250602",
+]
 
 [project.scripts]
 reporting = "reporting.cli:main"
@@ -37,6 +59,3 @@ testpaths = ["tests"]
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.dynamic]
-dependencies = { file = ["requirements.txt"] }
-optional-dependencies = { dev = { file = ["requirements.dev.txt"] } }

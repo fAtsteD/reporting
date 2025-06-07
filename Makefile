@@ -11,7 +11,7 @@ format-check: format check-types
 init: install-app-dev install-hooks
 
 install-app-dev:
-	pip install -e ".[dev]"
+	uv sycn --locked --all-groups
 
 install-hooks:
 	cp hooks/* .git/hooks
