@@ -12,6 +12,10 @@ from reporting import database
 from reporting.config.app import AppConfig
 from reporting.models import Base
 
+pytest_plugins = [
+    "tests.fixtures.portal",
+]
+
 
 class ReportingConfigFixture(Protocol):
     def __call__(self, config: dict = {}) -> None: ...
