@@ -1,4 +1,6 @@
 import datetime
+from enum import Enum
+from typing import Optional
 
 import faker
 import pytest
@@ -11,32 +13,56 @@ from tests.factories import ReportFactory
 from tests.fixtures.portal import PortalFixture
 
 
+class ReportDates(Enum):
+    Future = "future"
+    Past = "past"
+    Today = "today"
+
+
 @pytest.mark.parametrize(
-    "report_date_today",
+    "report_date_type",
     [
-        True,
-        False,
+        ReportDates.Today,
+        ReportDates.Past,
+        ReportDates.Future,
     ],
 )
-def test_send_reporting_first_day_report(
+def test_send_report(
     capsys: pytest.CaptureFixture,
     database_session: Session,
     faker: faker.Faker,
     monkeypatch: pytest.MonkeyPatch,
     portal_mock: PortalFixture,
-    report_date_today: bool,
+    report_date_type: ReportDates,
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_base_url = faker.url()
-    report = ReportFactory.create(
-        date=(
-            faker.date_between_dates(
+    report_date: Optional[datetime.date] = None
+    call_input_count = 0
+
+    def check_input(_) -> str:
+        nonlocal call_input_count
+        call_input_count += 1
+        return "y"
+
+    monkeypatch.setattr("builtins.input", check_input)
+
+    match report_date_type:
+        case ReportDates.Future:
+            report_date = faker.date_between_dates(
+                datetime.datetime.now() + datetime.timedelta(days=2),
+                datetime.datetime.now() + datetime.timedelta(days=10),
+            )
+        case ReportDates.Past:
+            report_date = faker.date_between_dates(
                 datetime.datetime(2000, 1, 1),
                 datetime.datetime.now() - datetime.timedelta(days=10),
             )
-            if not report_date_today
-            else datetime.datetime.now()
-        ),
+        case ReportDates.Today:
+            report_date = datetime.date.today()
+
+    report = ReportFactory.create(
+        date=report_date,
     )
     kinds = database_session.query(Kind).all()
     kinds_config = {kind.alias: faker.sentence(nb_words=3, variable_nb_words=True) for kind in kinds}
@@ -156,8 +182,6 @@ def test_send_reporting_first_day_report(
         report_put=True,
         time_records_post=True,
     )
-    if not report_date_today:
-        monkeypatch.setattr("builtins.input", lambda _: "y")
 
     cli.main(["--reporting"])
 
@@ -166,6 +190,14 @@ def test_send_reporting_first_day_report(
 
     for task in report.tasks:
         assert output.find(f"[+] {task}\n") > -1
+
+    match report_date_type:
+        case ReportDates.Future:
+            assert call_input_count == 1, "Input should be called once for future report date"
+        case ReportDates.Past:
+            assert call_input_count == 1, "Input should be called once for past report date"
+        case ReportDates.Today:
+            assert call_input_count == 0, "Input should not be called for today report date"
 
 
 @pytest.mark.parametrize(

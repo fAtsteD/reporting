@@ -96,8 +96,12 @@ def send_to_reporting() -> None:
         report = database.session.query(Report).filter(Report.date == config.reporting.report_date).first()
 
     if report:
+        if report.date > current_date:
+            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
+            reporting_send_task = input(f"You try to send report from future. Do you want send tasks? (y/n) ")
+
         if (current_date - report.date).days > config.reporting.safe_send_report_days:
-            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\\Current date: {current_date.strftime('%d.%m.%Y')}")
+            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
             reporting_send_task = input(
                 f"The date difference more than {config.reporting.safe_send_report_days} day(s). Do you want send tasks? (y/n) "
             )
