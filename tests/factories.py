@@ -11,7 +11,7 @@ FactoryModelType = TypeVar("FactoryModelType")
 
 class BaseFactory[FactoryModelType: Base](factory.alchemy.SQLAlchemyModelFactory):
 
-    class Meta(factory.alchemy.SQLAlchemyModelFactory.Meta):
+    class Meta:  # pyright: ignore
         abstract = True
         sqlalchemy_session_persistence = "commit"
 
@@ -42,7 +42,7 @@ class BaseFactory[FactoryModelType: Base](factory.alchemy.SQLAlchemyModelFactory
 
 class KindFactory(BaseFactory[Kind]):
 
-    class Meta(BaseFactory.Meta):
+    class Meta:  # pyright: ignore
         model = Kind
 
     alias = factory.declarations.Sequence(lambda index: f"kind_alias_{index}")
@@ -59,7 +59,7 @@ class KindFactory(BaseFactory[Kind]):
 
 class ProjectFactory(BaseFactory[Project]):
 
-    class Meta(BaseFactory.Meta):
+    class Meta:  # pyright: ignore
         model = Project
 
     alias = factory.declarations.Sequence(lambda index: f"project_alias_{index}")
@@ -76,7 +76,7 @@ class ProjectFactory(BaseFactory[Project]):
 
 class ReportFactory(BaseFactory[Report]):
 
-    class Meta(BaseFactory.Meta):
+    class Meta:  # pyright: ignore
         model = Report
 
     created_at = factory.faker.Faker("date_time")
@@ -93,7 +93,7 @@ class ReportFactory(BaseFactory[Report]):
 
 class TaskFactory(BaseFactory[Task]):
 
-    class Meta(BaseFactory.Meta):
+    class Meta:  # pyright: ignore
         model = Task
 
     created_at = factory.faker.Faker("date_time")
