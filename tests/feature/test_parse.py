@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from reporting import cli
-from reporting.models import Kind, Project, Report, Task
+from reporting.models import Report, Task
 from tests.conftest import ReportingConfigFixture
 from tests.factories import KindFactory, ProjectFactory, ReportFactory
 
@@ -56,11 +56,11 @@ def test_parse_last_report_with_remove_tasks(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     report_date = faker.date_object()
-    projects: list[Project] = [
+    projects = [
         ProjectFactory.create(tasks=[]),
         ProjectFactory.create(tasks=[]),
     ]
-    types: list[Kind] = [
+    types = [
         KindFactory.create(tasks=[]),
         KindFactory.create(tasks=[]),
         KindFactory.create(tasks=[]),
@@ -162,11 +162,11 @@ def test_parse_n_reports(
         )
     )
     ReportFactory.create(date=report_dates[1])
-    projects: list[Project] = [
+    projects = [
         ProjectFactory.create(tasks=[]),
         ProjectFactory.create(tasks=[]),
     ]
-    types: list[Kind] = [
+    types = [
         KindFactory.create(tasks=[]),
         KindFactory.create(tasks=[]),
         KindFactory.create(tasks=[]),

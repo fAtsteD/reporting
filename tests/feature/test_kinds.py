@@ -37,7 +37,7 @@ def test_show_kinds(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config()
-    kinds: list[Kind] = KindFactory.create_batch(3, tasks=[])
+    kinds = KindFactory.create_batch(3, tasks=[])
     kinds.sort(key=lambda kind: kind.name)
     output_expected = "Kinds:\n"
 
@@ -70,7 +70,7 @@ def test_update_kind(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config()
-    kind: Kind = KindFactory.create(tasks=[])
+    kind = KindFactory.create(tasks=[])
     kind_name_new = faker.sentence(nb_words=3, variable_nb_words=True)
     output_expected = "Kinds:\n"
     output_expected += f"{kind.alias} - {kind_name_new}\n"

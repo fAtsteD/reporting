@@ -14,7 +14,7 @@ def test_show_by_date(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config()
-    reports: list[Report] = ReportFactory.create_batch(size=10)
+    reports = ReportFactory.create_batch(size=10)
     reports.sort(key=lambda report: report.date)
 
     cli.main(["--show", reports[2].date.strftime("%d.%m.%Y")])

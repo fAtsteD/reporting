@@ -1,15 +1,15 @@
 import datetime
+from typing import TypeVar
 
 import factory
 
 from reporting import database
-from reporting.models import Kind, Project, Report, Task
+from reporting.models import Base, Kind, Project, Report, Task
 
-# Use if for relational factories
-_current_module = "tests.factories"
+FactoryModelType = TypeVar("FactoryModelType")
 
 
-class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
+class BaseFactory[FactoryModelType: Base](factory.alchemy.SQLAlchemyModelFactory):
 
     class Meta(factory.alchemy.SQLAlchemyModelFactory.Meta):
         abstract = True
@@ -19,8 +19,28 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
         def sqlalchemy_session_factory():
             return database.session
 
+    @classmethod
+    def create(cls, **kwargs) -> FactoryModelType:
+        # Redefine for type hinting, because alchemy factory does not support generic like base Factory. Remove when alchemy factory will be generic
+        return super().create(**kwargs)
 
-class KindFactory(BaseFactory):
+    @classmethod
+    def create_batch(cls, size: int, **kwargs) -> list[FactoryModelType]:
+        # Redefine for type hinting, because alchemy factory does not support generic like base Factory. Remove when alchemy factory will be generic
+        return super().create_batch(size, **kwargs)
+
+    @classmethod
+    def build(cls, **kwargs) -> FactoryModelType:
+        # Redefine for type hinting, because alchemy factory does not support generic like base Factory. Remove when alchemy factory will be generic
+        return super().build(**kwargs)
+
+    @classmethod
+    def build_batch(cls, size: int, **kwargs) -> list[FactoryModelType]:
+        # Redefine for type hinting, because alchemy factory does not support generic like base Factory. Remove when alchemy factory will be generic
+        return super().build_batch(size, **kwargs)
+
+
+class KindFactory(BaseFactory[Kind]):
 
     class Meta(BaseFactory.Meta):
         model = Kind
@@ -30,14 +50,14 @@ class KindFactory(BaseFactory):
     id = factory.declarations.Sequence(lambda index: index + 100)
     name = factory.faker.Faker("sentence", nb_words=3, variable_nb_words=True)
     tasks = factory.declarations.RelatedFactoryList(
-        factory=f"{_current_module}.TaskFactory",
+        factory=f"{__name__}.TaskFactory",
         factory_related_name="kind",
         kinds_id=factory.declarations.SelfAttribute("..id"),
     )
     updated_at = factory.faker.Faker("date_time")
 
 
-class ProjectFactory(BaseFactory):
+class ProjectFactory(BaseFactory[Project]):
 
     class Meta(BaseFactory.Meta):
         model = Project
@@ -47,14 +67,14 @@ class ProjectFactory(BaseFactory):
     id = factory.declarations.Sequence(lambda index: index + 100)
     name = factory.faker.Faker("sentence", nb_words=3, variable_nb_words=True)
     tasks = factory.declarations.RelatedFactoryList(
-        factory=f"{_current_module}.TaskFactory",
+        factory=f"{__name__}.TaskFactory",
         factory_related_name="project",
         projects_id=factory.declarations.SelfAttribute("..id"),
     )
     updated_at = factory.faker.Faker("date_time")
 
 
-class ReportFactory(BaseFactory):
+class ReportFactory(BaseFactory[Report]):
 
     class Meta(BaseFactory.Meta):
         model = Report
@@ -63,7 +83,7 @@ class ReportFactory(BaseFactory):
     date = factory.declarations.Sequence(lambda index: datetime.datetime.now() - datetime.timedelta(days=index + 100))
     id = factory.declarations.Sequence(lambda index: index + 100)
     tasks = factory.declarations.RelatedFactoryList(
-        factory=f"{_current_module}.TaskFactory",
+        factory=f"{__name__}.TaskFactory",
         factory_related_name="report",
         reports_id=factory.declarations.SelfAttribute("..id"),
         size=6,
@@ -71,7 +91,7 @@ class ReportFactory(BaseFactory):
     updated_at = factory.faker.Faker("date_time")
 
 
-class TaskFactory(BaseFactory):
+class TaskFactory(BaseFactory[Task]):
 
     class Meta(BaseFactory.Meta):
         model = Task
@@ -79,18 +99,18 @@ class TaskFactory(BaseFactory):
     created_at = factory.faker.Faker("date_time")
     id = factory.declarations.Sequence(lambda index: index + 100)
     kind = factory.declarations.SubFactory(
-        factory=f"{_current_module}.KindFactory",
+        factory=f"{__name__}.KindFactory",
         tasks=[],
     )
     kinds_id = factory.declarations.SelfAttribute("kind.id")
     logged_seconds = factory.faker.Faker("random_int", min=60, max=60000)
     project = factory.declarations.SubFactory(
-        factory=f"{_current_module}.ProjectFactory",
+        factory=f"{__name__}.ProjectFactory",
         tasks=[],
     )
     projects_id = factory.declarations.SelfAttribute("project.id")
     report = factory.declarations.SubFactory(
-        factory=f"{_current_module}.ReportFactory",
+        factory=f"{__name__}.ReportFactory",
         tasks=[],
     )
     reports_id = factory.declarations.SelfAttribute("report.id")

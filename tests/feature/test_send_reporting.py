@@ -8,7 +8,7 @@ from responses import RequestsMock, matchers
 from sqlalchemy.orm import Session
 
 from reporting import cli
-from reporting.models import Kind, Project, Report
+from reporting.models import Kind, Project
 from tests.conftest import ReportingConfigFixture
 from tests.factories import ReportFactory
 
@@ -194,7 +194,7 @@ def test_send_reporting_first_day_report(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_base_url = faker.url()
-    report: Report = ReportFactory.create(
+    report = ReportFactory.create(
         date=(
             faker.date_between_dates(
                 datetime.datetime(2000, 1, 1),
@@ -351,7 +351,7 @@ def test_send_reporting_empty_required_data(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_base_url = faker.url()
-    report: Report = ReportFactory.create(date=datetime.datetime.now())
+    report = ReportFactory.create(date=datetime.datetime.now())
     kinds = database_session.query(Kind).all()
     kinds_config = {kind.alias: faker.sentence(nb_words=3, variable_nb_words=True) for kind in kinds}
     projects = database_session.query(Project).all()

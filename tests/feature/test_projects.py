@@ -37,7 +37,7 @@ def test_show_projects(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config()
-    projects: list[Project] = [
+    projects = [
         ProjectFactory.create(tasks=[]),
         ProjectFactory.create(tasks=[]),
         ProjectFactory.create(tasks=[]),
@@ -74,7 +74,7 @@ def test_update_project(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_config()
-    project: Project = ProjectFactory.create(tasks=[])
+    project = ProjectFactory.create(tasks=[])
     project_new_name = faker.sentence(nb_words=3, variable_nb_words=True)
     output_expected = "Projects:\n"
     output_expected += f"{project.alias} - {project_new_name}\n"

@@ -1,7 +1,7 @@
 import datetime
 
 from reporting import config
-from reporting.models import Kind, Project, Report, Task
+from reporting.models import Kind, Project
 from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
 
 
@@ -23,9 +23,9 @@ def test_report_properties() -> None:
     config.app.minute_round_to = 15
     report_date = datetime.date(2000, 1, 1)
     report_date_str = report_date.strftime("%d.%m.%Y")
-    report: Report = ReportFactory.create(date=report_date, tasks=[])
-    kind: Kind = KindFactory.create(tasks=[])
-    tasks: list[Task] = [
+    report = ReportFactory.create(date=report_date, tasks=[])
+    kind = KindFactory.create(tasks=[])
+    tasks = [
         TaskFactory.create(
             kind=kind,
             kinds_id=kind.id,
@@ -68,10 +68,10 @@ def test_report_properties() -> None:
 def test_task_properties() -> None:
     minute_round_to = 15
     config.app.minute_round_to = minute_round_to
-    project: Project = ProjectFactory.create(
+    project = ProjectFactory.create(
         tasks=[],
     )
-    task: Task = TaskFactory.create(
+    task = TaskFactory.create(
         logged_seconds=0,
         project=project,
         projects_id=project.id,
