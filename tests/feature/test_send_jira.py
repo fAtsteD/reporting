@@ -1,3 +1,5 @@
+import datetime
+
 import faker
 import jira.client
 import jira.exceptions
@@ -86,7 +88,7 @@ def test_send_jira_report_with_jira_issues(
             "minute-round-to": 15,
         }
     )
-    report = ReportFactory.create(tasks=[])
+    report = ReportFactory.create(date=datetime.datetime.now(), tasks=[])
     tasks: list[Task] = []
 
     for jira_key in jira_keys:

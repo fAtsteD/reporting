@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from datetime import date
+from typing import Optional
 
 from reporting import config, database
 from reporting.config.app import Command
@@ -72,7 +73,9 @@ def report_show() -> None:
 
 
 def send_to_jira() -> None:
-    report: Report | None = None
+    current_date = date.today()
+    report: Optional[Report] = None
+    jira_set_worklog = "y"
     print("Jira")
 
     if config.jira.report_date == "last":
@@ -81,12 +84,17 @@ def send_to_jira() -> None:
         report = database.session.query(Report).filter(Report.date == config.jira.report_date).first()
 
     if report:
-        jira.set_worklog(report)
+        if report.date != current_date:
+            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
+            jira_set_worklog = input(f"You try to send report not today. Do you want set worklog? (y/n) ")
+
+        if jira_set_worklog == "y":
+            jira.set_worklog(report)
 
 
 def send_to_reporting() -> None:
     current_date = date.today()
-    report = None
+    report: Optional[Report] = None
     reporting_send_task = "y"
     print("Reporting")
 
@@ -96,15 +104,9 @@ def send_to_reporting() -> None:
         report = database.session.query(Report).filter(Report.date == config.reporting.report_date).first()
 
     if report:
-        if report.date > current_date:
+        if report.date != current_date:
             print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
-            reporting_send_task = input(f"You try to send report from future. Do you want send tasks? (y/n) ")
-
-        if (current_date - report.date).days > config.reporting.safe_send_report_days:
-            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
-            reporting_send_task = input(
-                f"The date difference more than {config.reporting.safe_send_report_days} day(s). Do you want send tasks? (y/n) "
-            )
+            reporting_send_task = input(f"You try to send report not today. Do you want send tasks? (y/n) ")
 
         if reporting_send_task == "y":
             reporting.send_tasks(report)
