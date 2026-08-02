@@ -2,8 +2,29 @@ import datetime
 
 import sqlalchemy as sa
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.types import DateTime, TypeDecorator
 
 from reporting import config, database
+
+
+class DBDatetimeType(TypeDecorator[datetime.datetime]):
+    cache_ok = True
+    impl = DateTime(timezone=True)
+
+    def process_bind_param(self, value: datetime.datetime | None, dialect) -> datetime.datetime | None:
+        if not value:
+            return None
+
+        if value.tzinfo is None:
+            return value.replace(tzinfo=datetime.UTC)
+
+        return value.astimezone(datetime.UTC)
+
+    def process_result_value(self, value: datetime.datetime | None, dialect) -> datetime.datetime | None:
+        if not value:
+            return None
+
+        return value.replace(tzinfo=datetime.UTC)
 
 
 class Base(DeclarativeBase):
@@ -21,14 +42,12 @@ class Kind(Base):
     alias: Mapped[str] = mapped_column(unique=True)
     name: Mapped[str]
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(),
-        server_default=sa.FetchedValue(),
-        onupdate=sa.func.now(),
-        server_onupdate=sa.FetchedValue(),
+        DBDatetimeType(),
+        default=lambda: datetime.datetime.now(datetime.UTC),
+        onupdate=lambda: datetime.datetime.now(datetime.UTC),
     )
     created_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(),
-        server_default=sa.FetchedValue(),
+        DBDatetimeType(), default=lambda: datetime.datetime.now(datetime.UTC)
     )
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="kind")
@@ -51,12 +70,13 @@ class Project(Base):
     alias: Mapped[str] = mapped_column(unique=True)
     name: Mapped[str]
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(),
-        server_default=sa.FetchedValue(),
-        onupdate=sa.func.now(),
-        server_onupdate=sa.FetchedValue(),
+        DBDatetimeType(),
+        default=lambda: datetime.datetime.now(datetime.UTC),
+        onupdate=lambda: datetime.datetime.now(datetime.UTC),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DBDatetimeType(), default=lambda: datetime.datetime.now(datetime.UTC)
+    )
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="project")
 
@@ -73,12 +93,13 @@ class Report(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     date: Mapped[datetime.date] = mapped_column(index=True)
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(),
-        server_default=sa.FetchedValue(),
-        onupdate=sa.func.now(),
-        server_onupdate=sa.FetchedValue(),
+        DBDatetimeType(),
+        default=lambda: datetime.datetime.now(datetime.UTC),
+        onupdate=lambda: datetime.datetime.now(datetime.UTC),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DBDatetimeType(), default=lambda: datetime.datetime.now(datetime.UTC)
+    )
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="report")
 
@@ -95,7 +116,7 @@ class Report(Base):
         Remove tasks in the report
         """
         for task in self.tasks:
-            self.updated_at = sa.func.now()
+            self.updated_at = datetime.datetime.now(datetime.UTC)
             database.session.delete(task)
 
         database.session.commit()
@@ -104,7 +125,7 @@ class Report(Base):
         """
         Report to the text present, it is multiline
         """
-        current_date = datetime.datetime.now(datetime.UTC).date()
+        current_date = datetime.datetime.now(config.app.timezone).date()
         text = self.date.strftime("%d.%m.%Y") + " (" + current_date.strftime("%d.%m.%Y") + ")\n"
 
         total_seconds = self.total_rounded_seconds
@@ -154,12 +175,13 @@ class Task(Base):
     project: Mapped["Project"] = relationship(back_populates="tasks")
 
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        default=sa.func.now(),
-        server_default=sa.FetchedValue(),
-        onupdate=sa.func.now(),
-        server_onupdate=sa.FetchedValue(),
+        DBDatetimeType(),
+        default=lambda: datetime.datetime.now(datetime.UTC),
+        onupdate=lambda: datetime.datetime.now(datetime.UTC),
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(default=sa.func.now(), server_default=sa.FetchedValue())
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DBDatetimeType(), default=lambda: datetime.datetime.now(datetime.UTC)
+    )
 
     reports_id: Mapped[int] = mapped_column(sa.ForeignKey("reports.id"))
     report: Mapped["Report"] = relationship(back_populates="tasks")

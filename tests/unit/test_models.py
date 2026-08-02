@@ -1,4 +1,7 @@
 import datetime
+from zoneinfo import ZoneInfo
+
+from sqlalchemy.orm import Session
 
 from reporting import config
 from reporting.models import Kind, Project
@@ -17,6 +20,17 @@ def test_project_str() -> None:
     name = "Test Project"
     kind = Project(alias=alias, name=name)
     assert str(kind) == f"{alias} - {name}"
+
+
+def test_datetime_fields_round_trip_as_utc(database_session: Session) -> None:
+    user_datetime = datetime.datetime(2026, 7, 1, 12, 0, tzinfo=ZoneInfo("Europe/Kyiv"))
+    project = Project(alias="project", created_at=user_datetime, name="Project", updated_at=user_datetime)
+    database_session.add(project)
+    database_session.commit()
+    database_session.expire(project)
+
+    assert project.created_at == datetime.datetime(2026, 7, 1, 9, 0, tzinfo=datetime.UTC)
+    assert project.updated_at == datetime.datetime(2026, 7, 1, 9, 0, tzinfo=datetime.UTC)
 
 
 def test_report_properties() -> None:

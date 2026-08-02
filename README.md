@@ -55,6 +55,7 @@ Create config file in the home folder `~/.reporting/config.json`
 Setting that can be setted:
 
 - hour-report-path - path to file with tasks by hours
+- timezone - IANA timezone for task-file times, for example `Europe/Kyiv`; defaults to the system local timezone
 - sqlite-database-path - path to file with database SQLite
 - omit-task - name of tasks that will be skipped
 - minute_round_to - for what number round minutes in the report. Default 25
@@ -83,6 +84,7 @@ Example:
 ```json
 {
     "hour-report-path": "~/example-hours.txt",
+    "timezone": "Europe/Kyiv",
     "sqlite-database-path": "~/reports.db",
     "omit-task": ["lunch", "break"],
     "minute-round-to": 25,

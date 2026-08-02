@@ -72,7 +72,7 @@ def report_show() -> None:
 
 
 def send_to_jira() -> None:
-    current_date = datetime.datetime.now(datetime.UTC).date()
+    current_date = datetime.datetime.now(config.app.timezone).date()
     report: Report | None = None
     jira_set_worklog = "y"
     print("Jira")
@@ -92,7 +92,7 @@ def send_to_jira() -> None:
 
 
 def send_to_reporting() -> None:
-    current_date = datetime.datetime.now(datetime.UTC).date()
+    current_date = datetime.datetime.now(config.app.timezone).date()
     report: Report | None = None
     reporting_send_task = "y"
     print("Reporting")

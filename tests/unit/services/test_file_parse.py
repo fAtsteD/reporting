@@ -1,27 +1,23 @@
-import dateutil.parser
+import datetime
+
 import pytest
 
+from reporting import config
 from reporting.config.app import AppConfig
 from reporting.services.file_parse import TaskLine, parse_task
-from tests.conftest import ReportingConfigFixture
+
+REPORT_DATE = datetime.date(2026, 8, 2)
 
 
 @pytest.mark.parametrize(
     "line, expected",
     [
         (
-            "",
-            TaskLine(
-                kind=AppConfig.default_kind,
-                project=AppConfig.default_project,
-            ),
-        ),
-        (
             "09 00",
             TaskLine(
                 kind=AppConfig.default_kind,
                 project=AppConfig.default_project,
-                time_begin=dateutil.parser.parse("09:00"),
+                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(9, 0)),
             ),
         ),
         (
@@ -30,7 +26,7 @@ from tests.conftest import ReportingConfigFixture
                 kind=AppConfig.default_kind,
                 project=AppConfig.default_project,
                 summary="Harum beatae-molestiae.",
-                time_begin=dateutil.parser.parse("09:10"),
+                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(9, 10)),
             ),
         ),
         (
@@ -39,7 +35,7 @@ from tests.conftest import ReportingConfigFixture
                 kind=AppConfig.default_kind,
                 project=AppConfig.default_project,
                 summary="inventore - modi quia",
-                time_begin=dateutil.parser.parse("09:10"),
+                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(9, 10)),
             ),
         ),
         (
@@ -48,7 +44,7 @@ from tests.conftest import ReportingConfigFixture
                 kind=AppConfig.default_kind,
                 project=AppConfig.default_project,
                 summary="Non hic repellendus facere architecto reprehenderit aut dolore est quaerat.",
-                time_begin=dateutil.parser.parse("10:30"),
+                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(10, 30)),
             ),
         ),
         (
@@ -57,7 +53,7 @@ from tests.conftest import ReportingConfigFixture
                 kind="eum",
                 project=AppConfig.default_project,
                 summary="Incidunt non omnis ut porro ut nostrum.",
-                time_begin=dateutil.parser.parse("11:45"),
+                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(11, 45)),
             ),
         ),
         (
@@ -66,12 +62,11 @@ from tests.conftest import ReportingConfigFixture
                 kind="quasi",
                 project="Dynamic Response Associate",
                 summary="debitis autem ipsa",
-                time_begin=dateutil.parser.parse("12:00"),
+                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(12, 0)),
             ),
         ),
     ],
     ids=[
-        "empty line",
         "only time",
         "time, summary escaped",
         "time, summary escaped with spaces",
@@ -80,7 +75,8 @@ from tests.conftest import ReportingConfigFixture
         "time, summary, kind, project",
     ],
 )
-def test_parse_line(reporting_config: ReportingConfigFixture, line: str, expected: TaskLine) -> None:
-    reporting_config()
-    task_line = parse_task(line)
+def test_parse_line(monkeypatch: pytest.MonkeyPatch, line: str, expected: TaskLine) -> None:
+    monkeypatch.setattr(config, "app", AppConfig(timezone_name="Europe/Kyiv"))
+    task_line = parse_task(line, REPORT_DATE)
+    expected.time_begin = expected.time_begin.replace(tzinfo=config.app.timezone)
     assert task_line == expected

@@ -49,6 +49,8 @@ def load_config(cli_args: list[str] | None = None):
         dictionary = Dictionary(**dictionary_dict)
     if "hour-report-path" in data and os.path.isfile(data["hour-report-path"]):
         app.input_file_hours = os.path.normpath(data["hour-report-path"])
+    if "timezone" in data:
+        app.timezone_name = data["timezone"]
     if "jira" in data:
         jira = JiraConfig(
             issue_key_bases=data["jira"].get("issue-key-base", []),

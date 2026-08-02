@@ -1,7 +1,7 @@
 import datetime
 import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from os import path
 
 import dateutil.parser
@@ -16,22 +16,21 @@ class TaskLine:
     Simple dto for structure parsed line of task
     """
 
-    time_begin: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
+    time_begin: datetime.datetime
     summary: str = ""
     kind: str = ""
     project: str = ""
 
 
-def parse_task(task_str: str) -> TaskLine:
+def parse_task(task_str: str, report_date: datetime.date) -> TaskLine:
     """
     Parse line from file to task object
     """
-    task = TaskLine()
+    parsed_time = dateutil.parser.parse(task_str.split(" - ")[0].strip().replace(" ", ":")).time()
+    task = TaskLine(
+        time_begin=datetime.datetime.combine(report_date, parsed_time, tzinfo=config.app.timezone),
+    )
     split_str = task_str.split(" - ")
-
-    if len(split_str) >= 1 and split_str[0]:
-        # Parse time, date will be current, it is not right
-        task.time_begin = dateutil.parser.parse(split_str[0].strip().replace(" ", ":"))
 
     if len(split_str) >= 2 and split_str[1]:
         task.summary = config.dictionary.translate_task(split_str[1].strip().replace("\\-", "-")).replace("\\\\", "\\")
@@ -128,7 +127,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
             if not line.strip() or report is None:
                 continue
 
-            task_line = parse_task(line)
+            task_line = parse_task(line, report.date)
             task = None
 
             if previous_task_line is not None and previous_task is not None:

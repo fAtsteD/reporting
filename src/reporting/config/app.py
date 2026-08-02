@@ -2,6 +2,7 @@ import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 
 class Command(Enum):
@@ -38,6 +39,7 @@ class AppConfig:
 
     # Input
     input_file_hours = ""
+    timezone_name: str | None = None
 
     # Tasks
     default_kind = "Development"
@@ -47,3 +49,10 @@ class AppConfig:
 
     # Parameters for program
     work_day_hours = datetime.timedelta(hours=8, minutes=0)
+
+    @property
+    def timezone(self) -> datetime.tzinfo:
+        if self.timezone_name:
+            return ZoneInfo(self.timezone_name)
+
+        return datetime.datetime.now().astimezone().tzinfo or datetime.UTC
