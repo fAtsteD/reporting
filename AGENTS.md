@@ -1,6 +1,6 @@
 # Reporting
 
-This is custom tool to tracking time of working. The tool collect tasks and save them in database. Then any report can be generated to view, send specific tasks in other systems so the user has one place to write tasks and send them in all required systems.
+This is custom tool to tracking time of working. The tool collect tasks and save them in a SQLite database. Then any report can be generated to view, send specific tasks in other systems so the user has one place to write tasks and send them in all required systems.
 
 ## Structure
 

@@ -28,10 +28,10 @@ lint-check:
 precommit: format-check lint-check
 
 test:
-	pytest
+	uv run pytest
 
 test-coverage:
-	pytest --cov=reporting
+	uv run pytest --cov=reporting
 
 type-check:
 	uv run pyright
