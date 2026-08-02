@@ -16,16 +16,15 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "black>=25.1.0",
     "factory-boy>=3.3.3",
     "faker>=37.3.0",
-    "isort>=6.0.1",
     "mypy>=1.16.0",
     "pyright>=1.1.401",
     "pytest>=8.4.0",
     "pytest-cov>=6.1.1",
     "pytest-responses>=0.5.1",
     "responses>=0.25.7",
+    "ruff>=0.16.1",
     "types-python-dateutil>=2.9.0.20250516",
     "types-requests>=2.32.0.20250602",
 ]
@@ -33,11 +32,12 @@ dev = [
 [project.scripts]
 reporting = "reporting.cli:main"
 
-[tool.black]
-line-length = 120
+[tool.mypy]
+files = ["src", "tests"]
 
-[tool.isort]
-profile = "black"
+[[tool.mypy.overrides]]
+module = ["factory", "responses"]
+ignore_missing_imports = true
 
 [tool.pyright]
 include = ["src", "tests"]
@@ -46,16 +46,17 @@ reportUnusedImport = true
 typeCheckingMode = "standard"
 useLibraryCodeForTypes = true
 
-[[tool.mypy.overrides]]
-module = ["factory", "responses"]
-ignore_missing_imports = true
-
 [tool.pytest.ini_options]
 addopts = "-ra"
 minversion = "8.0"
 pythonpath = ["src"]
 testpaths = ["tests"]
 
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
 [tool.setuptools]
 include-package-data = true
-

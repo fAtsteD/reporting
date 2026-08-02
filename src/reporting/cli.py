@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
-from datetime import date
-from typing import Optional
+import datetime
 
 from reporting import config, database
 from reporting.config.app import Command
@@ -73,8 +72,8 @@ def report_show() -> None:
 
 
 def send_to_jira() -> None:
-    current_date = date.today()
-    report: Optional[Report] = None
+    current_date = datetime.datetime.now(datetime.UTC).date()
+    report: Report | None = None
     jira_set_worklog = "y"
     print("Jira")
 
@@ -86,15 +85,15 @@ def send_to_jira() -> None:
     if report:
         if report.date != current_date:
             print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
-            jira_set_worklog = input(f"You try to send report not today. Do you want set worklog? (y/n) ")
+            jira_set_worklog = input("You try to send report not today. Do you want set worklog? (y/n) ")
 
         if jira_set_worklog == "y":
             jira.set_worklog(report)
 
 
 def send_to_reporting() -> None:
-    current_date = date.today()
-    report: Optional[Report] = None
+    current_date = datetime.datetime.now(datetime.UTC).date()
+    report: Report | None = None
     reporting_send_task = "y"
     print("Reporting")
 
@@ -106,7 +105,7 @@ def send_to_reporting() -> None:
     if report:
         if report.date != current_date:
             print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
-            reporting_send_task = input(f"You try to send report not today. Do you want send tasks? (y/n) ")
+            reporting_send_task = input("You try to send report not today. Do you want send tasks? (y/n) ")
 
         if reporting_send_task == "y":
             reporting.send_tasks(report)

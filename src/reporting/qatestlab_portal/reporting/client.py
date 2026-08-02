@@ -19,7 +19,6 @@ class ReportingClientRepositories(TypedDict, total=False):
 
 
 class ReportingClient:
-
     def __init__(self, base_url: str) -> None:
         self._api = ReportingApi(base_url=base_url)
         self._employee: Employee | None = None

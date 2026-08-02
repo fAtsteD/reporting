@@ -17,7 +17,7 @@ def set_worklog(report: Report) -> None:
         return
 
     jira_client = jira.client.JIRA(server=config_jira.server, basic_auth=(config_jira.login, config_jira.password))
-    bases = map(lambda base: "(?:" + re.escape(base) + "[0-9]+)", config_jira.issue_key_bases)
+    bases = ("(?:" + re.escape(base) + "[0-9]+)" for base in config_jira.issue_key_bases)
     regexp_compile = re.compile("^(" + "|".join(bases) + "):.+$")
 
     for task in report.tasks:

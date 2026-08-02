@@ -18,7 +18,7 @@ pytest_plugins = [
 
 
 class ReportingConfigFixture(Protocol):
-    def __call__(self, config: dict = {}) -> None: ...
+    def __call__(self, config: dict | None = None) -> None: ...
 
 
 @pytest.fixture(autouse=True)  # autouse for factory usage in any moment
@@ -61,7 +61,10 @@ def reporting_config(
         },
     }
 
-    def config_save(config: dict = {}) -> None:
+    def config_save(config: dict | None = None) -> None:
+        if not config:
+            config = {}
+
         config_union = dict(config_default, **config)
         config_path.write_text(json.dumps(config_union), encoding="utf-8")
 

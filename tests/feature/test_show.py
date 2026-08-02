@@ -82,8 +82,8 @@ def test_show_not_exist(
     reporting_config()
 
     if is_generate_report:
-        ReportFactory.create(date=faker.date_object(datetime.datetime(2010, 1, 1)))
-        ReportFactory.create(date=faker.date_object(datetime.datetime(2010, 1, 1)))
+        ReportFactory.create(date=faker.date_object(datetime.datetime(2010, 1, 1, tzinfo=datetime.UTC)))
+        ReportFactory.create(date=faker.date_object(datetime.datetime(2010, 1, 1, tzinfo=datetime.UTC)))
 
     cli.main(["--show", "01.01.2015"])
 

@@ -88,7 +88,7 @@ def test_send_jira_report_with_jira_issues(
             "minute-round-to": 15,
         }
     )
-    report = ReportFactory.create(date=datetime.datetime.now(), tasks=[])
+    report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC), tasks=[])
     tasks: list[Task] = []
 
     for jira_key in jira_keys:
@@ -124,7 +124,7 @@ def test_send_jira_report_with_jira_issues(
     assert str(output.out).startswith("Jira\n")
 
     for task in tasks:
-        is_jira_key = any(map(lambda allowed_jira_key: task.summary.startswith(allowed_jira_key), allowed_jira_keys))
+        is_jira_key = any(task.summary.startswith(allowed_jira_key) for allowed_jira_key in allowed_jira_keys)
 
         if is_jira_key:
             if task.summary.startswith(exist_jira_key):

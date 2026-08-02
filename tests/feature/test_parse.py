@@ -13,14 +13,16 @@ from tests.factories import KindFactory, ProjectFactory, ReportFactory
 
 
 class TrackingFileFixture(Protocol):
-    def __call__(self, lines: list[str] = []) -> pathlib.Path: ...
+    def __call__(self, lines: list[str] | None = None) -> pathlib.Path: ...
 
 
 @pytest.fixture
 def generate_tracking_file(tmp_path: pathlib.Path) -> TrackingFileFixture:
     tracking_file = pathlib.Path(tmp_path, "tracking.txt")
 
-    def generate(lines: list[str] = []) -> pathlib.Path:
+    def generate(lines: list[str] | None = None) -> pathlib.Path:
+        if lines is None:
+            lines = []
         tracking_file.write_text("\n".join(lines))
         return tracking_file
 
@@ -76,16 +78,16 @@ def test_parse_last_report_with_remove_tasks(
             report_date.strftime("%d.%m.%Y"),
             f"08 00 - {summaries[0]} - {types[1].alias}",
             f"10 00 - {summaries[1]} - {types[0].alias}",
-            f"12 30 - l",
+            "12 30 - l",
             f"12 45 - {summaries[2]} - {types[0].alias} - {projects[1].alias}",
-            f"13 30 - break",
+            "13 30 - break",
             f"14 00 - {summaries[0]} - {types[1].alias}",
             f"15 35 - {summaries[3]} - {types[2].alias} - {projects[1].alias}",
-            f"",
-            f"",
+            "",
+            "",
             faker.date_object().strftime("%d.%m.%Y"),
             f"08 00 - {summaries[0]} - {types[1].alias}",
-            f"09 00 - l",
+            "09 00 - l",
             f"10 00 - {summaries[1]} - {types[0].alias}",
         ]
     )
@@ -182,40 +184,40 @@ def test_parse_n_reports(
             report_dates[0].strftime("%d.%m.%Y"),
             f"08 00 - {summaries[0]} - {types[1].alias}",
             f"10 00 - {summaries[1]} - {types[0].alias}",
-            f"12 30 - l",
+            "12 30 - l",
             f"12 45 - {summaries[2]} - {types[0].alias} - {projects[1].alias}",
-            f"13 30 - break",
+            "13 30 - break",
             f"14 00 - {summaries[0]} - {types[1].alias}",
             f"15 35 - {summaries[3]} - {types[2].alias} - {projects[1].alias}",
-            f"",
-            f"",
+            "",
+            "",
             report_dates[1].strftime("%d.%m.%Y"),
             f"08 00 - {summaries[0]} - {types[1].alias}",
             f"09 00 - {summaries[1]} - {types[2].alias} - {projects[1].alias}",
-            f"12 30 - lunch",
+            "12 30 - lunch",
             f"13 00 - {summaries[2]} - {types[0].alias}",
-            f"13 30 - break",
+            "13 30 - break",
             f"14 00 - {summaries[3]} - {types[0].alias}",
             f"14 50 - {summaries[1]} - {types[2].alias} - {projects[1].alias}",
-            f"",
-            f"",
+            "",
+            "",
             report_dates[2].strftime("%d.%m.%Y"),
             f"08 00 - {summaries[1]} - {types[1].alias}",
             f"09 00 - {summaries[2]} - {types[2].alias} - {projects[1].alias}",
             f"10 00 - {summaries[3]} - {types[0].alias} - {projects[1].alias}",
-            f"12 30 - l",
+            "12 30 - l",
             f"12 45 - {summaries[0]} - {types[1].alias} - {projects[0].alias}",
-            f"13 30 - break",
+            "13 30 - break",
             f"14 00 - {summaries[1]} - {types[1].alias}",
             f"15 35 - {summaries[3]} - {types[0].alias} - {projects[1].alias}",
-            f"",
-            f"",
+            "",
+            "",
             faker.date_object().strftime("%d.%m.%Y"),
             f"08 00 - {summaries[0]} - {types[1].alias}",
             f"10 00 - {summaries[1]} - {types[0].alias}",
-            f"12 30 - l",
+            "12 30 - l",
             f"12 45 - {summaries[2]} - {types[0].alias} - {projects[1].alias}",
-            f"13 30 - break",
+            "13 30 - break",
             f"14 00 - {summaries[0]} - {types[1].alias}",
             f"15 35 - {summaries[3]} - {types[2].alias} - {projects[1].alias}",
         ]

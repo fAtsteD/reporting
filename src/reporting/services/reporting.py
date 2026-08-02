@@ -4,12 +4,16 @@ from reporting.models import Report
 from reporting.qatestlab_portal.reporting.client import ReportingClient
 
 
+class ReportingError(Exception):
+    pass
+
+
 def send_tasks(report: Report) -> None:
     reporting_client = ReportingClient(config.reporting.url)
     reporting_client.login(config.reporting.login, config.reporting.password)
 
     if reporting_client.employee is None:
-        raise Exception("Failed to get employee")
+        raise ReportingError("Failed to get employee")
 
     portal_reports = reporting_client.reports(report.date)
     portal_report = reporting_client.report_save(
@@ -25,7 +29,7 @@ def send_tasks(report: Report) -> None:
     )
 
     if not portal_report or not portal_report.id:
-        raise Exception("Failed create/load report")
+        raise ReportingError("Failed create/load report")
 
     time_record_index = portal_report.next_time_record_order_number
     time_records: list[reporting_models.TimeRecord] = []
@@ -34,23 +38,23 @@ def send_tasks(report: Report) -> None:
     )
 
     if not employee_position:
-        raise Exception("Employee does not have a main position")
+        raise ReportingError("Employee does not have a main position")
 
     for task in report.tasks:
         corp_struct_item = reporting_client.repositoryCorpStructItem().get_by_id(employee_position.corp_struct_item_id)
 
-        if task.project.alias in config.reporting.project_to_corp_struct_item.keys():
+        if task.project.alias in config.reporting.project_to_corp_struct_item:
             corp_struct_item_alias = config.reporting.project_to_corp_struct_item[task.project.alias]
             corp_struct_item = reporting_client.repositoryCorpStructItem().get_by_alias(corp_struct_item_alias)
 
         if not corp_struct_item:
             print(f"[-] {task}")
-            print(f"  Corp struct item not found")
+            print("  Corp struct item not found")
             continue
 
         category_name = task.kind.name
 
-        if task.kind.alias in config.reporting.kinds.keys():
+        if task.kind.alias in config.reporting.kinds:
             category_name = config.reporting.kinds[task.kind.alias]
 
         category = reporting_client.repositoryCategory().get_by_name_and_corp_struct_item(
@@ -64,7 +68,7 @@ def send_tasks(report: Report) -> None:
 
         project_name = task.project.name
 
-        if task.project.alias in config.reporting.projects.keys():
+        if task.project.alias in config.reporting.projects:
             project_name = config.reporting.projects[task.project.alias]
 
         project = reporting_client.repositoryProviders().get_project_by_name(project_name)

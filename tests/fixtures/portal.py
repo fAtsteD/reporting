@@ -7,7 +7,6 @@ from responses import RequestsMock, matchers
 
 
 class PortalFixture(Protocol):
-
     def __call__(
         self,
         base_url: str,

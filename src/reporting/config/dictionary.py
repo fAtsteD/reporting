@@ -3,9 +3,9 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Dictionary:
-    tasks: dict = field(default_factory=lambda: {})
-    kinds: dict = field(default_factory=lambda: {})
-    projects: dict = field(default_factory=lambda: {})
+    tasks: dict = field(default_factory=dict)
+    kinds: dict = field(default_factory=dict)
+    projects: dict = field(default_factory=dict)
 
     def translate_task(self, text: str) -> str:
         """

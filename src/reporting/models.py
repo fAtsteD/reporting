@@ -84,11 +84,11 @@ class Report(Base):
 
     @property
     def total_rounded_seconds(self) -> int:
-        return sum(map(lambda task: task.logged_rounded, self.tasks))
+        return sum(task.logged_rounded for task in self.tasks)
 
     @property
     def total_seconds(self) -> int:
-        return sum(map(lambda task: task.logged_seconds, self.tasks))
+        return sum(task.logged_seconds for task in self.tasks)
 
     def remove_tasks(self):
         """
@@ -104,7 +104,8 @@ class Report(Base):
         """
         Report to the text present, it is multiline
         """
-        text = self.date.strftime("%d.%m.%Y") + " (" + datetime.date.today().strftime("%d.%m.%Y") + ")\n"
+        current_date = datetime.datetime.now(datetime.UTC).date()
+        text = self.date.strftime("%d.%m.%Y") + " (" + current_date.strftime("%d.%m.%Y") + ")\n"
 
         total_seconds = self.total_rounded_seconds
         total_hours = round(total_seconds / 60 // 60)

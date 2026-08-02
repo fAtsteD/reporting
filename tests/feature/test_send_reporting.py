@@ -1,6 +1,5 @@
 import datetime
 from enum import Enum
-from typing import Optional
 
 import faker
 import pytest
@@ -37,7 +36,7 @@ def test_send_report(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_base_url = faker.url()
-    report_date: Optional[datetime.date] = None
+    report_date: datetime.date | None = None
     call_input_count = 0
 
     def check_input(_) -> str:
@@ -50,16 +49,16 @@ def test_send_report(
     match report_date_type:
         case ReportDates.Future:
             report_date = faker.date_between_dates(
-                datetime.datetime.now() + datetime.timedelta(days=2),
-                datetime.datetime.now() + datetime.timedelta(days=10),
+                datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=2),
+                datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=10),
             )
         case ReportDates.Past:
             report_date = faker.date_between_dates(
-                datetime.datetime(2000, 1, 1),
-                datetime.datetime.now() - datetime.timedelta(days=10),
+                datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC),
+                datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=10),
             )
         case ReportDates.Today:
-            report_date = datetime.date.today()
+            report_date = datetime.datetime.now(datetime.UTC).date()
 
     report = ReportFactory.create(
         date=report_date,
@@ -217,7 +216,7 @@ def test_send_reporting_empty_required_data(
     reporting_config: ReportingConfigFixture,
 ) -> None:
     reporting_base_url = faker.url()
-    report = ReportFactory.create(date=datetime.datetime.now())
+    report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC))
     kinds = database_session.query(Kind).all()
     kinds_config = {kind.alias: faker.sentence(nb_words=3, variable_nb_words=True) for kind in kinds}
     projects = database_session.query(Project).all()

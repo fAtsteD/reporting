@@ -16,7 +16,6 @@ def reconnect(sqlite_path: str) -> None:
 
 
 def run_migrations() -> None:
-    global engine
     from alembic import command
     from alembic.config import Config
 

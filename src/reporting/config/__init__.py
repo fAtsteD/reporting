@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import re
+import sys
 from pathlib import Path
 
 import dateutil.parser
@@ -29,7 +30,7 @@ def load_config(cli_args: list[str] | None = None):
     config_file.parent.mkdir(parents=True, exist_ok=True)
 
     if not config_file.is_file():
-        exit(f"Config file is not exist. Create configuration in {config_file}")
+        sys.exit(f"Config file is not exist. Create configuration in {config_file}")
 
     data = json.load(config_file.open("r", encoding="utf-8"))
 
@@ -50,10 +51,10 @@ def load_config(cli_args: list[str] | None = None):
         app.input_file_hours = os.path.normpath(data["hour-report-path"])
     if "jira" in data:
         jira = JiraConfig(
-            issue_key_bases=data["jira"]["issue-key-base"] if "issue-key-base" in data["jira"] else [],
-            login=data["jira"]["login"] if "login" in data["jira"] else "",
-            password=data["jira"]["password"] if "password" in data["jira"] else "",
-            server=data["jira"]["server"] if "server" in data["jira"] else "",
+            issue_key_bases=data["jira"].get("issue-key-base", []),
+            login=data["jira"].get("login", ""),
+            password=data["jira"].get("password", ""),
+            server=data["jira"].get("server", ""),
         )
     if "minute-round-to" in data and isinstance(data["minute-round-to"], int):
         app.minute_round_to = int(data["minute-round-to"])
@@ -66,21 +67,17 @@ def load_config(cli_args: list[str] | None = None):
         if "project-to-corp-struct-item" in data["reporting"]:
             reporting_dict["project_to_corp_struct_item"] = data["reporting"]["project-to-corp-struct-item"]
         reporting = ReportingConfig(
-            kinds=data["reporting"]["kinds"] if "kinds" in data["reporting"] else {},
-            login=data["reporting"]["login"] if "login" in data["reporting"] else "",
-            password=data["reporting"]["password"] if "password" in data["reporting"] else "",
-            projects=data["reporting"]["projects"] if "projects" in data["reporting"] else {},
-            project_to_corp_struct_item=(
-                data["reporting"]["project-to-corp-struct-item"]
-                if "project-to-corp-struct-item" in data["reporting"]
-                else {}
-            ),
+            kinds=data["reporting"].get("kinds", {}),
+            login=data["reporting"].get("login", ""),
+            password=data["reporting"].get("password", ""),
+            projects=data["reporting"].get("projects", {}),
+            project_to_corp_struct_item=(data["reporting"].get("project-to-corp-struct-item", {})),
             safe_send_report_days=(
                 data["reporting"]["safe-send-report-days"]
                 if "safe-send-report-days" in data["reporting"] and data["reporting"]["safe-send-report-days"] > 0
                 else 0
             ),
-            url=data["reporting"]["url"] if "url" in data["reporting"] else "",
+            url=data["reporting"].get("url", ""),
         )
     if "sqlite-database-path" in data:
         database.reconnect(os.path.normpath(data["sqlite-database-path"]))

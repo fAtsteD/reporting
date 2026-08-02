@@ -1,6 +1,7 @@
 import datetime
 import re
-from dataclasses import dataclass
+import sys
+from dataclasses import dataclass, field
 from os import path
 
 import dateutil.parser
@@ -15,7 +16,7 @@ class TaskLine:
     Simple dto for structure parsed line of task
     """
 
-    time_begin: datetime.datetime = datetime.datetime.now()
+    time_begin: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
     summary: str = ""
     kind: str = ""
     project: str = ""
@@ -151,7 +152,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                         kind = database.session.query(Kind).filter(Kind.alias == task_line.kind).first()
 
                         if kind is None:
-                            exit(f"Kind {task_line.kind} does not exist")
+                            sys.exit(f"Kind {task_line.kind} does not exist")
 
                         task.kind = kind
 
@@ -159,7 +160,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                         project = database.session.query(Project).filter(Project.alias == task_line.project).first()
 
                         if project is None:
-                            exit(f"Project {task_line.project} does not exist")
+                            sys.exit(f"Project {task_line.project} does not exist")
 
                         task.project = project
 

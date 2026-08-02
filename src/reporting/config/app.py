@@ -30,10 +30,10 @@ class AppConfig:
     parse_days: int | None = None
     show_date: str | datetime.date = "last"
 
-    kind_data: dict = field(default_factory=lambda: {})
+    kind_data: dict = field(default_factory=dict)
     show_kinds = False
 
-    project_data: dict = field(default_factory=lambda: {})
+    project_data: dict = field(default_factory=dict)
     show_projects = False
 
     # Input
@@ -43,7 +43,7 @@ class AppConfig:
     default_kind = "Development"
     default_project = "Default"
     minute_round_to = 15
-    skip_tasks: list[str] = field(default_factory=lambda: [])
+    skip_tasks: list[str] = field(default_factory=list)
 
     # Parameters for program
     work_day_hours = datetime.timedelta(hours=8, minutes=0)

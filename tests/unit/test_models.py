@@ -49,7 +49,7 @@ def test_report_properties() -> None:
         ),
     ]
     tasks.sort(key=lambda task: task.summary)
-    current_date_str = datetime.date.today().strftime("%d.%m.%Y")
+    current_date_str = datetime.datetime.now(datetime.UTC).strftime("%d.%m.%Y")
     output_tasks = f"  {kind.name}:\n"
 
     for task in tasks:

@@ -4,12 +4,12 @@ from dataclasses import dataclass, field
 
 @dataclass
 class ReportingConfig:
-    kinds: dict = field(default_factory=lambda: {})  # Kinds relation: key - from db, value - from reporting
+    kinds: dict = field(default_factory=dict)  # Kinds relation: key - from db, value - from reporting
     login: str = ""
     password: str = ""
-    projects: dict = field(default_factory=lambda: {})  # Projects relation: key - from db, value - from reporting
+    projects: dict = field(default_factory=dict)  # Projects relation: key - from db, value - from reporting
     project_to_corp_struct_item: dict = field(
-        default_factory=lambda: {}
+        default_factory=dict
     )  # Projects relation: key - from db, value - from reporting corp struct item alias
     report_date: str | datetime.date = "last"
     safe_send_report_days: int = 0

@@ -14,7 +14,7 @@ class JiraConfig:
     password: str = ""
 
     # Tasks
-    issue_key_bases: list[str] = field(default_factory=lambda: [])
+    issue_key_bases: list[str] = field(default_factory=list)
 
     @property
     def is_use(self) -> bool:
