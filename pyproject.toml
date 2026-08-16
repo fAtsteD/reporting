@@ -5,7 +5,7 @@ requires = ["setuptools"]
 [project]
 name = "reporting"
 requires-python = ">=3.12"
-version = "1.5.0"
+version = "1.5.1"
 dependencies = [
     "alembic==1.14.*",
     "jira==3.8.*",
