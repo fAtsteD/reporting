@@ -17,7 +17,7 @@ def test_show_by_date(
     reports = ReportFactory.create_batch(size=10)
     reports.sort(key=lambda report: report.date)
 
-    cli.main(["--show", reports[2].date.strftime("%d.%m.%Y")])
+    cli.main(["show", reports[2].date.strftime("%d.%m.%Y")])
 
     output = capsys.readouterr()
 
@@ -50,7 +50,7 @@ def test_show_last(
 
     reports.sort(key=lambda report: report.date, reverse=True)
 
-    cli.main(["--show"])
+    cli.main(["show"])
 
     output = capsys.readouterr()
 
@@ -85,7 +85,7 @@ def test_show_not_exist(
         ReportFactory.create(date=faker.date_object(datetime.datetime(2010, 1, 1, tzinfo=datetime.UTC)))
         ReportFactory.create(date=faker.date_object(datetime.datetime(2010, 1, 1, tzinfo=datetime.UTC)))
 
-    cli.main(["--show", "01.01.2015"])
+    cli.main(["show", "01.01.2015"])
 
     output = capsys.readouterr()
     assert output.out == "Report does not exist\n"

@@ -21,7 +21,7 @@ def test_add_kind(
     output_expected = "Kinds:\n"
     output_expected += f"{kind_raw['alias']} - {kind_raw['name']}\n"
 
-    cli.main(["--kind", kind_raw["alias"], kind_raw["name"]])
+    cli.main(["kind", "add", kind_raw["alias"], kind_raw["name"]])
 
     output = capsys.readouterr()
     assert output.out == (output_expected)
@@ -44,7 +44,7 @@ def test_show_kinds(
     for kind in kinds:
         output_expected += f"{kind}\n"
 
-    cli.main(["--show-kinds"])
+    cli.main(["kind", "list"])
 
     output = capsys.readouterr()
     assert output.out == (output_expected)
@@ -57,7 +57,7 @@ def test_show_kinds_empty(
     reporting_config()
     output_expected = "Kinds:\n"
 
-    cli.main(["--show-kinds"])
+    cli.main(["kind", "list"])
 
     output = capsys.readouterr()
     assert output.out == (output_expected)
@@ -75,7 +75,7 @@ def test_update_kind(
     output_expected = "Kinds:\n"
     output_expected += f"{kind.alias} - {kind_name_new}\n"
 
-    cli.main(["--kind", kind.alias, kind_name_new])
+    cli.main(["kind", "add", kind.alias, kind_name_new])
 
     output = capsys.readouterr()
     assert output.out == (output_expected)

@@ -29,7 +29,7 @@ if config.get_main_option("sqlalchemy.url", None) is None:
     from reporting import config as config_app
     from reporting.database import db_connection
 
-    config_app.load_config([])
+    config_app.load_config()
     config.set_main_option("sqlalchemy.url", str(db_connection.engine.url))
 
 

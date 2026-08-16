@@ -1,19 +1,7 @@
 import datetime
 from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
 from zoneinfo import ZoneInfo
-
-
-class Command(Enum):
-    JIRA = "jira"
-    KIND_SHOW = "show-kinds"
-    KIND_UPDATE = "kind"
-    PROJECT_SHOW = "show-projects"
-    PROJECT_UPDATE = "project"
-    REPORT_PARSE = "parse"
-    REPORT_SHOW = "show"
-    REPORTING = "reporting"
 
 
 @dataclass
@@ -26,16 +14,6 @@ class AppConfig:
 
     # Directories
     program_dir = Path("~/.reporting").expanduser()
-
-    # Actions
-    parse_days: int | None = None
-    show_date: str | datetime.date = "last"
-
-    kind_data: dict = field(default_factory=dict)
-    show_kinds = False
-
-    project_data: dict = field(default_factory=dict)
-    show_projects = False
 
     # Input
     input_file_hours = ""

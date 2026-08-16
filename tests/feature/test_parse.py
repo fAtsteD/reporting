@@ -42,7 +42,7 @@ def test_parse_empty_file(
     )
     output_expected = "Parsed 0\n"
 
-    cli.main(["--parse"])
+    cli.main(["parse"])
     output = capsys.readouterr()
 
     assert output.out == output_expected
@@ -110,7 +110,7 @@ def test_parse_last_report_with_remove_tasks(
     )
     ReportFactory.create(date=report_date)
 
-    cli.main(["--parse"])
+    cli.main(["parse"])
 
     output = capsys.readouterr()
     assert str(output.out).startswith("Parsed 1\n")
@@ -240,7 +240,7 @@ def test_parse_n_reports(
         }
     )
 
-    cli.main(["--parse", "3"])
+    cli.main(["parse", "3"])
 
     output = capsys.readouterr()
     assert str(output.out).startswith("Parsed 3\n")

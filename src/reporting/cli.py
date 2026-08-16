@@ -1,141 +1,18 @@
-#!/usr/bin/python3
+import typer
 
-import datetime
+from reporting.commands import kind, parse, project, send, show
 
-from reporting import config
-from reporting.config.app import Command
-from reporting.database import db_connection
-from reporting.database.models import Kind, Project, Report
-from reporting.services import file_parse, jira, reporting
+app = typer.Typer(help="Parse file with day (days) of tasks and save to many systems")
 
-
-def kind_update() -> None:
-    kind: Kind | None = db_connection.session.query(Kind).filter(Kind.alias == config.app.kind_data[0]).first()
-
-    if kind is None:
-        kind = Kind(alias=config.app.kind_data[0], name=config.app.kind_data[1])
-        db_connection.session.add(kind)
-    else:
-        kind.name = config.app.kind_data[1]
-
-    db_connection.session.commit()
-
-
-def kinds_show() -> None:
-    kinds = db_connection.session.query(Kind).order_by(Kind.name).all()
-    print("Kinds:")
-
-    for kind in kinds:
-        print(kind)
-
-
-def project_update() -> None:
-    project = db_connection.session.query(Project).filter(Project.alias == config.app.project_data[0]).first()
-
-    if project is None:
-        project = Project(alias=config.app.project_data[0], name=config.app.project_data[1])
-        db_connection.session.add(project)
-    else:
-        project.name = config.app.project_data[1]
-
-    db_connection.session.commit()
-
-
-def projects_show() -> None:
-    projects = db_connection.session.query(Project).order_by(Project.name).all()
-    print("Projects:")
-
-    for project in projects:
-        print(project)
-
-
-def report_parse() -> None:
-    reports = file_parse.parse_reports(config.app.parse_days or 1)
-    print(f"Parsed {len(reports)}")
-
-    if len(reports) < 10:
-        for report in reports:
-            print(report)
-
-
-def report_show() -> None:
-    report = None
-
-    if config.app.show_date == "last":
-        report = db_connection.session.query(Report).order_by(Report.date.desc()).first()
-    else:
-        report = db_connection.session.query(Report).filter(Report.date == config.app.show_date).first()
-
-    if report is None:
-        print("Report does not exist")
-    else:
-        print(report)
-
-
-def send_to_jira() -> None:
-    current_date = datetime.datetime.now(config.app.timezone).date()
-    report: Report | None = None
-    jira_set_worklog = "y"
-    print("Jira")
-
-    if config.jira.report_date == "last":
-        report = db_connection.session.query(Report).order_by(Report.date.desc()).first()
-    else:
-        report = db_connection.session.query(Report).filter(Report.date == config.jira.report_date).first()
-
-    if report:
-        if report.date != current_date:
-            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
-            jira_set_worklog = input("You try to send report not today. Do you want set worklog? (y/n) ")
-
-        if jira_set_worklog == "y":
-            jira.set_worklog(report)
-
-
-def send_to_reporting() -> None:
-    current_date = datetime.datetime.now(config.app.timezone).date()
-    report: Report | None = None
-    reporting_send_task = "y"
-    print("Reporting")
-
-    if config.reporting.report_date == "last":
-        report = db_connection.session.query(Report).order_by(Report.date.desc()).first()
-    else:
-        report = db_connection.session.query(Report).filter(Report.date == config.reporting.report_date).first()
-
-    if report:
-        if report.date != current_date:
-            print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
-            reporting_send_task = input("You try to send report not today. Do you want send tasks? (y/n) ")
-
-        if reporting_send_task == "y":
-            reporting.send_tasks(report)
+app.command("parse")(parse.parse)
+app.command("show")(show.show)
+app.command("send")(send.send)
+app.add_typer(kind.app, name="kind")
+app.add_typer(project.app, name="project")
 
 
 def main(cli_args: list[str] | None = None) -> None:
-    """
-    Main function for starting program
-    """
-    config.load_config(cli_args)
-
-    for command in config.commands:
-        match command:
-            case Command.JIRA:
-                send_to_jira()
-            case Command.KIND_SHOW:
-                kinds_show()
-            case Command.KIND_UPDATE:
-                kind_update()
-            case Command.PROJECT_SHOW:
-                projects_show()
-            case Command.PROJECT_UPDATE:
-                project_update()
-            case Command.REPORT_PARSE:
-                report_parse()
-            case Command.REPORT_SHOW:
-                report_show()
-            case Command.REPORTING:
-                send_to_reporting()
+    app(args=cli_args, standalone_mode=False)
 
 
 if __name__ == "__main__":

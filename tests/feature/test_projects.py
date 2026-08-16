@@ -21,7 +21,7 @@ def test_add_project(
     output_expected = "Projects:\n"
     output_expected += f"{project_raw['alias']} - {project_raw['name']}\n"
 
-    cli.main(["--project", project_raw["alias"], project_raw["name"]])
+    cli.main(["project", "add", project_raw["alias"], project_raw["name"]])
 
     output = capsys.readouterr()
     assert output.out == (output_expected)
@@ -48,7 +48,7 @@ def test_show_projects(
     for project in projects:
         output_expected += f"{project}\n"
 
-    cli.main(["--show-projects"])
+    cli.main(["project", "list"])
 
     output = capsys.readouterr()
     assert output.out == (output_expected)
@@ -61,7 +61,7 @@ def test_show_projects_empty(
     reporting_config()
     output_expected = "Projects:\n"
 
-    cli.main(["--show-projects"])
+    cli.main(["project", "list"])
 
     output = capsys.readouterr()
     assert output.out == (output_expected)
@@ -79,7 +79,7 @@ def test_update_project(
     output_expected = "Projects:\n"
     output_expected += f"{project.alias} - {project_new_name}\n"
 
-    cli.main(["--project", project.alias, project_new_name])
+    cli.main(["project", "add", project.alias, project_new_name])
 
     output = capsys.readouterr()
     assert output.out == (output_expected)

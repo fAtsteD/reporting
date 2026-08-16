@@ -182,7 +182,7 @@ def test_send_report(
         time_records_post=True,
     )
 
-    cli.main(["--reporting"])
+    cli.main(["send", "--portal"])
 
     output = str(capsys.readouterr().out)
     assert output.startswith("Reporting\n")
@@ -340,7 +340,7 @@ def test_send_reporting_empty_required_data(
         time_records_post=True,
     )
 
-    cli.main(["--reporting"])
+    cli.main(["send", "--portal"])
 
     output = str(capsys.readouterr().out)
     assert output.startswith("Reporting\n")

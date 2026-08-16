@@ -1,29 +1,21 @@
-import argparse
 import json
 import os
-import re
 import sys
 from pathlib import Path
 
-import dateutil.parser
-
-from reporting.config.app import AppConfig, Command
+from reporting.config.app import AppConfig
 from reporting.config.dictionary import Dictionary
 from reporting.config.jira import JiraConfig
 from reporting.config.reporting import ReportingConfig
 from reporting.database import db_connection
 
 app: AppConfig = AppConfig()
-commands: list[Command] = []
 dictionary = Dictionary()
 jira = JiraConfig()
 reporting = ReportingConfig()
 
 
-def load_config(cli_args: list[str] | None = None):
-    """
-    Parse config file and set settings
-    """
+def load_config() -> None:
     global app, dictionary, jira, reporting
     app = AppConfig()
     config_file = Path(app.program_dir, "config.json").expanduser()
@@ -83,126 +75,3 @@ def load_config(cli_args: list[str] | None = None):
         )
     if "sqlite-database-path" in data:
         db_connection.reconnect(os.path.normpath(data["sqlite-database-path"]))
-
-    _config_arguments(cli_args)
-
-
-def _config_arguments(cli_args: list[str] | None):
-    """
-    Parse params from arguments to program
-    """
-    global commands
-    commands = []
-    parser = argparse.ArgumentParser(
-        description="Parse file with day (days) of tasks begins in some time and save it is in many systems"
-    )
-
-    parser.add_argument(
-        "--show",
-        required=False,
-        nargs="?",
-        const="last",
-        metavar="01.01.2000",
-        action="store",
-        help="print report for defined date or last by default",
-    )
-    parser.add_argument(
-        "--parse",
-        required=False,
-        nargs="?",
-        const=1,
-        metavar="N",
-        action="store",
-        help="parse last n days from file and save to db, default 1, set 0 for all report in file",
-    )
-    parser.add_argument(
-        "--jira",
-        required=False,
-        nargs="?",
-        const="last",
-        metavar="01.01.2000",
-        action="store",
-        help="search task from Jira and logs time to them, default for last report",
-    )
-    parser.add_argument(
-        "--reporting",
-        required=False,
-        nargs="?",
-        const="last",
-        metavar="01.01.2000",
-        action="store",
-        help="log all task time to the reporting system, default for last report",
-    )
-
-    parser.add_argument(
-        "--kind",
-        required=False,
-        nargs=2,
-        metavar=("t", "Test"),
-        action="store",
-        help="add/update kind to the database and can be used in the future, alias (first param) is "
-        "unique, other data will updates",
-    )
-    parser.add_argument(
-        "--show-kinds",
-        required=False,
-        default=False,
-        action="store_true",
-        help="print all kinds and their data",
-    )
-
-    parser.add_argument(
-        "--project",
-        required=False,
-        nargs=2,
-        metavar=("p", "Project"),
-        action="store",
-        help="add/update project to the database and can be used in the future, alias (first param) "
-        "is unique, other data will updates",
-    )
-    parser.add_argument(
-        "--show-projects",
-        required=False,
-        default=False,
-        action="store_true",
-        help="print all projects and their data",
-    )
-
-    args = parser.parse_args(cli_args)
-
-    regex_date = "^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})$"
-
-    if args.show is not None:
-        commands.append(Command.REPORT_SHOW)
-        if re.search(regex_date, args.show.strip()):
-            app.show_date = dateutil.parser.parse(args.show, dayfirst=True).date()
-
-    if args.parse is not None and int(args.parse) >= 0:
-        commands.append(Command.REPORT_PARSE)
-        app.parse_days = int(args.parse)
-
-    if args.jira is not None:
-        commands.append(Command.JIRA)
-        if re.search(regex_date, args.jira.strip()):
-            jira.report_date = dateutil.parser.parse(args.jira, dayfirst=True).date()
-
-    if args.reporting is not None:
-        commands.append(Command.REPORTING)
-        if re.search(regex_date, args.reporting.strip()):
-            reporting.report_date = dateutil.parser.parse(args.reporting, dayfirst=True).date()
-
-    if args.kind:
-        commands.append(Command.KIND_UPDATE)
-        commands.append(Command.KIND_SHOW)
-        app.kind_data = args.kind
-
-    if args.show_kinds:
-        commands.append(Command.KIND_SHOW)
-
-    if args.project:
-        commands.append(Command.PROJECT_UPDATE)
-        commands.append(Command.PROJECT_SHOW)
-        app.project_data = args.project
-
-    if args.show_projects:
-        commands.append(Command.PROJECT_SHOW)

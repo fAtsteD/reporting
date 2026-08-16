@@ -30,7 +30,7 @@ def test_send_jira_empty_report(
     monkeypatch.setattr(jira.client.JIRA, "add_worklog", lambda: None)
     output_expected = "Jira\n"
 
-    cli.main(["--jira"])
+    cli.main(["send", "--jira"])
 
     output = capsys.readouterr()
     assert output.out == output_expected
@@ -118,7 +118,7 @@ def test_send_jira_report_with_jira_issues(
     monkeypatch.setattr(jira.client.JIRA, "issue", check_issue_key)
     monkeypatch.setattr(jira.client.JIRA, "add_worklog", check_issue_key)
 
-    cli.main(["--jira"])
+    cli.main(["send", "--jira"])
 
     output = capsys.readouterr()
     assert str(output.out).startswith("Jira\n")
