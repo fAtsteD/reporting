@@ -1,7 +1,6 @@
 import datetime
 import re
 import sys
-from dataclasses import dataclass
 from os import path
 
 import dateutil.parser
@@ -9,24 +8,10 @@ import dateutil.parser
 from reporting import config
 from reporting.database import db_connection
 from reporting.database.models import Kind, Project, Report, Task
-
-
-@dataclass
-class TaskLine:
-    """
-    Simple dto for structure parsed line of task
-    """
-
-    time_begin: datetime.datetime
-    summary: str = ""
-    kind: str = ""
-    project: str = ""
+from reporting.services.file_parse.models import TaskLine
 
 
 def parse_task(task_str: str, report_date: datetime.date) -> TaskLine:
-    """
-    Parse line from file to task object
-    """
     parsed_time = dateutil.parser.parse(task_str.split(" - ")[0].strip().replace(" ", ":")).time()
     task = TaskLine(
         time_begin=datetime.datetime.combine(report_date, parsed_time, tzinfo=config.app.timezone),
@@ -78,7 +63,6 @@ def parse_reports(read_days: int = 1) -> list[Report]:
     db_connection.session.autoflush = False
 
     with open(config.app.input_file_hours, "r", encoding="utf-8") as input_file_hours:
-        # Need for double new line finding
         report: Report | None = None
         day_index = 0
         previous_line = ""

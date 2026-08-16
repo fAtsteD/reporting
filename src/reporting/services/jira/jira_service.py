@@ -7,10 +7,11 @@ from reporting import config
 from reporting.database.models import Report
 
 
+def convert_time_to_jira_time(seconds: int) -> str:
+    return f"{round((seconds / 60) // 60)}h {round((seconds / 60) % 60)}m"
+
+
 def set_worklog(report: Report) -> None:
-    """
-    Set worklog time to the task
-    """
     config_jira = config.jira
 
     if not config_jira.is_use:
@@ -27,7 +28,6 @@ def set_worklog(report: Report) -> None:
             issue_key = task_to_jira.group(1)
 
             try:
-                # First request for checking that issue exist
                 jira_client.issue(issue_key)
                 jira_client.add_worklog(
                     issue_key,
@@ -38,10 +38,3 @@ def set_worklog(report: Report) -> None:
                 print(f"[-] {task}")
 
     print()
-
-
-def convert_time_to_jira_time(seconds: int) -> str:
-    """
-    Convert time to the jira type string
-    """
-    return f"{round((seconds / 60) // 60)}h {round((seconds / 60) % 60)}m"

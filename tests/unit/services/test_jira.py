@@ -1,6 +1,6 @@
 import pytest
 
-from reporting.services.jira import convert_time_to_jira_time
+from reporting.services.jira.jira_service import convert_time_to_jira_time
 
 
 @pytest.mark.parametrize(

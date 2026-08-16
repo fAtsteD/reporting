@@ -6,7 +6,8 @@ import typer
 from reporting import config
 from reporting.database import db_connection
 from reporting.database.models import Report
-from reporting.services import jira, reporting
+from reporting.services.jira import jira_service
+from reporting.services.qatestlab_portal import qatestlab_portal_service
 
 
 def send(
@@ -49,18 +50,18 @@ def _send_to_jira(report: Report | None) -> None:
             jira_set_worklog = input("You try to send report not today. Do you want set worklog? (y/n) ")
 
         if jira_set_worklog == "y":
-            jira.set_worklog(report)
+            jira_service.set_worklog(report)
 
 
 def _send_to_portal(report: Report | None) -> None:
     current_date = datetime.datetime.now(config.app.timezone).date()
-    reporting_send_task = "y"
-    print("Reporting")
+    portal_send_task = "y"
+    print("QATestLab Portal")
 
     if report:
         if report.date != current_date:
             print(f"Report date: {report.date.strftime('%d.%m.%Y')}\nCurrent date: {current_date.strftime('%d.%m.%Y')}")
-            reporting_send_task = input("You try to send report not today. Do you want send tasks? (y/n) ")
+            portal_send_task = input("You try to send report not today. Do you want send tasks? (y/n) ")
 
-        if reporting_send_task == "y":
-            reporting.send_tasks(report)
+        if portal_send_task == "y":
+            qatestlab_portal_service.send_tasks(report)

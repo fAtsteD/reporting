@@ -6,17 +6,17 @@ from pathlib import Path
 from reporting.config.app import AppConfig
 from reporting.config.dictionary import Dictionary
 from reporting.config.jira import JiraConfig
-from reporting.config.reporting import ReportingConfig
+from reporting.config.qatestlab_portal import QATestLabPortalConfig
 from reporting.database import db_connection
 
 app: AppConfig = AppConfig()
 dictionary = Dictionary()
 jira = JiraConfig()
-reporting = ReportingConfig()
+qatestlab_portal = QATestLabPortalConfig()
 
 
 def load_config() -> None:
-    global app, dictionary, jira, reporting
+    global app, dictionary, jira, qatestlab_portal
     app = AppConfig()
     config_file = Path(app.program_dir, "config.json").expanduser()
     config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -56,22 +56,25 @@ def load_config() -> None:
         skip_tasks = data["omit-task"]
         for task_name in skip_tasks:
             app.skip_tasks.append(dictionary.translate_task(task_name))
-    if "reporting" in data:
-        reporting_dict = {}
-        if "project-to-corp-struct-item" in data["reporting"]:
-            reporting_dict["project_to_corp_struct_item"] = data["reporting"]["project-to-corp-struct-item"]
-        reporting = ReportingConfig(
-            kinds=data["reporting"].get("kinds", {}),
-            login=data["reporting"].get("login", ""),
-            password=data["reporting"].get("password", ""),
-            projects=data["reporting"].get("projects", {}),
-            project_to_corp_struct_item=(data["reporting"].get("project-to-corp-struct-item", {})),
+    if "qatestlab-portal" in data:
+        qatestlab_portal_dict = {}
+        if "project-to-corp-struct-item" in data["qatestlab-portal"]:
+            qatestlab_portal_dict["project_to_corp_struct_item"] = data["qatestlab-portal"][
+                "project-to-corp-struct-item"
+            ]
+        qatestlab_portal = QATestLabPortalConfig(
+            kinds=data["qatestlab-portal"].get("kinds", {}),
+            login=data["qatestlab-portal"].get("login", ""),
+            password=data["qatestlab-portal"].get("password", ""),
+            projects=data["qatestlab-portal"].get("projects", {}),
+            project_to_corp_struct_item=(data["qatestlab-portal"].get("project-to-corp-struct-item", {})),
             safe_send_report_days=(
-                data["reporting"]["safe-send-report-days"]
-                if "safe-send-report-days" in data["reporting"] and data["reporting"]["safe-send-report-days"] > 0
+                data["qatestlab-portal"]["safe-send-report-days"]
+                if "safe-send-report-days" in data["qatestlab-portal"]
+                and data["qatestlab-portal"]["safe-send-report-days"] > 0
                 else 0
             ),
-            url=data["reporting"].get("url", ""),
+            url=data["qatestlab-portal"].get("url", ""),
         )
     if "sqlite-database-path" in data:
         db_connection.reconnect(os.path.normpath(data["sqlite-database-path"]))

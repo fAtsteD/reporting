@@ -35,7 +35,7 @@ def test_send_report(
     report_date_type: ReportDates,
     reporting_config: ReportingConfigFixture,
 ) -> None:
-    reporting_base_url = faker.url()
+    portal_base_url = faker.url()
     report_date: datetime.date | None = None
     call_input_count = 0
 
@@ -81,7 +81,7 @@ def test_send_report(
     reporting_config(
         {
             "minute-round-to": 15,
-            "reporting": {
+            "qatestlab-portal": {
                 "kinds": kinds_config,
                 "login": faker.domain_word(),
                 "password": faker.password(),
@@ -90,7 +90,7 @@ def test_send_report(
                     projects[0].alias: projects_0_corp_struct_item["alias"],
                 },
                 "safe-send-report-days": 1,
-                "url": reporting_base_url,
+                "url": portal_base_url,
             },
         }
     )
@@ -148,7 +148,7 @@ def test_send_report(
         for corp_struct_item in portal_api_corp_struct_items
     ]
     portal_mock(
-        base_url=reporting_base_url,
+        base_url=portal_base_url,
         categories=portal_api_categories,
         category_bindings=portal_api_category_bindings,
         corp_struct_items=portal_api_corp_struct_items,
@@ -185,7 +185,7 @@ def test_send_report(
     cli.main(["send", "--portal"])
 
     output = str(capsys.readouterr().out)
-    assert output.startswith("Reporting\n")
+    assert output.startswith("QATestLab Portal\n")
 
     for task in report.tasks:
         assert output.find(f"[+] {task}\n") > -1
@@ -207,7 +207,7 @@ def test_send_report(
         ("projects"),
     ],
 )
-def test_send_reporting_empty_required_data(
+def test_send_portal_empty_required_data(
     capsys: pytest.CaptureFixture,
     database_session: Session,
     empty_response_data: tuple,
@@ -215,7 +215,7 @@ def test_send_reporting_empty_required_data(
     portal_mock: PortalFixture,
     reporting_config: ReportingConfigFixture,
 ) -> None:
-    reporting_base_url = faker.url()
+    portal_base_url = faker.url()
     report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC))
     kinds = database_session.query(Kind).all()
     kinds_config = {kind.alias: faker.sentence(nb_words=3, variable_nb_words=True) for kind in kinds}
@@ -235,7 +235,7 @@ def test_send_reporting_empty_required_data(
     reporting_config(
         {
             "minute-round-to": 15,
-            "reporting": {
+            "qatestlab-portal": {
                 "kinds": kinds_config,
                 "login": faker.domain_word(),
                 "password": faker.password(),
@@ -244,7 +244,7 @@ def test_send_reporting_empty_required_data(
                     projects[0].alias: projects_0_corp_struct_item["alias"],
                 },
                 "safe-send-report-days": 1,
-                "url": reporting_base_url,
+                "url": portal_base_url,
             },
         }
     )
@@ -300,7 +300,7 @@ def test_send_reporting_empty_required_data(
         for corp_struct_item in portal_api_corp_struct_items
     ]
     portal_mock(
-        base_url=reporting_base_url,
+        base_url=portal_base_url,
         categories=portal_api_categories if "categories" in empty_response_data else [],
         category_bindings=portal_api_category_bindings if "category_bindings" in empty_response_data else [],
         corp_struct_items=portal_api_corp_struct_items if "corp_struct_items" in empty_response_data else [],
@@ -343,7 +343,7 @@ def test_send_reporting_empty_required_data(
     cli.main(["send", "--portal"])
 
     output = str(capsys.readouterr().out)
-    assert output.startswith("Reporting\n")
+    assert output.startswith("QATestLab Portal\n")
 
     for task in report.tasks:
         assert output.find(f"[-] {task}\n") > -1

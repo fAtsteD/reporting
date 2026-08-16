@@ -1,0 +1,2 @@
+class QATestLabPortalError(Exception):
+    pass

@@ -4,7 +4,8 @@ import pytest
 
 from reporting import config
 from reporting.config.app import AppConfig
-from reporting.services.file_parse import TaskLine, parse_task
+from reporting.services.file_parse.file_parse_service import parse_task
+from reporting.services.file_parse.models import TaskLine
 
 REPORT_DATE = datetime.date(2026, 8, 2)
 

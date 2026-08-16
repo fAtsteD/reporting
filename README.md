@@ -68,14 +68,14 @@ Setting that can be setted:
   - task - only use for task name
   - kind - only use for kind name, it has to change to alias inside
   - project - only use for project name, it has to change to alias inside
-- reporting - settings for reporting (have different class for them):
-  - kinds - dictionary for transformation kinds inside to the reporting, all inside kind's keys can view in command line
+- qatestlab-portal - settings for QATestLab Portal (have different class for them):
+  - kinds - dictionary for transformation kinds inside to the portal, all inside kind's keys can view in command line
   - login - user login to the account
   - password - password to the account
-  - projects - dictionary for transformation projects inside to the reporting, all inside project's keys can view in command line
-  - project-to-corp-struct-item - dictionary for setting related projects inside to the reporting corp struct item alias, all inside project's keys can view in command line
+  - projects - dictionary for transformation projects inside to the portal, all inside project's keys can view in command line
+  - project-to-corp-struct-item - dictionary for setting related projects inside to the portal corp struct item alias, all inside project's keys can view in command line
   - safe-send-report-days - send report without additional question when send report
-  - url - main url to the reporting api
+  - url - main url to the portal api
 - default-type - default type, setted if task does not have, set alias from inside name
 - default-project - default project, setted if task does not have, set alias from inside name
 
@@ -103,7 +103,7 @@ Example:
         "type": {},
         "project": {}
     },
-    "reporting": {
+    "qatestlab-portal": {
         "kinds": {
             "d": "Develop",
         },
@@ -116,7 +116,7 @@ Example:
             "bs": "Best Corp Struct Item Alias",
         },
         "safe-send-report-days": 1,
-        "url": "https://reporting.example.com/api",
+        "url": "https://qatestlab-portal.example.com/api",
     },
     "default-type": "Development",
     "default-project": "Project"
@@ -138,9 +138,9 @@ You must add 3 required configs for working with Jira: server, login, password.
 
 Issue key searches by concatenate base in the settings (default empty string) and any number before double dots. All other information for setting worklog does not need.
 
-## Reporting
+## QATestLab Portal
 
 Add requests through API.
 Firstly do requests for data then it can do what you need.
 
-New requests can be added in the api then used in reporting.
+New requests can be added in the api then used in the portal.
