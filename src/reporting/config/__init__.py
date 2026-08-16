@@ -7,11 +7,11 @@ from pathlib import Path
 
 import dateutil.parser
 
-from reporting import database
 from reporting.config.app import AppConfig, Command
 from reporting.config.dictionary import Dictionary
 from reporting.config.jira import JiraConfig
 from reporting.config.reporting import ReportingConfig
+from reporting.database import db_connection
 
 app: AppConfig = AppConfig()
 commands: list[Command] = []
@@ -82,7 +82,7 @@ def load_config(cli_args: list[str] | None = None):
             url=data["reporting"].get("url", ""),
         )
     if "sqlite-database-path" in data:
-        database.reconnect(os.path.normpath(data["sqlite-database-path"]))
+        db_connection.reconnect(os.path.normpath(data["sqlite-database-path"]))
 
     _config_arguments(cli_args)
 

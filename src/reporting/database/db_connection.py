@@ -20,7 +20,7 @@ def run_migrations() -> None:
     from alembic.config import Config
 
     alembic_cfg = Config()
-    alembic_cfg.set_main_option("script_location", "reporting:migrations")
+    alembic_cfg.set_main_option("script_location", "reporting.database:migrations")
     alembic_cfg.set_main_option("sqlalchemy.url", str(engine.url))
 
     with engine.connect() as connection:

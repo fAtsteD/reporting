@@ -6,8 +6,9 @@ from os import path
 
 import dateutil.parser
 
-from reporting import config, database
-from reporting.models import Kind, Project, Report, Task
+from reporting import config
+from reporting.database import db_connection
+from reporting.database.models import Kind, Project, Report, Task
 
 
 @dataclass
@@ -74,7 +75,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
     if not path.isfile(config.app.input_file_hours):
         return reports
 
-    database.session.autoflush = False
+    db_connection.session.autoflush = False
 
     with open(config.app.input_file_hours, "r", encoding="utf-8") as input_file_hours:
         # Need for double new line finding
@@ -87,11 +88,11 @@ def parse_reports(read_days: int = 1) -> list[Report]:
         for line in input_file_hours:
             if re.search("^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})\n$", line):
                 report_date = dateutil.parser.parse(line, dayfirst=True).date()
-                report = database.session.query(Report).filter(Report.date == report_date).first()
+                report = db_connection.session.query(Report).filter(Report.date == report_date).first()
 
                 if report is None:
                     report = Report(date=report_date)
-                    database.session.add(report)
+                    db_connection.session.add(report)
 
                 report.remove_tasks()
                 reports.append(report)
@@ -100,7 +101,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
 
             if previous_line == "\n" and line == "\n":
                 day_index += 1
-                database.session.commit()
+                db_connection.session.commit()
 
                 if (
                     report
@@ -148,7 +149,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                     task.report = report
 
                     if task_line.kind:
-                        kind = database.session.query(Kind).filter(Kind.alias == task_line.kind).first()
+                        kind = db_connection.session.query(Kind).filter(Kind.alias == task_line.kind).first()
 
                         if kind is None:
                             sys.exit(f"Kind {task_line.kind} does not exist")
@@ -156,17 +157,19 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                         task.kind = kind
 
                     if task_line.project:
-                        project = database.session.query(Project).filter(Project.alias == task_line.project).first()
+                        project = (
+                            db_connection.session.query(Project).filter(Project.alias == task_line.project).first()
+                        )
 
                         if project is None:
                             sys.exit(f"Project {task_line.project} does not exist")
 
                         task.project = project
 
-                    database.session.add(task)
+                    db_connection.session.add(task)
 
             previous_task = task
             previous_task_line = task_line
 
-    database.session.commit()
+    db_connection.session.commit()
     return reports

@@ -8,9 +8,9 @@ from typing import Protocol
 import pytest
 from sqlalchemy.orm import Session
 
-from reporting import database
 from reporting.config.app import AppConfig
-from reporting.models import Base
+from reporting.database import db_connection
+from reporting.database.models import Base
 
 pytest_plugins = [
     "tests.fixtures.portal",
@@ -23,14 +23,14 @@ class ReportingConfigFixture(Protocol):
 
 @pytest.fixture(autouse=True)  # autouse for factory usage in any moment
 def database_session(monkeypatch: pytest.MonkeyPatch) -> Generator[Session]:
-    database.reconnect(":memory:")
+    db_connection.reconnect(":memory:")
 
-    yield database.session()
+    yield db_connection.session()
 
-    database.session.rollback()
-    database.session.remove()
-    Base.metadata.drop_all(bind=database.engine)
-    database.engine.dispose()
+    db_connection.session.rollback()
+    db_connection.session.remove()
+    Base.metadata.drop_all(bind=db_connection.engine)
+    db_connection.engine.dispose()
 
 
 @pytest.fixture(autouse=True)

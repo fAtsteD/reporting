@@ -3,8 +3,8 @@ from typing import TypeVar
 
 import factory
 
-from reporting import database
-from reporting.models import Base, Kind, Project, Report, Task
+from reporting.database import db_connection
+from reporting.database.models import Base, Kind, Project, Report, Task
 
 FactoryModelType = TypeVar("FactoryModelType")
 
@@ -16,7 +16,7 @@ class BaseFactory[FactoryModelType: Base](factory.alchemy.SQLAlchemyModelFactory
 
         @staticmethod
         def sqlalchemy_session_factory():
-            return database.session
+            return db_connection.session
 
     @classmethod
     def create(cls, **kwargs) -> FactoryModelType:

@@ -4,7 +4,8 @@ import sqlalchemy as sa
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.types import DateTime, TypeDecorator
 
-from reporting import config, database
+from reporting import config
+from reporting.database import db_connection
 
 
 class DBDatetimeType(TypeDecorator[datetime.datetime]):
@@ -117,9 +118,9 @@ class Report(Base):
         """
         for task in self.tasks:
             self.updated_at = datetime.datetime.now(datetime.UTC)
-            database.session.delete(task)
+            db_connection.session.delete(task)
 
-        database.session.commit()
+        db_connection.session.commit()
 
     def __str__(self):
         """
@@ -137,7 +138,7 @@ class Report(Base):
 
         indent = "  "
         tasks = (
-            database.session.query(Task)
+            db_connection.session.query(Task)
             .filter(Task.report.has(Report.id == self.id))
             .order_by(Task.kinds_id, Task.summary)
             .all()

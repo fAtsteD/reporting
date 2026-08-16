@@ -1,6 +1,6 @@
 import reporting.qatestlab_portal.reporting.models as reporting_models
 from reporting import config
-from reporting.models import Report
+from reporting.database.models import Report
 from reporting.qatestlab_portal.reporting.client import ReportingClient
 
 

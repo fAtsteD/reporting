@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
 
 from reporting import config
-from reporting.models import Kind, Project
+from reporting.database.models import Kind, Project
 from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
 
 

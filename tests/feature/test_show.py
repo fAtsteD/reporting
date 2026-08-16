@@ -4,7 +4,7 @@ import faker
 import pytest
 
 from reporting import cli
-from reporting.models import Report
+from reporting.database.models import Report
 from tests.conftest import ReportingConfigFixture
 from tests.factories import ReportFactory
 

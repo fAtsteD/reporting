@@ -2,26 +2,27 @@
 
 import datetime
 
-from reporting import config, database
+from reporting import config
 from reporting.config.app import Command
-from reporting.models import Kind, Project, Report
+from reporting.database import db_connection
+from reporting.database.models import Kind, Project, Report
 from reporting.services import file_parse, jira, reporting
 
 
 def kind_update() -> None:
-    kind: Kind | None = database.session.query(Kind).filter(Kind.alias == config.app.kind_data[0]).first()
+    kind: Kind | None = db_connection.session.query(Kind).filter(Kind.alias == config.app.kind_data[0]).first()
 
     if kind is None:
         kind = Kind(alias=config.app.kind_data[0], name=config.app.kind_data[1])
-        database.session.add(kind)
+        db_connection.session.add(kind)
     else:
         kind.name = config.app.kind_data[1]
 
-    database.session.commit()
+    db_connection.session.commit()
 
 
 def kinds_show() -> None:
-    kinds = database.session.query(Kind).order_by(Kind.name).all()
+    kinds = db_connection.session.query(Kind).order_by(Kind.name).all()
     print("Kinds:")
 
     for kind in kinds:
@@ -29,19 +30,19 @@ def kinds_show() -> None:
 
 
 def project_update() -> None:
-    project = database.session.query(Project).filter(Project.alias == config.app.project_data[0]).first()
+    project = db_connection.session.query(Project).filter(Project.alias == config.app.project_data[0]).first()
 
     if project is None:
         project = Project(alias=config.app.project_data[0], name=config.app.project_data[1])
-        database.session.add(project)
+        db_connection.session.add(project)
     else:
         project.name = config.app.project_data[1]
 
-    database.session.commit()
+    db_connection.session.commit()
 
 
 def projects_show() -> None:
-    projects = database.session.query(Project).order_by(Project.name).all()
+    projects = db_connection.session.query(Project).order_by(Project.name).all()
     print("Projects:")
 
     for project in projects:
@@ -61,9 +62,9 @@ def report_show() -> None:
     report = None
 
     if config.app.show_date == "last":
-        report = database.session.query(Report).order_by(Report.date.desc()).first()
+        report = db_connection.session.query(Report).order_by(Report.date.desc()).first()
     else:
-        report = database.session.query(Report).filter(Report.date == config.app.show_date).first()
+        report = db_connection.session.query(Report).filter(Report.date == config.app.show_date).first()
 
     if report is None:
         print("Report does not exist")
@@ -78,9 +79,9 @@ def send_to_jira() -> None:
     print("Jira")
 
     if config.jira.report_date == "last":
-        report = database.session.query(Report).order_by(Report.date.desc()).first()
+        report = db_connection.session.query(Report).order_by(Report.date.desc()).first()
     else:
-        report = database.session.query(Report).filter(Report.date == config.jira.report_date).first()
+        report = db_connection.session.query(Report).filter(Report.date == config.jira.report_date).first()
 
     if report:
         if report.date != current_date:
@@ -98,9 +99,9 @@ def send_to_reporting() -> None:
     print("Reporting")
 
     if config.reporting.report_date == "last":
-        report = database.session.query(Report).order_by(Report.date.desc()).first()
+        report = db_connection.session.query(Report).order_by(Report.date.desc()).first()
     else:
-        report = database.session.query(Report).filter(Report.date == config.reporting.report_date).first()
+        report = db_connection.session.query(Report).filter(Report.date == config.reporting.report_date).first()
 
     if report:
         if report.date != current_date:

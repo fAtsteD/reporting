@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from reporting import cli
-from reporting.models import Kind, Project
+from reporting.database.models import Kind, Project
 from tests.conftest import ReportingConfigFixture
 from tests.factories import ReportFactory
 from tests.fixtures.portal import PortalFixture
