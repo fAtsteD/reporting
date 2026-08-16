@@ -2,11 +2,18 @@ import datetime
 from typing import TypeVar
 
 import factory
+from sqlalchemy.orm import Session
 
-from reporting.database import db_connection
 from reporting.database.models import Base, Kind, Project, Report, Task
 
 FactoryModelType = TypeVar("FactoryModelType")
+
+_session: Session | None = None
+
+
+def set_session(session: Session | None) -> None:
+    global _session
+    _session = session
 
 
 class BaseFactory[FactoryModelType: Base](factory.alchemy.SQLAlchemyModelFactory):
@@ -16,7 +23,7 @@ class BaseFactory[FactoryModelType: Base](factory.alchemy.SQLAlchemyModelFactory
 
         @staticmethod
         def sqlalchemy_session_factory():
-            return db_connection.session
+            return _session
 
     @classmethod
     def create(cls, **kwargs) -> FactoryModelType:

@@ -4,6 +4,7 @@ from typing import Protocol, TypeGuard
 
 import faker
 import pytest
+import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from reporting import cli
@@ -46,8 +47,8 @@ def test_parse_empty_file(
     output = capsys.readouterr()
 
     assert output.out == output_expected
-    assert database_session.query(Report).count() == 0
-    assert database_session.query(Task).count() == 0
+    assert database_session.scalar(sa.select(sa.func.count()).select_from(Report)) == 0
+    assert database_session.scalar(sa.select(sa.func.count()).select_from(Task)) == 0
 
 
 def test_parse_last_report_with_remove_tasks(
@@ -114,17 +115,19 @@ def test_parse_last_report_with_remove_tasks(
 
     output = capsys.readouterr()
     assert str(output.out).startswith("Parsed 1\n")
-    assert database_session.query(Report).filter(Report.date == report_date).count() == 1
-    assert database_session.query(Task).count() == len(summaries)
+    assert (
+        database_session.scalar(sa.select(sa.func.count()).select_from(Report).where(Report.date == report_date)) == 1
+    )
+    assert database_session.scalar(sa.select(sa.func.count()).select_from(Task)) == len(summaries)
 
     database_tasks = list(
         filter(
             None,
             [
-                database_session.query(Task).filter(Task.summary == summaries[0]).first(),
-                database_session.query(Task).filter(Task.summary == summaries[1]).first(),
-                database_session.query(Task).filter(Task.summary == summaries[2]).first(),
-                database_session.query(Task).filter(Task.summary == summaries[3]).first(),
+                database_session.scalars(sa.select(Task).where(Task.summary == summaries[0])).first(),
+                database_session.scalars(sa.select(Task).where(Task.summary == summaries[1])).first(),
+                database_session.scalars(sa.select(Task).where(Task.summary == summaries[2])).first(),
+                database_session.scalars(sa.select(Task).where(Task.summary == summaries[3])).first(),
             ],
         )
     )
@@ -244,16 +247,16 @@ def test_parse_n_reports(
 
     output = capsys.readouterr()
     assert str(output.out).startswith("Parsed 3\n")
-    assert database_session.query(Report).count() == 3
-    assert database_session.query(Task).count() == 12
+    assert database_session.scalar(sa.select(sa.func.count()).select_from(Report)) == 3
+    assert database_session.scalar(sa.select(sa.func.count()).select_from(Task)) == 12
 
     database_reports = list(
         filter(
             None,
             [
-                database_session.query(Report).filter(Report.date == report_dates[0]).first(),
-                database_session.query(Report).filter(Report.date == report_dates[1]).first(),
-                database_session.query(Report).filter(Report.date == report_dates[2]).first(),
+                database_session.scalars(sa.select(Report).where(Report.date == report_dates[0])).first(),
+                database_session.scalars(sa.select(Report).where(Report.date == report_dates[1])).first(),
+                database_session.scalars(sa.select(Report).where(Report.date == report_dates[2])).first(),
             ],
         )
     )
@@ -264,30 +267,30 @@ def test_parse_n_reports(
             filter(
                 None,
                 [
-                    database_session.query(Task)
-                    .filter(
-                        Task.summary == summaries[0],
-                        Task.reports_id == database_report.id,
-                    )
-                    .first(),
-                    database_session.query(Task)
-                    .filter(
-                        Task.summary == summaries[1],
-                        Task.reports_id == database_report.id,
-                    )
-                    .first(),
-                    database_session.query(Task)
-                    .filter(
-                        Task.summary == summaries[2],
-                        Task.reports_id == database_report.id,
-                    )
-                    .first(),
-                    database_session.query(Task)
-                    .filter(
-                        Task.summary == summaries[3],
-                        Task.reports_id == database_report.id,
-                    )
-                    .first(),
+                    database_session.scalars(
+                        sa.select(Task).where(
+                            Task.summary == summaries[0],
+                            Task.reports_id == database_report.id,
+                        )
+                    ).first(),
+                    database_session.scalars(
+                        sa.select(Task).where(
+                            Task.summary == summaries[1],
+                            Task.reports_id == database_report.id,
+                        )
+                    ).first(),
+                    database_session.scalars(
+                        sa.select(Task).where(
+                            Task.summary == summaries[2],
+                            Task.reports_id == database_report.id,
+                        )
+                    ).first(),
+                    database_session.scalars(
+                        sa.select(Task).where(
+                            Task.summary == summaries[3],
+                            Task.reports_id == database_report.id,
+                        )
+                    ).first(),
                 ],
             )
         )

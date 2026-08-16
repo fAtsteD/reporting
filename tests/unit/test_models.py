@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from reporting import config
 from reporting.database.models import Kind, Project
+from reporting.services.file_parse import file_parse_service
 from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
 
 
@@ -33,7 +34,7 @@ def test_datetime_fields_round_trip_as_utc(database_session: Session) -> None:
     assert project.updated_at == datetime.datetime(2026, 7, 1, 9, 0, tzinfo=datetime.UTC)
 
 
-def test_report_properties() -> None:
+def test_report_properties(database_session: Session) -> None:
     config.app.minute_round_to = 15
     report_date = datetime.date(2000, 1, 1)
     report_date_str = report_date.strftime("%d.%m.%Y")
@@ -73,7 +74,10 @@ def test_report_properties() -> None:
     assert report.total_seconds == (30 + 115 + 60) * 60
     assert str(report) == f"{report_date_str} ({current_date_str})\nSummary time: 03:30\nTasks:\n{output_tasks}"
 
-    report.remove_tasks()
+    file_parse_service.clear_report_tasks(database_session, report)
+    database_session.flush()
+    database_session.expire(report, ["tasks"])
+
     assert report.total_rounded_seconds == 0
     assert report.total_seconds == 0
     assert str(report) == f"{report_date_str} ({current_date_str})\nSummary time: 00:00\nReport does not have tasks\n"

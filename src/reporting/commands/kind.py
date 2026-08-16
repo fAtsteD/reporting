@@ -1,4 +1,6 @@
+import sqlalchemy as sa
 import typer
+from sqlalchemy.orm import Session
 
 from reporting import config
 from reporting.database import db_connection
@@ -14,22 +16,31 @@ def add(
 ) -> None:
     """Add or update kind."""
     config.load_config()
-    kind: Kind | None = db_connection.session.query(Kind).filter(Kind.alias == alias).first()
 
-    if kind is None:
-        kind = Kind(alias=alias, name=name)
-        db_connection.session.add(kind)
-    else:
-        kind.name = name
+    with db_connection.session_scope() as session:
+        kind: Kind | None = session.scalars(sa.select(Kind).where(Kind.alias == alias)).first()
 
-    db_connection.session.commit()
-    list_kinds()
+        if kind is None:
+            kind = Kind(alias=alias, name=name)
+            session.add(kind)
+            session.flush()
+        else:
+            kind.name = name
+
+        _list_kinds(session)
 
 
 @app.command("list")
 def list_kinds() -> None:
     """Print all kinds."""
-    kinds = db_connection.session.query(Kind).order_by(Kind.name).all()
+    config.load_config()
+
+    with db_connection.session_scope() as session:
+        _list_kinds(session)
+
+
+def _list_kinds(session: Session) -> None:
+    kinds = session.scalars(sa.select(Kind).order_by(Kind.name)).all()
     print("Kinds:")
 
     for kind in kinds:

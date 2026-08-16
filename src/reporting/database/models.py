@@ -5,7 +5,6 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.types import DateTime, TypeDecorator
 
 from reporting import config
-from reporting.database import db_connection
 
 
 class DBDatetimeType(TypeDecorator[datetime.datetime]):
@@ -102,7 +101,7 @@ class Report(Base):
         DBDatetimeType(), default=lambda: datetime.datetime.now(datetime.UTC)
     )
 
-    tasks: Mapped[list["Task"]] = relationship(back_populates="report")
+    tasks: Mapped[list["Task"]] = relationship(back_populates="report", cascade="all, delete-orphan")
 
     @property
     def total_rounded_seconds(self) -> int:
@@ -111,16 +110,6 @@ class Report(Base):
     @property
     def total_seconds(self) -> int:
         return sum(task.logged_seconds for task in self.tasks)
-
-    def remove_tasks(self):
-        """
-        Remove tasks in the report
-        """
-        for task in self.tasks:
-            self.updated_at = datetime.datetime.now(datetime.UTC)
-            db_connection.session.delete(task)
-
-        db_connection.session.commit()
 
     def __str__(self):
         """
@@ -137,12 +126,7 @@ class Report(Base):
         text += f"Summary time: {total_hours_str}:{total_minutes_str}\n"
 
         indent = "  "
-        tasks = (
-            db_connection.session.query(Task)
-            .filter(Task.report.has(Report.id == self.id))
-            .order_by(Task.kinds_id, Task.summary)
-            .all()
-        )
+        tasks = sorted(self.tasks, key=lambda task: (task.kinds_id, task.summary))
 
         if len(tasks) == 0:
             text += "Report does not have tasks\n"
@@ -184,7 +168,7 @@ class Task(Base):
         DBDatetimeType(), default=lambda: datetime.datetime.now(datetime.UTC)
     )
 
-    reports_id: Mapped[int] = mapped_column(sa.ForeignKey("reports.id"))
+    reports_id: Mapped[int] = mapped_column(sa.ForeignKey("reports.id", ondelete="CASCADE"))
     report: Mapped["Report"] = relationship(back_populates="tasks")
 
     @property

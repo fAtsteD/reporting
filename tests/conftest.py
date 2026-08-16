@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from reporting.config.app import AppConfig
 from reporting.database import db_connection
 from reporting.database.models import Base
+from tests import factories
 
 pytest_plugins = [
     "tests.fixtures.portal",
@@ -25,10 +26,17 @@ class ReportingConfigFixture(Protocol):
 def database_session(monkeypatch: pytest.MonkeyPatch) -> Generator[Session]:
     db_connection.reconnect(":memory:")
 
-    yield db_connection.session()
+    if db_connection.session_factory is None or db_connection.engine is None:
+        raise RuntimeError("Database is not connected")
 
-    db_connection.session.rollback()
-    db_connection.session.remove()
+    session = db_connection.session_factory()
+    factories.set_session(session)
+
+    yield session
+
+    session.rollback()
+    session.close()
+    factories.set_session(None)
     Base.metadata.drop_all(bind=db_connection.engine)
     db_connection.engine.dispose()
 

@@ -1,6 +1,7 @@
 import datetime
 
 import dateutil.parser
+import sqlalchemy as sa
 import typer
 
 from reporting import config
@@ -13,18 +14,20 @@ def show(
 ) -> None:
     """Print report for date."""
     config.load_config()
-    report: Report | None = None
     report_date: str | datetime.date = date
 
     if date != "last":
         report_date = dateutil.parser.parse(date, dayfirst=True).date()
 
-    if report_date == "last":
-        report = db_connection.session.query(Report).order_by(Report.date.desc()).first()
-    else:
-        report = db_connection.session.query(Report).filter(Report.date == report_date).first()
+    with db_connection.session_scope() as session:
+        report: Report | None
 
-    if report is None:
-        print("Report does not exist")
-    else:
-        print(report)
+        if report_date == "last":
+            report = session.scalars(sa.select(Report).order_by(Report.date.desc())).first()
+        else:
+            report = session.scalars(sa.select(Report).where(Report.date == report_date)).first()
+
+        if report is None:
+            print("Report does not exist")
+        else:
+            print(report)

@@ -30,6 +30,10 @@ if config.get_main_option("sqlalchemy.url", None) is None:
     from reporting.database import db_connection
 
     config_app.load_config()
+
+    if db_connection.engine is None:
+        raise RuntimeError("Database is not connected. Call reconnect() first.")
+
     config.set_main_option("sqlalchemy.url", str(db_connection.engine.url))
 
 

@@ -1,5 +1,6 @@
 import faker
 import pytest
+import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from reporting import cli
@@ -26,7 +27,7 @@ def test_add_kind(
     output = capsys.readouterr()
     assert output.out == (output_expected)
 
-    saved_kind = database_session.query(Kind).first()
+    saved_kind = database_session.scalars(sa.select(Kind)).first()
     assert saved_kind is not None
     assert saved_kind.alias == kind_raw["alias"]
     assert saved_kind.name == kind_raw["name"]
@@ -76,11 +77,12 @@ def test_update_kind(
     output_expected += f"{kind.alias} - {kind_name_new}\n"
 
     cli.main(["kind", "add", kind.alias, kind_name_new])
+    database_session.expire_all()
 
     output = capsys.readouterr()
     assert output.out == (output_expected)
 
-    saved_kind = database_session.query(Kind).first()
+    saved_kind = database_session.scalars(sa.select(Kind)).first()
     assert saved_kind is not None
     assert saved_kind.alias == kind.alias
     assert saved_kind.name == kind_name_new

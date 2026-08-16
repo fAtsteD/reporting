@@ -1,4 +1,6 @@
+import sqlalchemy as sa
 import typer
+from sqlalchemy.orm import Session
 
 from reporting import config
 from reporting.database import db_connection
@@ -14,22 +16,31 @@ def add(
 ) -> None:
     """Add or update project."""
     config.load_config()
-    project: Project | None = db_connection.session.query(Project).filter(Project.alias == alias).first()
 
-    if project is None:
-        project = Project(alias=alias, name=name)
-        db_connection.session.add(project)
-    else:
-        project.name = name
+    with db_connection.session_scope() as session:
+        project: Project | None = session.scalars(sa.select(Project).where(Project.alias == alias)).first()
 
-    db_connection.session.commit()
-    list_projects()
+        if project is None:
+            project = Project(alias=alias, name=name)
+            session.add(project)
+            session.flush()
+        else:
+            project.name = name
+
+        _list_projects(session)
 
 
 @app.command("list")
 def list_projects() -> None:
     """Print all projects."""
-    projects = db_connection.session.query(Project).order_by(Project.name).all()
+    config.load_config()
+
+    with db_connection.session_scope() as session:
+        _list_projects(session)
+
+
+def _list_projects(session: Session) -> None:
+    projects = session.scalars(sa.select(Project).order_by(Project.name)).all()
     print("Projects:")
 
     for project in projects:

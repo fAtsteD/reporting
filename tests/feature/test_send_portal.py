@@ -3,6 +3,7 @@ from enum import Enum
 
 import faker
 import pytest
+import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from reporting import cli
@@ -63,9 +64,9 @@ def test_send_report(
     report = ReportFactory.create(
         date=report_date,
     )
-    kinds = database_session.query(Kind).all()
+    kinds = database_session.scalars(sa.select(Kind)).all()
     kinds_config = {kind.alias: faker.sentence(nb_words=3, variable_nb_words=True) for kind in kinds}
-    projects = database_session.query(Project).all()
+    projects = database_session.scalars(sa.select(Project)).all()
     projects_config = {project.alias: faker.sentence(nb_words=3, variable_nb_words=True) for project in projects}
     projects_0_corp_struct_item = {
         "alias": faker.domain_word().upper(),
@@ -217,9 +218,9 @@ def test_send_portal_empty_required_data(
 ) -> None:
     portal_base_url = faker.url()
     report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC))
-    kinds = database_session.query(Kind).all()
+    kinds = database_session.scalars(sa.select(Kind)).all()
     kinds_config = {kind.alias: faker.sentence(nb_words=3, variable_nb_words=True) for kind in kinds}
-    projects = database_session.query(Project).all()
+    projects = database_session.scalars(sa.select(Project)).all()
     projects_config = {project.alias: faker.sentence(nb_words=3, variable_nb_words=True) for project in projects}
     projects_0_corp_struct_item = {
         "alias": faker.domain_word().upper(),

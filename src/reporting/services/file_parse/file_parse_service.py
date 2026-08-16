@@ -4,9 +4,10 @@ import sys
 from os import path
 
 import dateutil.parser
+import sqlalchemy as sa
+from sqlalchemy.orm import Session
 
 from reporting import config
-from reporting.database import db_connection
 from reporting.database.models import Kind, Project, Report, Task
 from reporting.services.file_parse.models import TaskLine
 
@@ -36,7 +37,17 @@ def parse_task(task_str: str, report_date: datetime.date) -> TaskLine:
     return task
 
 
-def parse_reports(read_days: int = 1) -> list[Report]:
+def clear_report_tasks(session: Session, report: Report) -> None:
+    """
+    Remove all tasks of the report
+    """
+    for task in report.tasks:
+        session.delete(task)
+
+    report.updated_at = datetime.datetime.now(datetime.UTC)
+
+
+def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
     """
     Parse data from the file for some days into Reports and save them to the db.
 
@@ -60,8 +71,6 @@ def parse_reports(read_days: int = 1) -> list[Report]:
     if not path.isfile(config.app.input_file_hours):
         return reports
 
-    db_connection.session.autoflush = False
-
     with open(config.app.input_file_hours, "r", encoding="utf-8") as input_file_hours:
         report: Report | None = None
         day_index = 0
@@ -72,20 +81,20 @@ def parse_reports(read_days: int = 1) -> list[Report]:
         for line in input_file_hours:
             if re.search("^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})\n$", line):
                 report_date = dateutil.parser.parse(line, dayfirst=True).date()
-                report = db_connection.session.query(Report).filter(Report.date == report_date).first()
+                report = session.scalars(sa.select(Report).where(Report.date == report_date)).first()
 
                 if report is None:
                     report = Report(date=report_date)
-                    db_connection.session.add(report)
+                    session.add(report)
 
-                report.remove_tasks()
+                clear_report_tasks(session, report)
                 reports.append(report)
 
                 continue
 
             if previous_line == "\n" and line == "\n":
                 day_index += 1
-                db_connection.session.commit()
+                session.commit()
 
                 if (
                     report
@@ -133,7 +142,7 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                     task.report = report
 
                     if task_line.kind:
-                        kind = db_connection.session.query(Kind).filter(Kind.alias == task_line.kind).first()
+                        kind = session.scalars(sa.select(Kind).where(Kind.alias == task_line.kind)).first()
 
                         if kind is None:
                             sys.exit(f"Kind {task_line.kind} does not exist")
@@ -141,19 +150,17 @@ def parse_reports(read_days: int = 1) -> list[Report]:
                         task.kind = kind
 
                     if task_line.project:
-                        project = (
-                            db_connection.session.query(Project).filter(Project.alias == task_line.project).first()
-                        )
+                        project = session.scalars(sa.select(Project).where(Project.alias == task_line.project)).first()
 
                         if project is None:
                             sys.exit(f"Project {task_line.project} does not exist")
 
                         task.project = project
 
-                    db_connection.session.add(task)
+                    session.add(task)
 
             previous_task = task
             previous_task_line = task_line
 
-    db_connection.session.commit()
+    session.commit()
     return reports
