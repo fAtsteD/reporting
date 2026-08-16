@@ -9,6 +9,7 @@ version = "1.4.6"
 dependencies = [
     "alembic==1.14.*",
     "jira==3.8.*",
+    "pydantic==2.*",
     "python-dateutil==2.9.*",
     "requests==2.32.*",
     "sqlalchemy==2.0.*",

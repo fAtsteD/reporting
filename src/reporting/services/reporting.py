@@ -1,7 +1,8 @@
-import reporting.qatestlab_portal.reporting.models as reporting_models
 from reporting import config
 from reporting.database.models import Report
-from reporting.qatestlab_portal.reporting.client import ReportingClient
+from reporting.qatestlab_portal.client import QATestLabPortal
+from reporting.qatestlab_portal.models import Report as PortalReport
+from reporting.qatestlab_portal.models import TimeRecord
 
 
 class ReportingError(Exception):
@@ -9,20 +10,20 @@ class ReportingError(Exception):
 
 
 def send_tasks(report: Report) -> None:
-    reporting_client = ReportingClient(config.reporting.url)
-    reporting_client.login(config.reporting.login, config.reporting.password)
+    with QATestLabPortal(config.reporting.url) as portal:
+        portal.login(config.reporting.login, config.reporting.password)
+        _send_report_tasks(portal, report)
 
-    if reporting_client.employee is None:
-        raise ReportingError("Failed to get employee")
 
-    portal_reports = reporting_client.reports(report.date)
-    portal_report = reporting_client.report_save(
-        reporting_models.Report(
+def _send_report_tasks(portal: QATestLabPortal, report: Report) -> None:
+    portal_reports = portal.reports(report.date)
+    portal_report = portal.report_save(
+        PortalReport(
             date=report.date,
-            employee_id=reporting_client.employee.id,
-            have_problems=False,
+            employeeId=portal.employee.id,
+            haveProblems=False,
             id=portal_reports[0].id if len(portal_reports) else None,
-            no_tasks=False,
+            noTasks=False,
             problems="",
             timeRecords=[],
         )
@@ -32,20 +33,18 @@ def send_tasks(report: Report) -> None:
         raise ReportingError("Failed create/load report")
 
     time_record_index = portal_report.next_time_record_order_number
-    time_records: list[reporting_models.TimeRecord] = []
-    employee_position = reporting_client.repositoryEmployeePosition().get_main_position_by_employee_id(
-        reporting_client.employee.id
-    )
+    time_records: list[TimeRecord] = []
+    employee_position = portal.employee_position_collection.get_main_position_by_employee_id(portal.employee.id)
 
     if not employee_position:
         raise ReportingError("Employee does not have a main position")
 
     for task in report.tasks:
-        corp_struct_item = reporting_client.repositoryCorpStructItem().get_by_id(employee_position.corp_struct_item_id)
+        corp_struct_item = portal.corp_struct_item_collection.get_by_id(employee_position.corp_struct_item_id)
 
         if task.project.alias in config.reporting.project_to_corp_struct_item:
             corp_struct_item_alias = config.reporting.project_to_corp_struct_item[task.project.alias]
-            corp_struct_item = reporting_client.repositoryCorpStructItem().get_by_alias(corp_struct_item_alias)
+            corp_struct_item = portal.corp_struct_item_collection.get_by_alias(corp_struct_item_alias)
 
         if not corp_struct_item:
             print(f"[-] {task}")
@@ -57,9 +56,7 @@ def send_tasks(report: Report) -> None:
         if task.kind.alias in config.reporting.kinds:
             category_name = config.reporting.kinds[task.kind.alias]
 
-        category = reporting_client.repositoryCategory().get_by_name_and_corp_struct_item(
-            category_name, corp_struct_item.id
-        )
+        category = portal.category_collection.get_by_name_and_corp_struct_item(category_name, corp_struct_item.id)
 
         if not category or category.deleted:
             print(f"[-] {task}")
@@ -71,7 +68,7 @@ def send_tasks(report: Report) -> None:
         if task.project.alias in config.reporting.projects:
             project_name = config.reporting.projects[task.project.alias]
 
-        project = reporting_client.repositoryProviders().get_project_by_name(project_name)
+        project = portal.provider_collection.get_project_by_name(project_name)
 
         if not project or not project.active:
             print(f"[-] {task}")
@@ -79,21 +76,21 @@ def send_tasks(report: Report) -> None:
             continue
 
         time_records.append(
-            reporting_models.TimeRecord(
-                category_id=category.id,
-                client_id=None,
-                corp_struct_item_id=corp_struct_item.id,
+            TimeRecord(
+                categoryId=category.id,
+                clientId=None,
+                corpStructItemId=corp_struct_item.id,
                 description=task.summary,
                 hours=round(task.logged_rounded / 60 / 60 * 100),
-                invoice_hours=0,
-                order_number=time_record_index,
-                project_id=project.id,
-                report_id=portal_report.id,
-                salary_coefficient=category.salary_coefficient,
-                salary_coefficient_type=0,
+                invoiceHours=0,
+                orderNumber=time_record_index,
+                projectId=project.id,
+                reportId=portal_report.id,
+                salaryCoefficient=category.salary_coefficient,
+                salaryCoefficientType=0,
             )
         )
         time_record_index += 1
         print(f"[+] {task}")
 
-    reporting_client.time_record_save(time_records)
+    portal.time_record_save(time_records)
