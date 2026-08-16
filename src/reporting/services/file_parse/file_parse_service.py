@@ -45,6 +45,7 @@ def clear_report_tasks(session: Session, report: Report) -> None:
         session.delete(task)
 
     report.updated_at = datetime.datetime.now(datetime.UTC)
+    session.commit()
 
 
 def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
@@ -86,6 +87,7 @@ def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
                 if report is None:
                     report = Report(date=report_date)
                     session.add(report)
+                    session.flush()
 
                 clear_report_tasks(session, report)
                 reports.append(report)
@@ -158,6 +160,7 @@ def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
                         task.project = project
 
                     session.add(task)
+                    session.flush()
 
             previous_task = task
             previous_task_line = task_line
