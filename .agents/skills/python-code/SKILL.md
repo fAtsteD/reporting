@@ -1,7 +1,7 @@
 ---
 name: python-code
 description: "BLOCKING: Must be invoked BEFORE writing, editing, or reviewing ANY Python code. Enforces the project's Python code style rules. Applies rules for typing, imports, naming, ordering, block spacing, and comments."
-version: 1.0.3
+version: 1.0.4
 ---
 
 # Python Code Style
@@ -50,9 +50,18 @@ Keep types, models, enums, and data objects in dedicated modules that import onl
 
 **No shortened forms** — write the full word (`result`, not `res`; `response`, not `resp`; `message`, not `msg`; `configuration`, not `cfg`).
 
-**Widely recognised abbreviations** (e.g., `url`, `api`, `http`, `db`, `id`) are acceptable as-is. **Custom abbreviations** (ones you invent because the original name is too long) are a last resort — prefer the full name first and only abbreviate when it is unreasonably long.
+**Widely recognized abbreviations** (e.g., `url`, `api`, `http`, `db`, `id`) are acceptable as-is. **Custom abbreviations** (ones you invent because the original name is too long) are a last resort — prefer the full name first and only abbreviate when it is unreasonably long.
 
 ## Ordering
+
+**A library-defined layout wins** over tier, visibility, and alphabetical order alike. Recognize the case by evidence, not by library name — one of these must hold:
+
+- **Load-bearing** — the library reads, generates from, or resolves the declaration by its position.
+- **Documented** — its guide, base class, or generated scaffolding shows a member layout for that kind of class.
+- **Established** — the project already follows that layout consistently.
+- **Required by the language** — a `@name.setter` or `@name.deleter` directly follows its `@property`; fields feeding a generated `__init__` keep that signature order, defaults last.
+
+Apply the rules below only to the declarations the layout leaves free.
 
 **Module level** — order by this sort key, applied in precedence order:
 
@@ -63,17 +72,23 @@ Keep types, models, enums, and data objects in dedicated modules that import onl
 **Class members** — order by this sort key, applied in precedence order (each level breaks ties of the one above):
 
 1. **Tier:**
-   1. Class-level fields and constants
-   2. Dunder / special methods — `__name__`
-   3. Public members — `name`
-   4. Protected members — `_name`
-   5. Private, name-mangled members — `__name`
-2. **Kind** (within a tier): properties before regular methods — `@property` and `@property`-like descriptors (e.g. `@cached_property`) come before plain methods.
+   1. Docstring
+   2. Nested classes, including a library's inner configuration class
+   3. Class-level constants — `UPPER_CASE`
+   4. Class-level fields and annotations
+   5. Constructors — `__new__`, `__init__`, `__post_init__`, in that order
+   6. Other dunder / special methods — `__name__`
+   7. Public members — `name`
+   8. Protected members — `_name`
+   9. Private, name-mangled members — `__name`
+2. **Kind** (within a member tier): properties, then static methods, then class methods, then instance methods — `@property` and `@property`-like descriptors (e.g. `@cached_property`), then `@staticmethod`, then `@classmethod`, then plain methods.
 3. **Name** (within a kind): alphabetical.
+
+Visibility is the outer grouping, kind the inner one — the Python convention keeps the whole non-public block last, so the class reads as public API first, implementation after.
 
 **Exceptions to the name sort:**
 
-- Dunders are ordered by convention — `__init__` first, then the rest — not alphabetically.
+- Dunders are ordered by convention — constructors first, then the rest — not alphabetically.
 - Don't confuse the dunder tier (`__name__`) with the private name-mangled tier (`__name`); the latter sorts last.
 
 **Break the order when a definition must precede its use** — if a name has to be defined before another name that references it at module load time (e.g. a value used as a default argument or a decorator), place it above regardless of tier or alphabetical position.

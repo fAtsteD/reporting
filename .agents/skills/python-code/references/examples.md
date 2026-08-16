@@ -225,10 +225,14 @@ cfg = load_config()  # shortened form (use "configuration")
 
 ## Ordering in classes
 
-**Correct** — fields/constants first, then dunders (`__init__` first); within each visibility tier, properties (alphabetical) before methods (alphabetical):
+**Correct** — nested classes, constants and fields first, then constructors and other dunders; then each visibility tier in turn, and inside it properties, static methods, class methods, instance methods, each group alphabetical:
 
 ```python
 class Order:
+    class Totals(NamedTuple):
+        net: float
+        tax: float
+
     MAX_ITEMS: int = 50
 
     customer_id: int
@@ -240,8 +244,18 @@ class Order:
 
     @property
     def is_paid(self) -> bool: ...
+
     @property
     def total(self) -> float: ...
+
+    @total.setter
+    def total(self, amount: float) -> None: ...  # must follow its own property
+
+    @staticmethod
+    def supported_currencies() -> list[str]: ...
+
+    @classmethod
+    def from_payload(cls, payload: dict[str, str]) -> "Order": ...
 
     def cancel(self) -> None: ...
     def confirm(self) -> OrderResult: ...
@@ -250,14 +264,21 @@ class Order:
     @property
     def _payload(self) -> dict[str, str]: ...
 
+    @staticmethod
+    def _normalise_currency(currency: str) -> str: ...
+
     def _build_payload(self) -> dict[str, str]: ...
     def _validate_items(self) -> bool: ...
 ```
 
-**Incorrect** — unordered, mixed visibility, property below methods:
+**Incorrect** — unordered, mixed visibility, property below methods, static method above the dunders:
 
 ```python
 class Order:
+    @staticmethod
+    def supported_currencies() -> list[str]: ...  # above the constructor
+
+    def __init__(self, order_id: int) -> None: ...
     def confirm(self) -> OrderResult: ...
     def _build_payload(self) -> dict: ...  # protected before other publics
     def cancel(self) -> None: ...
@@ -265,6 +286,85 @@ class Order:
     def total(self) -> float: ...  # property below regular methods
     def refund(self) -> None: ...
     def _validate_items(self) -> bool: ...
+```
+
+## Ordering — a library-defined layout wins
+
+Illustrations of the rule, not the set it applies to.
+
+**Correct** — SQLAlchemy keeps `__tablename__` and `__table_args__` at the top of the model body, above the columns, even though the tier rules would push name-mangled-looking members down:
+
+```python
+class OrderRow(Base):
+    __tablename__ = "orders"
+    __table_args__ = (UniqueConstraint("customer_id", "reference"),)
+
+    order_id: Mapped[int] = mapped_column(primary_key=True)
+    customer_id: Mapped[int] = mapped_column()
+    reference: Mapped[str] = mapped_column()
+
+    def to_domain(self) -> Order: ...
+```
+
+**Correct** — Django's documented model layout, with `class Meta` between the fields and the methods and `__str__` before the other methods:
+
+```python
+class Article(models.Model):
+    STATUS_CHOICES = [("draft", "Draft"), ("published", "Published")]
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    title = models.CharField(max_length=200)
+
+    objects = ArticleManager()
+
+    class Meta:
+        ordering = ["title"]
+
+    def __str__(self) -> str: ...
+
+    def save(self, *args, **kwargs) -> None: ...
+
+    def get_absolute_url(self) -> str: ...
+
+    def publish(self) -> None: ...
+```
+
+**Correct** — Pydantic puts `model_config` above the fields, and dataclass fields keep the constructor order (defaults last), not an alphabetical one:
+
+```python
+class OrderSettings(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    currency: str
+    max_items: int
+
+
+@dataclass
+class OrderDraft:
+    customer_id: int
+    order_id: int
+    discount: float = 0.0  # defaulted field must stay last
+```
+
+**Incorrect** — the skill's ordering applied over the library's:
+
+```python
+class OrderRow(Base):
+    order_id: Mapped[int] = mapped_column(primary_key=True)
+
+    __tablename__ = "orders"  # SQLAlchemy expects this above the columns
+```
+
+**Correct** — an unfamiliar library, same test: load-bearing declarations keep the library's placement, the rest follows the normal rules:
+
+```python
+class ReportCommand(SomeCliLibrary.Command):
+    name = "report"  # library resolves the command by these
+    arguments = [Argument("--format")]  # and builds the parser from their order
+
+    def handle(self) -> int: ...  # library entry point, its position is fixed
+
+    def _render_rows(self) -> str: ...  # free declaration — normal ordering applies
 ```
 
 ## Ordering in files (module level)
