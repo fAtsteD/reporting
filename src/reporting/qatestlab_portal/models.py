@@ -19,10 +19,10 @@ class Category(PortalBaseModel):
 
 class CategoryBinding(PortalBaseModel):
     category_id: int = Field(alias="categoryId")
-    corp_struct_item_id: int = Field(alias="corpStructItemId")
+    corp_struct_item_id: int | None = Field(alias="corpStructItemId")
     id: int
-    position_id: int = Field(alias="positionId")
-    role_id: int = Field(alias="roleId")
+    position_id: int | None = Field(alias="positionId")
+    role_id: int | None = Field(alias="roleId")
 
 
 class CategoryCollection(PortalBaseModel):
@@ -99,7 +99,7 @@ class EmployeePosition(PortalBaseModel):
     alias: str
     corp_struct_item_alias: str = Field(alias="corpStructItemAlias")
     corp_struct_item_id: int = Field(alias="corpStructItemId")
-    employee_id: int = Field(alias="employeeId")
+    employee_id: int | None = Field(alias="employeeId")
     id: int
     position_id: int = Field(alias="positionId")
 
