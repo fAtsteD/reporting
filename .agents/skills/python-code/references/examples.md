@@ -488,18 +488,63 @@ if items is None or len(items) == 0:
 
 ## Comments — prohibited
 
-**Incorrect:**
+Every comment below is accurate and looks useful. All of them are violations.
+
+**Incorrect** — a why comment, a banner, and a workaround note:
 
 ```python
-# Check if the order is ready before processing
-if order.status == OrderStatus.READY:
-    # Start the fulfillment
-    start_fulfillment(order.id)
+def import_orders(source_path: str) -> ImportReport:
+    # --- Read ---
+    rows = read_csv(source_path)
+
+    # Retry only on 429 and 5xx — a 4xx will never succeed
+    if response.status_code == 429 or response.status_code >= 500:
+        schedule_retry(request)
+
+    # The vendor returns 200 with an empty body when the account is suspended,
+    # so an empty payload has to be treated as a failure.
+    if not payload:
+        raise AccountSuspendedError(account_id)
 ```
 
-**Correct:**
+**Correct** — the names carry what the comments said; the vendor's behaviour goes in the commit message and a test named `test_empty_payload_means_suspended_account`:
 
 ```python
-if order.status == OrderStatus.READY:
-    start_fulfillment(order.id)
+def import_orders(source_path: str) -> ImportReport:
+    rows = read_csv(source_path)
+
+    if is_retryable_failure(response):
+        schedule_retry(request)
+
+    if not payload:
+        raise AccountSuspendedError(account_id)
+```
+
+**Incorrect** — a docstring restating the signature:
+
+```python
+def reserve_stock(item_id: str, quantity: int) -> Reservation:
+    """
+    Reserve stock for an item.
+
+    Args:
+        item_id: The identifier of the item.
+        quantity: How many units to reserve.
+
+    Returns:
+        The created reservation.
+    """
+```
+
+**Correct** — one line, on a public API boundary only:
+
+```python
+def reserve_stock(item_id: str, quantity: int) -> Reservation:
+    """Hold stock for an item until the reservation expires."""
+```
+
+**Allowed:**
+
+```python
+value = compute()  # type: ignore[no-untyped-call]
 ```

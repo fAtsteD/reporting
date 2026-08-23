@@ -1,7 +1,7 @@
 ---
 name: python-code
 description: "BLOCKING: Must be invoked BEFORE writing, editing, or reviewing ANY Python code. Enforces the project's Python code style rules. Applies rules for typing, imports, naming, ordering, block spacing, and comments."
-version: 1.0.4
+version: 1.0.5
 ---
 
 # Python Code Style
@@ -110,7 +110,22 @@ Use a truthiness check (`if variable:` / `if not variable:`) when you only need 
 
 ## Comments
 
-Do **not** write comments that explain or describe what the code does. Code must be self-documenting through clear naming.
+Code must be self-documenting. A comment is allowed only in the cases below — anything else is a violation, including a comment that is accurate and useful.
+
+**Allowed:**
+
+- tool pragmas (`# noqa: E501`, `# type: ignore[arg-type]`, `# pragma: no cover`), on the line they affect
+- the shebang of an executable script
+- `# TODO: <what is missing>`, only when the user asked you to leave the work unfinished
+- a docstring on a public API boundary, where the project already writes them
+
+**Not allowed, however useful it looks:** a why, intent, or rationale note; a section banner (`# --- Parsing ---`); a note above a regular expression, a formula, an edge case, an API quirk, or a workaround; a restatement of a name, a type, or a signature; commented-out code; an `Args:` / `Returns:` block that repeats the signature.
+
+**One line each.** If an allowed comment needs a second line, restructure the code instead.
+
+**Write the name, not the comment.** Extract a function, name a variable, name a constant or enum member, or name the condition (`if is_retryable_failure(response):`). What does not fit a name belongs in the commit message, the pull request, or a test name.
+
+**Before the task is complete,** re-read the lines you changed and delete every comment outside this list — the formatter and the linter do not remove them.
 
 ## Formatting
 
