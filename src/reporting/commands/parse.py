@@ -8,7 +8,6 @@ from reporting.services.file_parse import file_parse_service
 def parse(
     days: int = typer.Argument(1, help="Number of days to parse, 0 for all"),
 ) -> None:
-    """Parse days from file and save to database."""
     config.load_config()
 
     with db_connection.session_scope() as session:

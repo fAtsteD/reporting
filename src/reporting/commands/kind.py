@@ -14,7 +14,6 @@ def add(
     alias: str = typer.Argument(..., help="Kind alias (unique)"),
     name: str = typer.Argument(..., help="Kind name"),
 ) -> None:
-    """Add or update kind."""
     config.load_config()
 
     with db_connection.session_scope() as session:
@@ -32,7 +31,6 @@ def add(
 
 @app.command("list")
 def list_kinds() -> None:
-    """Print all kinds."""
     config.load_config()
 
     with db_connection.session_scope() as session:

@@ -12,7 +12,6 @@ from reporting.database.models import Report
 def show(
     date: str = typer.Argument("last", help="Date to show (DD.MM.YYYY) or 'last'"),
 ) -> None:
-    """Print report for date."""
     config.load_config()
     report_date: str | datetime.date = date
 

@@ -49,9 +49,6 @@ def run_migrations() -> None:
 
 @contextlib.contextmanager
 def session_scope() -> Generator[Session]:
-    """
-    Transactional scope: commit on success, rollback on error, always close
-    """
     if session_factory is None:
         raise RuntimeError("Database is not connected. Call reconnect() first.")
 

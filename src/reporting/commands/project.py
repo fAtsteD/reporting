@@ -14,7 +14,6 @@ def add(
     alias: str = typer.Argument(..., help="Project alias (unique)"),
     name: str = typer.Argument(..., help="Project name"),
 ) -> None:
-    """Add or update project."""
     config.load_config()
 
     with db_connection.session_scope() as session:
@@ -32,7 +31,6 @@ def add(
 
 @app.command("list")
 def list_projects() -> None:
-    """Print all projects."""
     config.load_config()
 
     with db_connection.session_scope() as session:

@@ -38,9 +38,6 @@ def parse_task(task_str: str, report_date: datetime.date) -> TaskLine:
 
 
 def clear_report_tasks(session: Session, report: Report) -> None:
-    """
-    Remove all tasks of the report
-    """
     for task in report.tasks:
         session.delete(task)
 

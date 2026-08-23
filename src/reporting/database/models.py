@@ -32,10 +32,6 @@ class Base(DeclarativeBase):
 
 
 class Kind(Base):
-    """
-    It kind of tasks, because each kind can has short, full name etc.
-    """
-
     __tablename__ = "kinds"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -53,17 +49,10 @@ class Kind(Base):
     tasks: Mapped[list["Task"]] = relationship(back_populates="kind")
 
     def __str__(self):
-        """
-        One text line present of kind
-        """
         return f"{self.alias} - {self.name}"
 
 
 class Project(Base):
-    """
-    It's project of tasks, because each project can has short, name etc.
-    """
-
     __tablename__ = "projects"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -81,9 +70,6 @@ class Project(Base):
     tasks: Mapped[list["Task"]] = relationship(back_populates="project")
 
     def __str__(self):
-        """
-        One text line present of kind
-        """
         return f"{self.alias} - {self.name}"
 
 
@@ -112,9 +98,6 @@ class Report(Base):
         return sum(task.logged_seconds for task in self.tasks)
 
     def __str__(self):
-        """
-        Report to the text present, it is multiline
-        """
         current_date = datetime.datetime.now(config.app.timezone).date()
         text = self.date.strftime("%d.%m.%Y") + " (" + current_date.strftime("%d.%m.%Y") + ")\n"
 
@@ -211,9 +194,6 @@ class Task(Base):
         self.logged_seconds = (self.logged_seconds or 0) + int(round(logged_time.total_seconds(), 0))
 
     def __str__(self):
-        """
-        One text line present of task
-        """
         logged_rounded = self.logged_rounded
         logged_hours = round(logged_rounded / 60 // 60)
         logged_hours_str = f"0{logged_hours}" if logged_hours < 10 else f"{logged_hours}"

@@ -8,10 +8,6 @@ class Dictionary:
     projects: dict = field(default_factory=dict)
 
     def translate_task(self, text: str) -> str:
-        """
-        Translate task if it sets
-        Return translated or original
-        """
         if len(self.tasks) < 1:
             return text
 
@@ -21,10 +17,6 @@ class Dictionary:
         return text
 
     def translate_kind(self, text: str) -> str:
-        """
-        Translate kind if it sets
-        Return translated or original
-        """
         if len(self.kinds) < 1:
             return text
 
@@ -34,10 +26,6 @@ class Dictionary:
         return text
 
     def translate_project(self, text: str) -> str:
-        """
-        Translate project if it sets
-        Return translated or original
-        """
         if len(self.projects) < 1:
             return text
 

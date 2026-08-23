@@ -16,7 +16,6 @@ def send(
     to_jira: bool = typer.Option(False, "--jira", help="Send report to Jira"),
     to_portal: bool = typer.Option(False, "--portal", help="Send report to portal"),
 ) -> None:
-    """Send report to selected systems."""
     if not to_jira and not to_portal:
         typer.echo("Specify at least one target: --jira or --portal")
         raise typer.Exit(code=1)
