@@ -1,0 +1,2 @@
+class DatabaseNotConfiguredError(Exception):
+    pass

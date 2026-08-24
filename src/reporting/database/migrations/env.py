@@ -13,15 +13,9 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 if config.get_main_option("sqlalchemy.url", None) is None:
-    from reporting import config as config_app
     from reporting.database import db_connection
 
-    config_app.load_config()
-
-    if db_connection.engine is None:
-        raise RuntimeError("Database is not connected. Call reconnect() first.")
-
-    config.set_main_option("sqlalchemy.url", str(db_connection.engine.url))
+    config.set_main_option("sqlalchemy.url", db_connection.database_url())
 
 
 def run_migrations_offline() -> None:

@@ -38,7 +38,9 @@ def test_parse_empty_file(
 ) -> None:
     reporting_config(
         {
-            "hour-report-path": str(generate_tracking_file()),
+            "app": {
+                "hour-report-path": str(generate_tracking_file()),
+            },
         }
     )
     output_expected = "Parsed 0\n"
@@ -94,19 +96,21 @@ def test_parse_last_report_with_remove_tasks(
     )
     reporting_config(
         {
-            "default-type": types[0].alias,
-            "default-project": projects[0].alias,
+            "app": {
+                "default-project": projects[0].alias,
+                "default-type": types[0].alias,
+                "hour-report-path": str(tracking_file_path),
+                "minute-round-to": 15,
+                "omit-task": [
+                    "break",
+                    "lunch",
+                ],
+            },
             "dictionary": {
                 "task": {
                     "l": "lunch",
                 },
             },
-            "hour-report-path": str(tracking_file_path),
-            "minute-round-to": 15,
-            "omit-task": [
-                "break",
-                "lunch",
-            ],
         }
     )
     ReportFactory.create(date=report_date)
@@ -227,19 +231,21 @@ def test_parse_n_reports(
     )
     reporting_config(
         {
-            "default-type": types[0].alias,
-            "default-project": projects[0].alias,
+            "app": {
+                "default-project": projects[0].alias,
+                "default-type": types[0].alias,
+                "hour-report-path": str(tracking_file_path),
+                "minute-round-to": 15,
+                "omit-task": [
+                    "break",
+                    "lunch",
+                ],
+            },
             "dictionary": {
                 "task": {
                     "l": "lunch",
                 },
             },
-            "hour-report-path": str(tracking_file_path),
-            "minute-round-to": 15,
-            "omit-task": [
-                "break",
-                "lunch",
-            ],
         }
     )
 

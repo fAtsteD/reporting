@@ -1,0 +1,2 @@
+class JiraNotConfiguredError(Exception):
+    pass

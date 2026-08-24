@@ -19,7 +19,7 @@ def test_send_jira_empty_report(
     reporting_config(
         {
             "jira": {
-                "issue_key_bases": [],
+                "issue-key-base": [],
                 "login": "login",
                 "password": "password",
                 "server": "server",
@@ -79,13 +79,15 @@ def test_send_jira_report_with_jira_issues(
     ]
     reporting_config(
         {
+            "app": {
+                "minute-round-to": 15,
+            },
             "jira": {
                 "issue-key-base": allowed_jira_keys,
                 "login": "login",
                 "password": "password",
                 "server": "https://jira.example.com",
             },
-            "minute-round-to": 15,
         }
     )
     report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC), tasks=[])

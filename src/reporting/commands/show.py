@@ -4,7 +4,6 @@ import dateutil.parser
 import sqlalchemy as sa
 import typer
 
-from reporting import config
 from reporting.database import db_connection
 from reporting.database.models import Report
 
@@ -12,7 +11,6 @@ from reporting.database.models import Report
 def show(
     date: str = typer.Argument("last", help="Date to show (DD.MM.YYYY) or 'last'"),
 ) -> None:
-    config.load_config()
     report_date: str | datetime.date = date
 
     if date != "last":

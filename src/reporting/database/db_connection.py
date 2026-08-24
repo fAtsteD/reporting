@@ -1,24 +1,37 @@
 import contextlib
 from collections.abc import Generator
+from os import path
 
 import sqlalchemy as sa
 from sqlalchemy import event
 from sqlalchemy.orm import Session, sessionmaker
 
+from reporting import config
+from reporting.database.exceptions import DatabaseNotConfiguredError
+
 engine: sa.engine.Engine | None = None
 session_factory: sessionmaker[Session] | None = None
 
 
-def reconnect(sqlite_path: str) -> None:
+def database_url() -> str:
+    if not config.app.sqlite_database_path:
+        raise DatabaseNotConfiguredError("Path to the database file is not configured")
+
+    return "sqlite:///" + path.normpath(path.expanduser(config.app.sqlite_database_path))
+
+
+def reconnect() -> None:
     """
     Recreate connection with session factory. Run migrations
     """
     global engine, session_factory
 
+    url = database_url()
+
     if engine is not None:
         engine.dispose()
 
-    engine = sa.create_engine("sqlite:///" + sqlite_path)
+    engine = sa.create_engine(url)
 
     @event.listens_for(engine, "connect")
     def _set_sqlite_pragma(dbapi_connection, _) -> None:
@@ -36,7 +49,7 @@ def run_migrations() -> None:
     from alembic.config import Config
 
     if engine is None:
-        raise RuntimeError("Database is not connected. Call reconnect() first.")
+        raise DatabaseNotConfiguredError("Database is not connected. Call reconnect() first.")
 
     alembic_cfg = Config()
     alembic_cfg.set_main_option("script_location", "reporting.database:migrations")
@@ -50,9 +63,14 @@ def run_migrations() -> None:
 @contextlib.contextmanager
 def session_scope() -> Generator[Session]:
     if session_factory is None:
-        raise RuntimeError("Database is not connected. Call reconnect() first.")
+        reconnect()
 
-    session = session_factory()
+    current_factory = session_factory
+
+    if current_factory is None:
+        raise DatabaseNotConfiguredError("Database is not connected. Call reconnect() first.")
+
+    session = current_factory()
 
     try:
         yield session

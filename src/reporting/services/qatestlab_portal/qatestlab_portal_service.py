@@ -3,10 +3,18 @@ from reporting.database.models import Report
 from reporting.qatestlab_portal.client import QATestLabPortal
 from reporting.qatestlab_portal.models import Report as PortalReport
 from reporting.qatestlab_portal.models import TimeRecord
-from reporting.services.qatestlab_portal.exceptions import QATestLabPortalError
+from reporting.services.qatestlab_portal.exceptions import (
+    QATestLabPortalError,
+    QATestLabPortalNotConfiguredError,
+)
 
 
 def send_tasks(report: Report) -> None:
+    if not config.qatestlab_portal.is_use:
+        raise QATestLabPortalNotConfiguredError(
+            "QATestLab Portal is not configured. Api url, login and password are required"
+        )
+
     with QATestLabPortal(config.qatestlab_portal.url) as portal:
         portal.login(config.qatestlab_portal.login, config.qatestlab_portal.password)
         _send_report_tasks(portal, report)

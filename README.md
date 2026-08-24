@@ -1,5 +1,10 @@
 # Create and send report
 
+Program find tasks, their type and project. Task without project or type get in default name.
+
+Some tasks like lunch can be omitted. For that purpose they have to be in the list of skipped tasks
+in the configuration. Task that has to be omitted can be anything and have any symbols like another.
+
 ## Development
 
 It requires uv installed before.
@@ -45,98 +50,16 @@ Example:
 The app has help in command line, read it before use. It always require some command.
 
 ```bash
-report --help
+reporting --help
 ```
-
-## Config
-
-Create config file in the home folder `~/.reporting/config.json`
-
-Setting that can be setted:
-
-- hour-report-path - path to file with tasks by hours
-- timezone - IANA timezone for task-file times, for example `Europe/Kyiv`; defaults to the system local timezone
-- sqlite-database-path - path to file with database SQLite
-- omit-task - name of tasks that will be skipped
-- minute_round_to - for what number round minutes in the report. Default 25
-- jira - settings related for working with Jira:
-  - server - url to the server with Jira
-  - login - user login to the account
-  - password - user password to the account
-  - issue-key-base - (optional) prefix for all issue key. Default empty array
-- dictionary - dictionary with shorter version of origin or reworded (can be used in omit task):
-  - task - only use for task name
-  - kind - only use for kind name, it has to change to alias inside
-  - project - only use for project name, it has to change to alias inside
-- qatestlab-portal - settings for QATestLab Portal (have different class for them):
-  - kinds - dictionary for transformation kinds inside to the portal, all inside kind's keys can view in command line
-  - login - user login to the account
-  - password - password to the account
-  - projects - dictionary for transformation projects inside to the portal, all inside project's keys can view in command line
-  - project-to-corp-struct-item - dictionary for setting related projects inside to the portal corp struct item alias, all inside project's keys can view in command line
-  - safe-send-report-days - send report without additional question when send report
-  - url - main url to the portal api
-- default-type - default type, setted if task does not have, set alias from inside name
-- default-project - default project, setted if task does not have, set alias from inside name
-
-Example:
-
-```json
-{
-    "hour-report-path": "~/example-hours.txt",
-    "timezone": "Europe/Kyiv",
-    "sqlite-database-path": "~/reports.db",
-    "omit-task": ["lunch", "break"],
-    "minute-round-to": 25,
-    "jira": {
-        "server": "https://jira.example.domain.com/",
-        "login": "test.user",
-        "password": "password",
-        "issue-key-base": [
-            "JRA-"
-        ]
-    },
-    "dictionary": {
-        "task": {
-            "l": "lunch"
-        },
-        "type": {},
-        "project": {}
-    },
-    "qatestlab-portal": {
-        "kinds": {
-            "d": "Develop",
-        },
-        "login": "test",
-        "password": "pass",
-        "projects": {
-            "bs": "Best Project",
-        },
-        "project-to-corp-struct-item": {
-            "bs": "Best Corp Struct Item Alias",
-        },
-        "safe-send-report-days": 1,
-        "url": "https://qatestlab-portal.example.com/api",
-    },
-    "default-type": "Development",
-    "default-project": "Project"
-}
-```
-
-## How it works
-
-Program find tasks, their type and project. Task without project or type get in default name.
-
-Some tasks like lunch can be omitted. For that purpose they have to be in the config file in omit array.
-Task that has to be omitted can be anything and have any symbols like another.
 
 ## JIRA
 
-You must add 3 required configs for working with Jira: server, login, password.
+Jira requires the server address, login and password in the configuration.
 
 ### Worklog setting
 
-Issue key searches by concatenate base in the settings (default empty string) and any number before double dots. All other information for setting worklog does not need.
+Issue key searches by concatenate one of the configured issue key prefixes and any number before double dots. All other information for setting worklog does not need.
 
 ## QATestLab Portal
 

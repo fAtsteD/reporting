@@ -20,7 +20,6 @@ def send(
         typer.echo("Specify at least one target: --jira or --portal")
         raise typer.Exit(code=1)
 
-    config.load_config()
     report_date: str | datetime.date = date
 
     if date != "last":

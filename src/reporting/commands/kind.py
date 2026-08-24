@@ -2,7 +2,6 @@ import sqlalchemy as sa
 import typer
 from sqlalchemy.orm import Session
 
-from reporting import config
 from reporting.database import db_connection
 from reporting.database.models import Kind
 
@@ -14,8 +13,6 @@ def add(
     alias: str = typer.Argument(..., help="Kind alias (unique)"),
     name: str = typer.Argument(..., help="Kind name"),
 ) -> None:
-    config.load_config()
-
     with db_connection.session_scope() as session:
         kind: Kind | None = session.scalars(sa.select(Kind).where(Kind.alias == alias)).first()
 
@@ -31,8 +28,6 @@ def add(
 
 @app.command("list")
 def list_kinds() -> None:
-    config.load_config()
-
     with db_connection.session_scope() as session:
         _list_kinds(session)
 

@@ -81,7 +81,9 @@ def test_send_report(
     current_user_id = faker.random_int(min=1)
     reporting_config(
         {
-            "minute-round-to": 15,
+            "app": {
+                "minute-round-to": 15,
+            },
             "qatestlab-portal": {
                 "kinds": kinds_config,
                 "login": faker.domain_word(),
@@ -235,7 +237,9 @@ def test_send_portal_empty_required_data(
     current_user_id = faker.random_int(min=1)
     reporting_config(
         {
-            "minute-round-to": 15,
+            "app": {
+                "minute-round-to": 15,
+            },
             "qatestlab-portal": {
                 "kinds": kinds_config,
                 "login": faker.domain_word(),

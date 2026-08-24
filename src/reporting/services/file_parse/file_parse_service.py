@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from reporting import config
 from reporting.database.models import Kind, Project, Report, Task
+from reporting.services.file_parse.exceptions import FileParseNotConfiguredError
 from reporting.services.file_parse.models import TaskLine
 
 
@@ -64,12 +65,18 @@ def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
 
     Return reports
     """
+    if not config.app.input_file_hours:
+        raise FileParseNotConfiguredError("Path to the file with tasks by hours is not configured")
+
+    input_file_path = path.normpath(path.expanduser(config.app.input_file_hours))
+
+    if not path.isfile(input_file_path):
+        raise FileParseNotConfiguredError(f"File with tasks by hours does not exist: {input_file_path}")
+
     reports: list[Report] = []
+    skip_tasks = [config.dictionary.translate_task(task_name) for task_name in config.app.skip_tasks]
 
-    if not path.isfile(config.app.input_file_hours):
-        return reports
-
-    with open(config.app.input_file_hours, "r", encoding="utf-8") as input_file_hours:
+    with open(input_file_path, "r", encoding="utf-8") as input_file_hours:
         report: Report | None = None
         day_index = 0
         previous_line = ""
@@ -100,10 +107,10 @@ def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
                     and previous_task
                     and previous_task_line
                     and previous_task_line.summary
-                    and report.total_rounded_seconds < config.app.work_day_hours.total_seconds()
+                    and report.total_rounded_seconds < config.app.work_day_duration.total_seconds()
                 ):
                     previous_task.logged_timedelta(
-                        datetime.timedelta(seconds=config.app.work_day_hours.total_seconds() - report.total_seconds)
+                        datetime.timedelta(seconds=config.app.work_day_duration.total_seconds() - report.total_seconds)
                     )
 
                 if day_index < read_days or read_days == 0:
@@ -126,7 +133,7 @@ def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
             if previous_task_line is not None and previous_task is not None:
                 previous_task.logged_timedelta(task_line.time_begin - previous_task_line.time_begin)
 
-            if task_line.summary.strip() and task_line.summary not in config.app.skip_tasks:
+            if task_line.summary.strip() and task_line.summary not in skip_tasks:
                 for report_task in report.tasks:
                     if (
                         report_task.summary == task_line.summary
