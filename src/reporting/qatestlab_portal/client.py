@@ -3,7 +3,6 @@ from types import TracebackType
 from typing import Any, Self
 
 from reporting.qatestlab_portal.base import BaseApi
-from reporting.qatestlab_portal.exceptions import PortalNotAuthorizedException
 from reporting.qatestlab_portal.models import (
     Category,
     CategoryBinding,
@@ -182,4 +181,4 @@ class QATestLabPortal(BaseApi):
 
     def _ensure_authorized(self) -> None:
         if not self._is_authorized:
-            raise PortalNotAuthorizedException("Portal client is not authorized. Call login() first.")
+            raise RuntimeError("Portal client is not authorized")

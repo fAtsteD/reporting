@@ -4,7 +4,8 @@ import typer
 from pydantic import ValidationError
 
 from reporting import config
-from reporting.config import config_access, config_file
+from reporting.cli import views
+from reporting.config import config_access, config_file, validation_message
 from reporting.config.exceptions import ConfigError
 from reporting.config.models import RootConfig
 
@@ -21,21 +22,14 @@ def get(
 @app.command("list", help="Print the config file location and every setting with its value")
 def list_values() -> None:
     config_file_path = config_file.config_path()
+    values = [
+        (key, config_access.format_value(value), description)
+        for key, value, description in config_access.iterate_values(config.current)
+    ]
 
-    if config_file_path.is_file():
-        print(f"Config file: {config_file_path}")
-    else:
-        print(f"Config file: {config_file_path} (does not exist, every value is a default)")
-
+    print(views.render_config_file_path(config_file_path, config_file_path.is_file()))
     print()
-    values = config_access.iterate_values(config.current)
-    key_width = max((len(item_key) for item_key, _, _ in values), default=0)
-
-    for item_key, item_value, item_description in values:
-        print(f"{item_key.ljust(key_width)}  {config_access.format_value(item_value)}")
-
-        if item_description:
-            print(f"    {item_description}")
+    print(views.render_config_values(values))
 
 
 @app.command(
@@ -71,7 +65,7 @@ def _save(data: dict[str, Any], key: str) -> None:
     try:
         root = RootConfig.model_validate(data)
     except ValidationError as error:
-        raise ConfigError(f"Value is not valid for {key}:\n{error}") from error
+        raise ConfigError(f"Value is not valid for {key}:\n{validation_message.describe(error)}") from error
 
     config_file.write_data(data)
     config.reload()

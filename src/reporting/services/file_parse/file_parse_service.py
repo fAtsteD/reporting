@@ -1,6 +1,5 @@
 import datetime
 import re
-import sys
 from os import path
 
 import dateutil.parser
@@ -9,12 +8,17 @@ from sqlalchemy.orm import Session
 
 from reporting import config
 from reporting.database.models import Kind, Project, Report, Task
-from reporting.services.file_parse.exceptions import FileParseNotConfiguredError
+from reporting.services.file_parse.exceptions import (
+    FileParseError,
+    FileParseNotConfiguredError,
+    UnknownKindError,
+    UnknownProjectError,
+)
 from reporting.services.file_parse.models import TaskLine
 
 
 def parse_task(task_str: str, report_date: datetime.date) -> TaskLine:
-    parsed_time = dateutil.parser.parse(task_str.split(" - ")[0].strip().replace(" ", ":")).time()
+    parsed_time = _parse_time(task_str.split(" - ")[0].strip().replace(" ", ":"), task_str)
     task = TaskLine(
         time_begin=datetime.datetime.combine(report_date, parsed_time, tzinfo=config.app.timezone),
     )
@@ -85,7 +89,7 @@ def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
 
         for line in input_file_hours:
             if re.search("^[0-9]{1,2}\\.[0-9]{1,2}\\.([0-9]{4}|[0-9]{2})\n$", line):
-                report_date = dateutil.parser.parse(line, dayfirst=True).date()
+                report_date = _parse_date(line)
                 report = session.scalars(sa.select(Report).where(Report.date == report_date)).first()
 
                 if report is None:
@@ -148,20 +152,10 @@ def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
                     task.report = report
 
                     if task_line.kind:
-                        kind = session.scalars(sa.select(Kind).where(Kind.alias == task_line.kind)).first()
-
-                        if kind is None:
-                            sys.exit(f"Kind {task_line.kind} does not exist")
-
-                        task.kind = kind
+                        task.kind = _resolve_kind(session, task_line.kind)
 
                     if task_line.project:
-                        project = session.scalars(sa.select(Project).where(Project.alias == task_line.project)).first()
-
-                        if project is None:
-                            sys.exit(f"Project {task_line.project} does not exist")
-
-                        task.project = project
+                        task.project = _resolve_project(session, task_line.project)
 
                     session.add(task)
                     session.flush()
@@ -170,4 +164,37 @@ def parse_reports(session: Session, read_days: int = 1) -> list[Report]:
             previous_task_line = task_line
 
     session.commit()
+
     return reports
+
+
+def _parse_date(line: str) -> datetime.date:
+    try:
+        return dateutil.parser.parse(line, dayfirst=True).date()
+    except (dateutil.parser.ParserError, OverflowError) as error:
+        raise FileParseError(f"Line is not a date (DD.MM.YYYY): {line.strip()}") from error
+
+
+def _parse_time(time_str: str, task_str: str) -> datetime.time:
+    try:
+        return dateutil.parser.parse(time_str).time()
+    except (dateutil.parser.ParserError, OverflowError) as error:
+        raise FileParseError(f"Line does not start with a time (HH MM): {task_str.strip()}") from error
+
+
+def _resolve_kind(session: Session, alias: str) -> Kind:
+    kind = session.scalars(sa.select(Kind).where(Kind.alias == alias)).first()
+
+    if kind is None:
+        raise UnknownKindError(f'Kind {alias} does not exist. Add it: reporting kind add {alias} "<name>"')
+
+    return kind
+
+
+def _resolve_project(session: Session, alias: str) -> Project:
+    project = session.scalars(sa.select(Project).where(Project.alias == alias)).first()
+
+    if project is None:
+        raise UnknownProjectError(f'Project {alias} does not exist. Add it: reporting project add {alias} "<name>"')
+
+    return project

@@ -1,69 +1,49 @@
 import datetime
-from enum import Enum
 
 import faker
 import pytest
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from reporting import cli
 from reporting.database.models import Kind, Project
 from tests.conftest import ReportingConfigFixture
-from tests.factories import ReportFactory
+from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
+from tests.fixtures.cli import RunCli
 from tests.fixtures.portal import PortalFixture
 
-
-class ReportDates(Enum):
-    Future = "future"
-    Past = "past"
-    Today = "today"
+TASK_SUMMARIES = ["task 0", "task 1", "task 2"]
 
 
-@pytest.mark.parametrize(
-    "report_date_type",
-    [
-        ReportDates.Today,
-        ReportDates.Past,
-        ReportDates.Future,
-    ],
-)
+def create_report(report_date: datetime.date) -> None:
+    kind = KindFactory.create(alias="dev", id=1, name="Develop", tasks=[])
+    project = ProjectFactory.create(alias="mp", id=1, name="My Project", tasks=[])
+    report = ReportFactory.create(date=report_date, id=1, tasks=[])
+
+    for index, summary in enumerate(TASK_SUMMARIES):
+        TaskFactory.create(
+            id=index + 1,
+            kind=kind,
+            kinds_id=kind.id,
+            logged_seconds=60 * 60,
+            project=project,
+            projects_id=project.id,
+            report=report,
+            reports_id=report.id,
+            summary=summary,
+        )
+
+
 def test_send_report(
-    capsys: pytest.CaptureFixture,
     database_session: Session,
     faker: faker.Faker,
-    monkeypatch: pytest.MonkeyPatch,
     portal_mock: PortalFixture,
-    report_date_type: ReportDates,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     portal_base_url = faker.url()
-    report_date: datetime.date | None = None
-    call_input_count = 0
 
-    def check_input(_) -> str:
-        nonlocal call_input_count
-        call_input_count += 1
-        return "y"
+    create_report(datetime.datetime.now(datetime.UTC).date())
 
-    monkeypatch.setattr("builtins.input", check_input)
-
-    match report_date_type:
-        case ReportDates.Future:
-            report_date = faker.date_between_dates(
-                datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=2),
-                datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=10),
-            )
-        case ReportDates.Past:
-            report_date = faker.date_between_dates(
-                datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC),
-                datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=10),
-            )
-        case ReportDates.Today:
-            report_date = datetime.datetime.now(datetime.UTC).date()
-
-    report = ReportFactory.create(
-        date=report_date,
-    )
     kinds = database_session.scalars(sa.select(Kind)).all()
     kinds_config = {kind.alias: faker.sentence(nb_words=3, variable_nb_words=True) for kind in kinds}
     projects = database_session.scalars(sa.select(Project)).all()
@@ -83,6 +63,7 @@ def test_send_report(
         {
             "app": {
                 "minute-round-to": 15,
+                "timezone": "UTC",
             },
             "qatestlab-portal": {
                 "kinds": kinds_config,
@@ -185,21 +166,11 @@ def test_send_report(
         time_records_post=True,
     )
 
-    cli.main(["send", "--portal"])
+    result = run_cli("send", "--portal")
 
-    output = str(capsys.readouterr().out)
-    assert output.startswith("QATestLab Portal\n")
-
-    for task in report.tasks:
-        assert output.find(f"[+] {task}\n") > -1
-
-    match report_date_type:
-        case ReportDates.Future:
-            assert call_input_count == 1, "Input should be called once for future report date"
-        case ReportDates.Past:
-            assert call_input_count == 1, "Input should be called once for past report date"
-        case ReportDates.Today:
-            assert call_input_count == 0, "Input should not be called for today report date"
+    assert result.out == "QATestLab Portal\n" + "".join(
+        f"[+] 01:00 - {summary} - My Project\n" for summary in TASK_SUMMARIES
+    )
 
 
 @pytest.mark.parametrize(
@@ -211,15 +182,17 @@ def test_send_report(
     ],
 )
 def test_send_portal_empty_required_data(
-    capsys: pytest.CaptureFixture,
     database_session: Session,
     empty_response_data: tuple,
     faker: faker.Faker,
     portal_mock: PortalFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     portal_base_url = faker.url()
-    report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC))
+
+    create_report(datetime.datetime.now(datetime.UTC).date())
+
     kinds = database_session.scalars(sa.select(Kind)).all()
     kinds_config = {kind.alias: faker.sentence(nb_words=3, variable_nb_words=True) for kind in kinds}
     projects = database_session.scalars(sa.select(Project)).all()
@@ -345,10 +318,11 @@ def test_send_portal_empty_required_data(
         time_records_post=True,
     )
 
-    cli.main(["send", "--portal"])
+    failure = run_cli("send", "--portal")
 
-    output = str(capsys.readouterr().out)
-    assert output.startswith("QATestLab Portal\n")
+    assert failure.exit_code == 1
+    assert failure.err == f"Failed tasks: {len(TASK_SUMMARIES)}\n"
+    assert failure.out.startswith("QATestLab Portal\n")
 
-    for task in report.tasks:
-        assert output.find(f"[-] {task}\n") > -1
+    for summary in TASK_SUMMARIES:
+        assert f"[-] 01:00 - {summary} - My Project\n" in failure.out

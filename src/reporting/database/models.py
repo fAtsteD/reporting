@@ -48,9 +48,6 @@ class Kind(Base):
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="kind")
 
-    def __str__(self):
-        return f"{self.alias} - {self.name}"
-
 
 class Project(Base):
     __tablename__ = "projects"
@@ -68,9 +65,6 @@ class Project(Base):
     )
 
     tasks: Mapped[list["Task"]] = relationship(back_populates="project")
-
-    def __str__(self):
-        return f"{self.alias} - {self.name}"
 
 
 class Report(Base):
@@ -96,37 +90,6 @@ class Report(Base):
     @property
     def total_seconds(self) -> int:
         return sum(task.logged_seconds for task in self.tasks)
-
-    def __str__(self):
-        current_date = datetime.datetime.now(config.app.timezone).date()
-        text = self.date.strftime("%d.%m.%Y") + " (" + current_date.strftime("%d.%m.%Y") + ")\n"
-
-        total_seconds = self.total_rounded_seconds
-        total_hours = round(total_seconds / 60 // 60)
-        total_hours_str = f"0{total_hours}" if total_hours < 10 else f"{total_hours}"
-        total_minutes = round(total_seconds / 60 % 60)
-        total_minutes_str = f"0{total_minutes}" if total_minutes < 10 else f"{total_minutes}"
-        text += f"Summary time: {total_hours_str}:{total_minutes_str}\n"
-
-        indent = "  "
-        tasks = sorted(self.tasks, key=lambda task: (task.kinds_id, task.summary))
-
-        if len(tasks) == 0:
-            text += "Report does not have tasks\n"
-            return text
-
-        text += "Tasks:\n"
-        task_indent = indent + indent
-        previous_kind = ""
-
-        for task in tasks:
-            if task.kind.name != previous_kind:
-                text += indent + task.kind.name + ":\n"
-
-            text += f"{task_indent}{task}\n"
-            previous_kind = task.kind.name
-
-        return text
 
 
 class Task(Base):
@@ -192,12 +155,3 @@ class Task(Base):
         Firstly timedelta transforms to the seconds.
         """
         self.logged_seconds = (self.logged_seconds or 0) + int(round(logged_time.total_seconds(), 0))
-
-    def __str__(self):
-        logged_rounded = self.logged_rounded
-        logged_hours = round(logged_rounded / 60 // 60)
-        logged_hours_str = f"0{logged_hours}" if logged_hours < 10 else f"{logged_hours}"
-        logged_minutes = round(logged_rounded / 60 % 60)
-        logged_minutes_str = f"0{logged_minutes}" if logged_minutes < 10 else f"{logged_minutes}"
-
-        return f"{logged_hours_str}:{logged_minutes_str} - {self.summary} - {self.project.name}"

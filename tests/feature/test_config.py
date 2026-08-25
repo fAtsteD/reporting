@@ -2,42 +2,39 @@ import json
 
 import pytest
 
-from reporting import cli, config
+from reporting import config
 from reporting.config import config_access, config_file
 from tests.conftest import ReportingConfigFixture
+from tests.fixtures.cli import RunCli
 
 
 def test_list_shows_config_file_path(
-    capsys: pytest.CaptureFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     config_path = config_file.config_path()
 
-    cli.main(["config", "list"])
-    assert capsys.readouterr().out.startswith(
-        f"Config file: {config_path} (does not exist, every value is a default)\n"
-    )
+    missing = run_cli("config", "list")
+    assert missing.out.startswith(f"Config file: {config_path} (does not exist, every value is a default)\n")
 
     reporting_config()
 
-    cli.main(["config", "list"])
-    assert capsys.readouterr().out.startswith(f"Config file: {config_path}\n")
+    existing = run_cli("config", "list")
+    assert existing.out.startswith(f"Config file: {config_path}\n")
 
 
 def test_list_shows_every_setting_with_description(
-    capsys: pytest.CaptureFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config()
 
-    cli.main(["config", "list"])
-
-    output = capsys.readouterr().out
+    result = run_cli("config", "list")
 
     for key, _, description in config_access.iterate_values(config.current):
-        assert key in output
+        assert key in result.out
         assert description, f"{key} does not have a description"
-        assert description in output
+        assert description in result.out
 
 
 @pytest.mark.parametrize(
@@ -49,25 +46,39 @@ def test_list_shows_every_setting_with_description(
     ],
 )
 def test_set_and_get_value(
-    capsys: pytest.CaptureFixture,
     expected: str,
     key: str,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
     value: str,
 ) -> None:
     reporting_config()
 
-    cli.main(["config", "set", key, value])
-    assert capsys.readouterr().out == f"{key} = {expected}\n"
-
-    cli.main(["config", "get", key])
-    assert capsys.readouterr().out == f"{expected}\n"
+    assert run_cli("config", "set", key, value).out == f"{key} = {expected}\n"
+    assert run_cli("config", "get", key).out == f"{expected}\n"
 
 
-def test_set_saves_value_in_the_config_file(reporting_config: ReportingConfigFixture) -> None:
+def test_get_section_prints_a_json_object(
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+) -> None:
+    reporting_config({"jira": {"login": "someone", "server": "https://jira.example.com"}})
+
+    result = run_cli("config", "get", "jira")
+
+    assert (
+        result.out
+        == '{"issue-key-base": [], "login": "someone", "password": "", "server": "https://jira.example.com"}\n'
+    )
+
+
+def test_set_saves_value_in_the_config_file(
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+) -> None:
     reporting_config()
 
-    cli.main(["config", "set", "app.minute-round-to", "25"])
+    run_cli("config", "set", "app.minute-round-to", "25")
 
     saved = json.loads(config_file.config_path().read_text(encoding="utf-8"))
     assert saved["app"]["minute-round-to"] == 25
@@ -78,13 +89,18 @@ def test_set_saves_value_in_the_config_file(reporting_config: ReportingConfigFix
     [
         pytest.param("jira.password", "", id="text returns to default"),
         pytest.param("dictionary.task.l", "null", id="dictionary entry is removed"),
+        pytest.param(
+            "jira",
+            '{"issue-key-base": [], "login": "", "password": "", "server": ""}',
+            id="whole section is reset",
+        ),
     ],
 )
 def test_unset_returns_value_to_default(
-    capsys: pytest.CaptureFixture,
     expected: str,
     key: str,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config(
         {
@@ -93,44 +109,33 @@ def test_unset_returns_value_to_default(
         }
     )
 
-    cli.main(["config", "unset", key])
-    capsys.readouterr()
-    cli.main(["config", "get", key])
+    run_cli("config", "unset", key)
 
-    assert capsys.readouterr().out == f"{expected}\n"
+    assert run_cli("config", "get", key).out == f"{expected}\n"
 
 
 def test_set_and_unset_list_items(
-    capsys: pytest.CaptureFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config()
 
-    cli.main(["config", "set", "app.omit-task", "lunch"])
-    assert capsys.readouterr().out == 'app.omit-task = ["lunch"]\n'
-
-    cli.main(["config", "set", "app.omit-task", "break"])
-    assert capsys.readouterr().out == 'app.omit-task = ["lunch", "break"]\n'
-
-    cli.main(["config", "set", "app.omit-task", "lunch"])
-    assert capsys.readouterr().out == 'app.omit-task = ["lunch", "break"]\n'
-
-    cli.main(["config", "unset", "app.omit-task", "lunch"])
-    assert capsys.readouterr().out == 'app.omit-task = ["break"]\n'
-
-    cli.main(["config", "unset", "app.omit-task"])
-    assert capsys.readouterr().out == "app.omit-task = []\n"
+    assert run_cli("config", "set", "app.omit-task", "lunch").out == 'app.omit-task = ["lunch"]\n'
+    assert run_cli("config", "set", "app.omit-task", "break").out == 'app.omit-task = ["lunch", "break"]\n'
+    assert run_cli("config", "set", "app.omit-task", "lunch").out == 'app.omit-task = ["lunch", "break"]\n'
+    assert run_cli("config", "unset", "app.omit-task", "lunch").out == 'app.omit-task = ["break"]\n'
+    assert run_cli("config", "unset", "app.omit-task").out == "app.omit-task = []\n"
 
 
 def test_set_adds_json_array_as_one_list_item(
-    capsys: pytest.CaptureFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config()
 
-    cli.main(["config", "set", "app.omit-task", '["a","b"]'])
+    result = run_cli("config", "set", "app.omit-task", '["a","b"]')
 
-    assert capsys.readouterr().out == 'app.omit-task = ["[\\"a\\",\\"b\\"]"]\n'
+    assert result.out == 'app.omit-task = ["[\\"a\\",\\"b\\"]"]\n'
 
 
 @pytest.mark.parametrize(
@@ -145,14 +150,30 @@ def test_set_adds_json_array_as_one_list_item(
 )
 def test_command_fails_with_message(
     arguments: list[str],
-    capsys: pytest.CaptureFixture,
     expected_message: str,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config({"app": {"omit-task": ["lunch"]}})
 
-    with pytest.raises(SystemExit) as exit_info:
-        cli.main(arguments)
+    failure = run_cli(*arguments)
 
-    assert exit_info.value.code == 1
-    assert expected_message in capsys.readouterr().out
+    assert failure.exit_code == 1
+    assert failure.out == ""
+    assert expected_message in failure.err
+
+
+def test_malformed_config_file_fails_with_one_line(
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+) -> None:
+    reporting_config()
+    config_file.config_path().write_text('{"app": {"minute-round-to": "abc"}}', encoding="utf-8")
+
+    failure = run_cli("config", "list")
+
+    assert failure.exit_code == 1
+    assert failure.out == ""
+    assert failure.err.startswith("Error: Config file ")
+    assert "app.minute-round-to: " in failure.err
+    assert failure.err.count("\n") == 2

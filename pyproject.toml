@@ -32,7 +32,7 @@ dev = [
 ]
 
 [project.scripts]
-reporting = "reporting.cli:main"
+reporting = "reporting.cli.main:run"
 
 [tool.mypy]
 files = ["src", "tests"]

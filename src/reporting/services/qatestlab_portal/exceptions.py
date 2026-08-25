@@ -1,4 +1,7 @@
-class QATestLabPortalError(Exception):
+from reporting.exceptions import ReportingError
+
+
+class QATestLabPortalError(ReportingError):
     pass
 
 

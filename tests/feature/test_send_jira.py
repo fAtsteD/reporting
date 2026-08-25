@@ -1,39 +1,16 @@
 import datetime
 
-import faker
 import jira.client
 import jira.exceptions
 import pytest
 
-from reporting import cli
 from reporting.database.models import Task
 from tests.conftest import ReportingConfigFixture
-from tests.factories import ReportFactory, TaskFactory
+from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
+from tests.fixtures.cli import RunCli
 
-
-def test_send_jira_empty_report(
-    capsys: pytest.CaptureFixture,
-    monkeypatch: pytest.MonkeyPatch,
-    reporting_config: ReportingConfigFixture,
-) -> None:
-    reporting_config(
-        {
-            "jira": {
-                "issue-key-base": [],
-                "login": "login",
-                "password": "password",
-                "server": "server",
-            }
-        }
-    )
-    monkeypatch.setattr(jira.client.JIRA, "issue", lambda: None)
-    monkeypatch.setattr(jira.client.JIRA, "add_worklog", lambda: None)
-    output_expected = "Jira\n"
-
-    cli.main(["send", "--jira"])
-
-    output = capsys.readouterr()
-    assert output.out == output_expected
+EXIST_JIRA_KEY = "TEST-"
+MISSING_JIRA_KEY = "NO-TEST-"
 
 
 @pytest.mark.parametrize(
@@ -66,72 +43,139 @@ def test_send_jira_empty_report(
     ],
 )
 def test_send_jira_report_with_jira_issues(
-    capsys: pytest.CaptureFixture,
-    faker: faker.Faker,
     jira_keys: list[str],
     monkeypatch: pytest.MonkeyPatch,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
-    exist_jira_key = "TEST-"
-    allowed_jira_keys = [
-        exist_jira_key,
-        "NO-TEST-",
-    ]
     reporting_config(
         {
             "app": {
                 "minute-round-to": 15,
+                "timezone": "UTC",
             },
             "jira": {
-                "issue-key-base": allowed_jira_keys,
+                "issue-key-base": [EXIST_JIRA_KEY, MISSING_JIRA_KEY],
                 "login": "login",
                 "password": "password",
                 "server": "https://jira.example.com",
             },
         }
     )
-    report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC), tasks=[])
+    kind = KindFactory.create(alias="dev", id=1, name="Develop", tasks=[])
+    project = ProjectFactory.create(alias="mp", id=1, name="My Project", tasks=[])
+    report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC).date(), id=1, tasks=[])
+    summaries: list[str] = []
     tasks: list[Task] = []
 
-    for jira_key in jira_keys:
-        task_summary = faker.sentence(nb_words=10, variable_nb_words=True)
+    for index, jira_key in enumerate(jira_keys):
+        summary = f"{jira_key}: task {index}" if jira_key else f"task {index}"
+        summaries.append(summary)
+        tasks.append(
+            TaskFactory.create(
+                id=index + 1,
+                kind=kind,
+                kinds_id=kind.id,
+                logged_seconds=60 * 60,
+                project=project,
+                projects_id=project.id,
+                report=report,
+                reports_id=report.id,
+                summary=summary,
+            )
+        )
 
-        if jira_key:
-            task_summary = f"{jira_key}: {task_summary}"
-
-        tasks.append(TaskFactory.create(report=report, reports_id=report.id, summary=task_summary))
+    issue_calls: list[str] = []
+    worklog_calls: list[tuple[str, str]] = []
 
     def init_jira(*args, **kwargs) -> None:
         assert kwargs["server"] == "https://jira.example.com"
         assert kwargs["basic_auth"] == ("login", "password")
 
-    def check_issue_key(self: jira.client.JIRA, key: str, timeSpent: str | None = None) -> bool:
-        assert key in jira_keys
+    def check_issue(self: jira.client.JIRA, key: str) -> bool:
+        issue_calls.append(key)
 
-        if timeSpent is not None:
-            assert len(timeSpent) > 0
-
-        if key.startswith(exist_jira_key):
+        if key.startswith(EXIST_JIRA_KEY):
             return True
 
         raise jira.exceptions.JIRAError()
 
+    def check_add_worklog(self: jira.client.JIRA, key: str, time_spent: str) -> bool:
+        worklog_calls.append((key, time_spent))
+        return True
+
     monkeypatch.setattr(jira.client.JIRA, "__init__", init_jira)
-    monkeypatch.setattr(jira.client.JIRA, "issue", check_issue_key)
-    monkeypatch.setattr(jira.client.JIRA, "add_worklog", check_issue_key)
+    monkeypatch.setattr(jira.client.JIRA, "issue", check_issue)
+    monkeypatch.setattr(jira.client.JIRA, "add_worklog", check_add_worklog)
 
-    cli.main(["send", "--jira"])
+    result = run_cli("send", "--jira")
+    expected_failures = [key for key in jira_keys if key.startswith(MISSING_JIRA_KEY)]
 
-    output = capsys.readouterr()
-    assert str(output.out).startswith("Jira\n")
+    if expected_failures:
+        assert result.exit_code == 1
+        assert result.err == f"Failed tasks: {len(expected_failures)}\n"
+    else:
+        assert result.exit_code == 0
 
-    for task in tasks:
-        is_jira_key = any(task.summary.startswith(allowed_jira_key) for allowed_jira_key in allowed_jira_keys)
+    expected_attempted = [key for key in jira_keys if key.startswith((EXIST_JIRA_KEY, MISSING_JIRA_KEY))]
+    expected_logged = [key for key in jira_keys if key.startswith(EXIST_JIRA_KEY)]
+    assert issue_calls == expected_attempted
+    assert [key for key, _ in worklog_calls] == expected_logged
+    assert [time_spent for _, time_spent in worklog_calls] == ["1h 0m"] * len(expected_logged)
 
-        if is_jira_key:
-            if task.summary.startswith(exist_jira_key):
-                assert output.out.find(f"[+] {task}\n") > -1
-            else:
-                assert output.out.find(f"[-] {task}\n") > -1
-        else:
-            assert output.out.find(f"{task}\n") == -1
+    expected_lines = ["Jira"]
+
+    for jira_key, summary in zip(jira_keys, summaries):
+        if jira_key.startswith(EXIST_JIRA_KEY):
+            expected_lines.append(f"[+] 01:00 - {summary} - My Project")
+        elif jira_key.startswith(MISSING_JIRA_KEY):
+            expected_lines.append(f"[-] 01:00 - {summary} - My Project")
+
+    assert result.out == "\n".join(expected_lines) + "\n\n"
+
+
+def test_send_jira_shows_the_failure_reason(
+    monkeypatch: pytest.MonkeyPatch,
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+) -> None:
+    reporting_config(
+        {
+            "app": {
+                "minute-round-to": 15,
+                "timezone": "UTC",
+            },
+            "jira": {
+                "issue-key-base": [EXIST_JIRA_KEY],
+                "login": "login",
+                "password": "password",
+                "server": "https://jira.example.com",
+            },
+        }
+    )
+    kind = KindFactory.create(alias="dev", id=1, name="Develop", tasks=[])
+    project = ProjectFactory.create(alias="mp", id=1, name="My Project", tasks=[])
+    report = ReportFactory.create(date=datetime.datetime.now(datetime.UTC).date(), id=1, tasks=[])
+    TaskFactory.create(
+        id=1,
+        kind=kind,
+        kinds_id=kind.id,
+        logged_seconds=60 * 60,
+        project=project,
+        projects_id=project.id,
+        report=report,
+        reports_id=report.id,
+        summary="TEST-1: task 0",
+    )
+
+    def refuse_issue(self: jira.client.JIRA, key: str) -> bool:
+        raise jira.exceptions.JIRAError(status_code=404, text="Issue does not exist")
+
+    monkeypatch.setattr(jira.client.JIRA, "__init__", lambda *args, **kwargs: None)
+    monkeypatch.setattr(jira.client.JIRA, "issue", refuse_issue)
+
+    failure = run_cli("send", "--jira")
+
+    assert failure.exit_code == 1
+    assert failure.err == "Failed tasks: 1\n"
+    assert failure.out == "Jira\n[-] 01:00 - TEST-1: task 0 - My Project\n  Issue does not exist\n\n"

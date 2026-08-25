@@ -1,12 +1,10 @@
+import hashlib
 import json
 import os
 import random
-import tempfile
 from collections.abc import Generator
 from pathlib import Path
 from typing import Protocol
-
-os.environ["XDG_CONFIG_HOME"] = tempfile.mkdtemp(prefix="reporting-tests-")
 
 import pytest
 from sqlalchemy.orm import Session
@@ -17,9 +15,14 @@ from reporting.database import db_connection
 from reporting.database.models import Base
 from tests import factories
 
+FAKER_SEED_VARIABLE = "REPORTING_TEST_FAKER_SEED"
+
 pytest_plugins = [
+    "tests.fixtures.cli",
     "tests.fixtures.portal",
 ]
+
+_session_faker_seed = int(os.environ.get(FAKER_SEED_VARIABLE) or random.randrange(1000000))
 
 
 class ReportingConfigFixture(Protocol):
@@ -47,12 +50,17 @@ def database_session() -> Generator[Session]:
 
 
 @pytest.fixture(autouse=True)
-def faker_seed() -> int:
-    return round(random.random() * 1000000)
+def faker_seed(request: pytest.FixtureRequest) -> int:
+    digest = hashlib.sha256(f"{_session_faker_seed}:{request.node.nodeid}".encode()).digest()
+    return int.from_bytes(digest[:4], "big")
+
+
+def pytest_report_header() -> str:
+    return f"faker seed: {_session_faker_seed} (set {FAKER_SEED_VARIABLE} to reproduce)"
 
 
 @pytest.fixture(scope="session")
-def reporting_base_dir() -> Path:
+def reporting_base_dir(test_environment: None) -> Path:
     return config_file.config_path().parent
 
 
@@ -98,3 +106,14 @@ def reporting_config(
 
     os.remove(config_path)
     config.reload()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def test_environment(tmp_path_factory: pytest.TempPathFactory) -> Generator[None]:
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("COLUMNS", "100")
+        patch.setenv("NO_COLOR", "1")
+        patch.setenv("TERM", "dumb")
+        patch.setenv("XDG_CONFIG_HOME", str(tmp_path_factory.mktemp("config")))
+        patch.delenv("FORCE_COLOR", raising=False)
+        yield

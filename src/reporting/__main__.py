@@ -1,3 +1,3 @@
 from reporting.cli import main
 
-main()
+main.run()

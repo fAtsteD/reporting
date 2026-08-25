@@ -53,6 +53,21 @@ The app has help in command line, read it before use. It always require some com
 reporting --help
 ```
 
+### Exit codes
+
+Diagnostics go to stderr, results go to stdout, so `reporting show > report.txt` writes only the
+report.
+
+| Code | Meaning |
+| --- | --- |
+| 0 | Success |
+| 1 | The command failed: nothing to show or send, a task was not sent, the configuration is not valid |
+| 2 | The command line is wrong: a missing argument, an unknown command, a date that is not a date |
+| 130 | Interrupted with Ctrl-C |
+
+`send` exits 1 when any task fails and prints the reason under the task. `show` and `send` exit 1
+when the report does not exist.
+
 ## JIRA
 
 Jira requires the server address, login and password in the configuration.

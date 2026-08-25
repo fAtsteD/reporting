@@ -1,92 +1,68 @@
-import faker
-import pytest
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from reporting import cli
 from reporting.database.models import Project
 from tests.conftest import ReportingConfigFixture
 from tests.factories import ProjectFactory
+from tests.fixtures.cli import RunCli
 
 
 def test_add_project(
-    capsys: pytest.CaptureFixture,
     database_session: Session,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config()
-    project_raw = {
-        "alias": "wide-eyed-tip",
-        "name": "Product Mobility Consultant",
-    }
-    output_expected = "Projects:\n"
-    output_expected += f"{project_raw['alias']} - {project_raw['name']}\n"
 
-    cli.main(["project", "add", project_raw["alias"], project_raw["name"]])
+    result = run_cli("project", "add", "wide-eyed-tip", "Product Mobility Consultant")
 
-    output = capsys.readouterr()
-    assert output.out == (output_expected)
+    assert result.out == "Projects:\nwide-eyed-tip - Product Mobility Consultant\n"
 
     saved_project = database_session.scalars(sa.select(Project)).first()
     assert saved_project is not None
-    assert saved_project.alias == project_raw["alias"]
-    assert saved_project.name == project_raw["name"]
+    assert saved_project.alias == "wide-eyed-tip"
+    assert saved_project.name == "Product Mobility Consultant"
 
 
 def test_show_projects(
-    capsys: pytest.CaptureFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config()
-    projects = [
-        ProjectFactory.create(tasks=[]),
-        ProjectFactory.create(tasks=[]),
-        ProjectFactory.create(tasks=[]),
-    ]
-    projects.sort(key=lambda project: project.name)
-    output_expected = "Projects:\n"
+    ProjectFactory.create(alias="p3", name="Gamma", tasks=[])
+    ProjectFactory.create(alias="p1", name="Alpha", tasks=[])
+    ProjectFactory.create(alias="p2", name="Beta", tasks=[])
 
-    for project in projects:
-        output_expected += f"{project}\n"
+    result = run_cli("project", "list")
 
-    cli.main(["project", "list"])
-
-    output = capsys.readouterr()
-    assert output.out == (output_expected)
+    assert result.out == "Projects:\np1 - Alpha\np2 - Beta\np3 - Gamma\n"
 
 
 def test_show_projects_empty(
-    capsys: pytest.CaptureFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config()
-    output_expected = "Projects:\n"
 
-    cli.main(["project", "list"])
+    result = run_cli("project", "list")
 
-    output = capsys.readouterr()
-    assert output.out == (output_expected)
+    assert result.out == "Projects:\n"
 
 
 def test_update_project(
-    capsys: pytest.CaptureFixture,
     database_session: Session,
-    faker: faker.Faker,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config()
-    project = ProjectFactory.create(tasks=[])
-    project_new_name = faker.sentence(nb_words=3, variable_nb_words=True)
-    output_expected = "Projects:\n"
-    output_expected += f"{project.alias} - {project_new_name}\n"
+    ProjectFactory.create(alias="p1", name="Old Name", tasks=[])
 
-    cli.main(["project", "add", project.alias, project_new_name])
+    result = run_cli("project", "add", "p1", "New Name")
     database_session.expire_all()
 
-    output = capsys.readouterr()
-    assert output.out == (output_expected)
+    assert result.out == "Projects:\np1 - New Name\n"
 
     saved_project = database_session.scalars(sa.select(Project)).first()
     assert saved_project is not None
-    assert saved_project.alias == project.alias
-    assert saved_project.name == project_new_name
+    assert saved_project.alias == "p1"
+    assert saved_project.name == "New Name"

@@ -5,6 +5,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from reporting.config import validation_message
 from reporting.config.exceptions import ConfigError
 from reporting.config.models import RootConfig
 
@@ -23,7 +24,7 @@ def load() -> RootConfig:
     try:
         return RootConfig.model_validate(read_data())
     except ValidationError as error:
-        raise ConfigError(f"Config file {config_path()} is not valid:\n{error}") from error
+        raise ConfigError(f"Config file {config_path()} is not valid:\n{validation_message.describe(error)}") from error
 
 
 def read_data() -> dict[str, Any]:

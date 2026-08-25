@@ -14,6 +14,9 @@ def format_value(value: Any) -> str:
     if isinstance(value, str):
         return value
 
+    if isinstance(value, BaseModel):
+        value = value.model_dump(by_alias=True)
+
     return json.dumps(value, ensure_ascii=False)
 
 

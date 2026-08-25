@@ -7,10 +7,10 @@ import pytest
 import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
-from reporting import cli
 from reporting.database.models import Report, Task
 from tests.conftest import ReportingConfigFixture
 from tests.factories import KindFactory, ProjectFactory, ReportFactory
+from tests.fixtures.cli import RunCli
 
 
 class TrackingFileFixture(Protocol):
@@ -31,10 +31,10 @@ def generate_tracking_file(tmp_path: pathlib.Path) -> TrackingFileFixture:
 
 
 def test_parse_empty_file(
-    capsys: pytest.CaptureFixture,
     database_session: Session,
     generate_tracking_file: TrackingFileFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     reporting_config(
         {
@@ -43,22 +43,20 @@ def test_parse_empty_file(
             },
         }
     )
-    output_expected = "Parsed 0\n"
 
-    cli.main(["parse"])
-    output = capsys.readouterr()
+    result = run_cli("parse")
 
-    assert output.out == output_expected
+    assert result.out == "Parsed 0\n"
     assert database_session.scalar(sa.select(sa.func.count()).select_from(Report)) == 0
     assert database_session.scalar(sa.select(sa.func.count()).select_from(Task)) == 0
 
 
 def test_parse_last_report_with_remove_tasks(
-    capsys: pytest.CaptureFixture,
     database_session: Session,
     faker: faker.Faker,
     generate_tracking_file: TrackingFileFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     report_date = faker.date_object()
     projects = [
@@ -115,10 +113,9 @@ def test_parse_last_report_with_remove_tasks(
     )
     ReportFactory.create(date=report_date)
 
-    cli.main(["parse"])
+    result = run_cli("parse")
 
-    output = capsys.readouterr()
-    assert str(output.out).startswith("Parsed 1\n")
+    assert result.out.startswith("Parsed 1\n")
     assert (
         database_session.scalar(sa.select(sa.func.count()).select_from(Report).where(Report.date == report_date)) == 1
     )
@@ -151,11 +148,11 @@ def test_parse_last_report_with_remove_tasks(
 
 
 def test_parse_n_reports(
-    capsys: pytest.CaptureFixture,
     database_session: Session,
     faker: faker.Faker,
     generate_tracking_file: TrackingFileFixture,
     reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
 ) -> None:
     def filter_date(date) -> TypeGuard[datetime.date]:
         return isinstance(date, datetime.date)
@@ -249,10 +246,9 @@ def test_parse_n_reports(
         }
     )
 
-    cli.main(["parse", "3"])
+    result = run_cli("parse", "3")
 
-    output = capsys.readouterr()
-    assert str(output.out).startswith("Parsed 3\n")
+    assert result.out.startswith("Parsed 3\n")
     assert database_session.scalar(sa.select(sa.func.count()).select_from(Report)) == 3
     assert database_session.scalar(sa.select(sa.func.count()).select_from(Task)) == 12
 
@@ -342,3 +338,81 @@ def test_parse_n_reports(
     assert database_reports_tasks[11].logged_seconds == (3 * 60 + 40) * 60
     assert database_reports_tasks[11].kinds_id == types[0].id
     assert database_reports_tasks[11].projects_id == projects[1].id
+
+
+@pytest.mark.parametrize(
+    "unknown_alias, expected_message",
+    [
+        pytest.param("dev", 'Kind dev does not exist. Add it: reporting kind add dev "<name>"', id="kind"),
+        pytest.param("mp", 'Project mp does not exist. Add it: reporting project add mp "<name>"', id="project"),
+    ],
+)
+def test_parse_fails_on_an_unknown_alias(
+    database_session: Session,
+    expected_message: str,
+    generate_tracking_file: TrackingFileFixture,
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+    unknown_alias: str,
+) -> None:
+    if unknown_alias != "dev":
+        KindFactory.create(alias="dev", name="Develop", tasks=[])
+
+    if unknown_alias != "mp":
+        ProjectFactory.create(alias="mp", name="My Project", tasks=[])
+
+    tracking_file_path = generate_tracking_file(
+        [
+            "20.08.2026",
+            "09 00 - first task - dev - mp",
+            "10 00 - second task - dev - mp",
+        ]
+    )
+    reporting_config({"app": {"hour-report-path": str(tracking_file_path)}})
+
+    failure = run_cli("parse", "0")
+
+    assert failure.exit_code == 1
+    assert failure.out == ""
+    assert expected_message in failure.err
+    assert failure.err.count("\n") == 1
+    assert database_session.scalar(sa.select(sa.func.count()).select_from(Task)) == 0
+
+
+def test_parse_prints_every_report_when_fewer_than_ten(
+    generate_tracking_file: TrackingFileFixture,
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+) -> None:
+    KindFactory.create(alias="dev", name="Develop", tasks=[])
+    ProjectFactory.create(alias="mp", name="My Project", tasks=[])
+    tracking_file_path = generate_tracking_file(
+        [
+            "20.08.2026",
+            "09 00 - alpha task - dev - mp",
+            "10 30 - beta task - dev - mp",
+        ]
+    )
+    reporting_config(
+        {
+            "app": {
+                "hour-report-path": str(tracking_file_path),
+                "minute-round-to": 0,
+                "timezone": "UTC",
+                "work-day-hours": 8.0,
+            },
+        }
+    )
+
+    result = run_cli("parse", "0")
+    current_date_text = datetime.datetime.now(datetime.UTC).strftime("%d.%m.%Y")
+
+    assert result.out == (
+        "Parsed 1\n"
+        f"20.08.2026 ({current_date_text})\n"
+        "Summary time: 01:30\n"
+        "Tasks:\n"
+        "  Develop:\n"
+        "    01:30 - alpha task - My Project\n"
+        "    00:00 - beta task - My Project\n"
+    )

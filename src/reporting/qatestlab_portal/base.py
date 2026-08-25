@@ -4,7 +4,7 @@ from requests.exceptions import JSONDecodeError
 from requests.models import Response
 from requests.sessions import Session
 
-from reporting.qatestlab_portal.exceptions import PortalRequestException
+from reporting.qatestlab_portal.exceptions import PortalRequestError
 
 
 class BaseApi:
@@ -19,7 +19,7 @@ class BaseApi:
         response = self._request_session.get(f"{self.base_url}/ping")
 
         if response.status_code >= 500:
-            raise PortalRequestException("Portal reporting API is not available", response=response)
+            raise PortalRequestError("Portal reporting API is not available", response=response)
 
     def _get(self, endpoint: str, params: dict | None = None) -> Any:
         return self._request(method="get", endpoint=endpoint, params=params)
@@ -46,7 +46,7 @@ class BaseApi:
         )
 
         if response.status_code >= 500:
-            raise PortalRequestException(
+            raise PortalRequestError(
                 f"Portal reporting API {endpoint} has bad status code: {response.status_code}",
                 response=response,
             )
@@ -58,18 +58,18 @@ class BaseApi:
             response_data = response.json()
         except JSONDecodeError:
             if response.status_code >= 400:
-                raise PortalRequestException(f"Portal reporting API {endpoint} has bad body", response=response)
+                raise PortalRequestError(f"Portal reporting API {endpoint} has bad body", response=response)
 
             return None
 
         if response.status_code >= 400:
             if isinstance(response_data, dict) and "errorMessage" in response_data:
-                raise PortalRequestException(
+                raise PortalRequestError(
                     f"Portal reporting API {endpoint} has error: {response_data['errorMessage']}",
                     response=response,
                 )
 
-            raise PortalRequestException(
+            raise PortalRequestError(
                 f"Portal reporting API {endpoint} has bad status code: {response.status_code}",
                 response=response,
             )

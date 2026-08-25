@@ -49,7 +49,7 @@ def run_migrations() -> None:
     from alembic.config import Config
 
     if engine is None:
-        raise DatabaseNotConfiguredError("Database is not connected. Call reconnect() first.")
+        raise RuntimeError("Database connection is not initialized")
 
     alembic_cfg = Config()
     alembic_cfg.set_main_option("script_location", "reporting.database:migrations")
@@ -68,7 +68,7 @@ def session_scope() -> Generator[Session]:
     current_factory = session_factory
 
     if current_factory is None:
-        raise DatabaseNotConfiguredError("Database is not connected. Call reconnect() first.")
+        raise RuntimeError("Database connection is not initialized")
 
     session = current_factory()
 
