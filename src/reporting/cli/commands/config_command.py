@@ -64,7 +64,7 @@ def _save(data: dict[str, Any], key: str) -> None:
     except ValidationError as error:
         raise ConfigError(f"Value is not valid for {key}:\n{validation_message.describe(error)}") from error
 
-    config_file.write_data(data)
+    config_file.save(root)
     config.reload()
     output.print_result(
         view_message.render_setting(key, config_access.format_value(config_access.get_value(root, key)))

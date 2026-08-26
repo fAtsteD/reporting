@@ -44,7 +44,8 @@ def read_data() -> dict[str, Any]:
     return data
 
 
-def write_data(data: dict[str, Any]) -> None:
+def save(root_config: RootConfig) -> None:
     file_path = config_path()
+    data = root_config.model_dump(by_alias=True)
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(json.dumps(data, ensure_ascii=False, indent=4, sort_keys=True) + "\n", encoding="utf-8")

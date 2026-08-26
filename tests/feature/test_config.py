@@ -92,6 +92,22 @@ def test_set_saves_value_in_the_config_file(
     assert saved["app"]["minute-round-to"] == 25
 
 
+def test_set_saves_every_setting_and_drops_unknown_ones(
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+) -> None:
+    reporting_config({"legacy-section": {"legacy-setting": "value"}})
+
+    run_cli("config", "set", "jira.server", "https://jira.example.com")
+
+    saved = json.loads(config_file.config_path().read_text(encoding="utf-8"))
+    assert "legacy-section" not in saved
+
+    for key, value, _ in config_access.iterate_values(config.current):
+        section, _, name = key.partition(".")
+        assert saved[section][name] == value
+
+
 @pytest.mark.parametrize(
     "key, expected",
     [
