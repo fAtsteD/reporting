@@ -10,16 +10,6 @@ from reporting.config.exceptions import ConfigError
 from reporting.config.models import KeyKind, ResolvedKey, RootConfig
 
 
-def format_value(value: Any) -> str:
-    if isinstance(value, str):
-        return value
-
-    if isinstance(value, BaseModel):
-        value = value.model_dump(by_alias=True)
-
-    return json.dumps(value, ensure_ascii=False)
-
-
 def get_value(root: RootConfig, key: str) -> Any:
     resolved = resolve(key)
     value: Any = root
@@ -31,14 +21,6 @@ def get_value(root: RootConfig, key: str) -> Any:
         return value.get(resolved.entry_key)
 
     return value
-
-
-def iterate_values(root: RootConfig) -> list[tuple[str, Any, str]]:
-    values: list[tuple[str, Any, str]] = []
-    _collect_values(root, [], values)
-    values.sort(key=lambda item: item[0])
-
-    return values
 
 
 def resolve(key: str) -> ResolvedKey:
@@ -54,6 +36,7 @@ def resolve(key: str) -> ResolvedKey:
         field_name, field_info = _find_field(model, segment)
         field_names.append(field_name)
         aliases.append(field_info.alias or field_name)
+        description = field_info.description or ""
         annotation = _unwrap_optional(field_info.annotation)
         origin = typing.get_origin(annotation)
         is_last = index == len(segments) - 1
@@ -61,7 +44,12 @@ def resolve(key: str) -> ResolvedKey:
 
         if isinstance(annotation, type) and issubclass(annotation, BaseModel):
             if is_last:
-                return ResolvedKey(aliases=aliases, field_names=field_names, kind=KeyKind.SECTION)
+                return ResolvedKey(
+                    aliases=aliases,
+                    description=description,
+                    field_names=field_names,
+                    kind=KeyKind.SECTION,
+                )
 
             model = annotation
             continue
@@ -72,6 +60,7 @@ def resolve(key: str) -> ResolvedKey:
             if is_last:
                 return ResolvedKey(
                     aliases=aliases,
+                    description=description,
                     field_names=field_names,
                     kind=KeyKind.DICT_FIELD,
                     value_type=value_type,
@@ -82,6 +71,7 @@ def resolve(key: str) -> ResolvedKey:
 
             return ResolvedKey(
                 aliases=aliases,
+                description=description,
                 entry_key=rest[0],
                 field_names=field_names,
                 kind=KeyKind.DICT_ENTRY,
@@ -94,6 +84,7 @@ def resolve(key: str) -> ResolvedKey:
         if origin is list:
             return ResolvedKey(
                 aliases=aliases,
+                description=description,
                 field_names=field_names,
                 kind=KeyKind.LIST_FIELD,
                 value_type=typing.get_args(annotation)[0],
@@ -101,6 +92,7 @@ def resolve(key: str) -> ResolvedKey:
 
         return ResolvedKey(
             aliases=aliases,
+            description=description,
             field_names=field_names,
             kind=KeyKind.SCALAR_FIELD,
             value_type=annotation,
@@ -191,19 +183,6 @@ def _coerce_value(value_type: Any, raw_value: str) -> Any:
         return json.loads(raw_value)
     except json.JSONDecodeError:
         return raw_value
-
-
-def _collect_values(model: BaseModel, prefix: list[str], values: list[tuple[str, Any, str]]) -> None:
-    for field_name, field_info in type(model).model_fields.items():
-        alias = field_info.alias or field_name
-        value = getattr(model, field_name)
-        path = prefix + [alias]
-
-        if isinstance(value, BaseModel):
-            _collect_values(value, path, values)
-            continue
-
-        values.append((".".join(path), value, field_info.description or ""))
 
 
 def _ensure_container(data: dict[str, Any], aliases: list[str]) -> dict[str, Any]:

@@ -23,7 +23,3 @@ def render_notice(message: str) -> Text:
 
 def render_parsed_count(report_count: int) -> Text:
     return Text(f"Parsed {report_count}")
-
-
-def render_setting(key: str, value: str) -> Text:
-    return Text(f"{key} = {value}")

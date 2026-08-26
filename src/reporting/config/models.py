@@ -148,6 +148,7 @@ class QATestLabPortalConfig(BaseConfig):
 class ResolvedKey:
     kind: KeyKind
     aliases: list[str] = field(default_factory=list)
+    description: str = ""
     entry_key: str = ""
     field_names: list[str] = field(default_factory=list)
     value_type: Any = str

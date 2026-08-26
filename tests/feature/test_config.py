@@ -3,7 +3,8 @@ import json
 import pytest
 
 from reporting import config
-from reporting.config import config_access, config_file
+from reporting.config import config_file
+from reporting.config.models import RootConfig
 from tests import rendered_output
 from tests.conftest import ReportingConfigFixture
 from tests.fixtures.cli import RunCli
@@ -36,21 +37,27 @@ def test_list_shows_every_setting_with_description(
 
     rendered = rendered_output.flat_text(result.out)
 
-    for key, _, description in config_access.iterate_values(config.current):
-        section, _, name = key.partition(".")
+    for section_name, section_info in RootConfig.model_fields.items():
+        section = section_info.alias or section_name
+        section_config = getattr(config.current, section_name)
 
         assert f"{section}.*" in rendered
-        assert name in rendered
-        assert description, f"{key} does not have a description"
-        assert description in rendered
+
+        for field_name, field_info in type(section_config).model_fields.items():
+            name = field_info.alias or field_name
+            description = field_info.description or ""
+
+            assert name in rendered
+            assert description, f"{section}.{name} does not have a description"
+            assert description in rendered
 
 
 @pytest.mark.parametrize(
     "key, value, expected",
     [
-        pytest.param("app.timezone", "Europe/Kyiv", "Europe/Kyiv", id="text"),
-        pytest.param("app.minute-round-to", "25", "25", id="number"),
-        pytest.param("dictionary.task.l", "lunch", "lunch", id="dictionary entry"),
+        pytest.param("app.timezone", "Europe/Kyiv", "app.timezone Europe/Kyiv", id="text"),
+        pytest.param("app.minute-round-to", "25", "app.minute-round-to 25", id="number"),
+        pytest.param("dictionary.task.l", "lunch", "dictionary.task.l lunch", id="dictionary entry"),
     ],
 )
 def test_set_and_get_value(
@@ -62,22 +69,24 @@ def test_set_and_get_value(
 ) -> None:
     reporting_config()
 
-    assert run_cli("config", "set", key, value).out == f"{key} = {expected}\n"
-    assert run_cli("config", "get", key).out == f"{expected}\n"
+    saved = rendered_output.flat_text(run_cli("config", "set", key, value).out)
+    assert expected in saved
+    assert "saved" in saved
+
+    assert expected in rendered_output.flat_text(run_cli("config", "get", key).out)
 
 
-def test_get_section_prints_a_json_object(
+def test_get_section_prints_every_setting_in_it(
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
 ) -> None:
     reporting_config({"jira": {"login": "someone", "server": "https://jira.example.com"}})
 
-    result = run_cli("config", "get", "jira")
+    rendered = rendered_output.flat_text(run_cli("config", "get", "jira").out)
 
-    assert (
-        result.out
-        == '{"issue-key-base": [], "login": "someone", "password": "", "server": "https://jira.example.com"}\n'
-    )
+    assert "jira.login someone" in rendered
+    assert "jira.server https://jira.example.com" in rendered
+    assert "jira.password (empty)" in rendered
 
 
 def test_set_saves_value_in_the_config_file(
@@ -101,23 +110,17 @@ def test_set_saves_every_setting_and_drops_unknown_ones(
     run_cli("config", "set", "jira.server", "https://jira.example.com")
 
     saved = json.loads(config_file.config_path().read_text(encoding="utf-8"))
-    assert "legacy-section" not in saved
 
-    for key, value, _ in config_access.iterate_values(config.current):
-        section, _, name = key.partition(".")
-        assert saved[section][name] == value
+    assert "legacy-section" not in saved
+    assert saved == config.current.model_dump(by_alias=True)
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        pytest.param("jira.password", "", id="text returns to default"),
-        pytest.param("dictionary.task.l", "null", id="dictionary entry is removed"),
-        pytest.param(
-            "jira",
-            '{"issue-key-base": [], "login": "", "password": "", "server": ""}',
-            id="whole section is reset",
-        ),
+        pytest.param("jira.password", "jira.password (empty)", id="text returns to default"),
+        pytest.param("dictionary.task.l", "dictionary.task.l (empty)", id="dictionary entry is removed"),
+        pytest.param("jira", "jira.login (empty)", id="whole section is reset"),
     ],
 )
 def test_unset_returns_value_to_default(
@@ -129,13 +132,13 @@ def test_unset_returns_value_to_default(
     reporting_config(
         {
             "dictionary": {"task": {"l": "lunch"}},
-            "jira": {"password": "secret"},
+            "jira": {"login": "someone", "password": "secret"},
         }
     )
 
     run_cli("config", "unset", key)
 
-    assert run_cli("config", "get", key).out == f"{expected}\n"
+    assert expected in rendered_output.flat_text(run_cli("config", "get", key).out)
 
 
 def test_set_and_unset_list_items(
@@ -144,11 +147,20 @@ def test_set_and_unset_list_items(
 ) -> None:
     reporting_config()
 
-    assert run_cli("config", "set", "app.omit-task", "lunch").out == 'app.omit-task = ["lunch"]\n'
-    assert run_cli("config", "set", "app.omit-task", "break").out == 'app.omit-task = ["lunch", "break"]\n'
-    assert run_cli("config", "set", "app.omit-task", "lunch").out == 'app.omit-task = ["lunch", "break"]\n'
-    assert run_cli("config", "unset", "app.omit-task", "lunch").out == 'app.omit-task = ["break"]\n'
-    assert run_cli("config", "unset", "app.omit-task").out == "app.omit-task = []\n"
+    added = run_cli("config", "set", "app.omit-task", "lunch")
+    assert "app.omit-task lunch" in rendered_output.flat_text(added.out)
+
+    extended = run_cli("config", "set", "app.omit-task", "break")
+    assert "app.omit-task lunch break" in rendered_output.flat_text(extended.out)
+
+    repeated = run_cli("config", "set", "app.omit-task", "lunch")
+    assert "app.omit-task lunch break" in rendered_output.flat_text(repeated.out)
+
+    removed = run_cli("config", "unset", "app.omit-task", "lunch")
+    assert "app.omit-task break" in rendered_output.flat_text(removed.out)
+
+    cleared = run_cli("config", "unset", "app.omit-task")
+    assert "app.omit-task (empty)" in rendered_output.flat_text(cleared.out)
 
 
 def test_set_adds_json_array_as_one_list_item(
@@ -159,7 +171,7 @@ def test_set_adds_json_array_as_one_list_item(
 
     result = run_cli("config", "set", "app.omit-task", '["a","b"]')
 
-    assert result.out == 'app.omit-task = ["[\\"a\\",\\"b\\"]"]\n'
+    assert 'app.omit-task ["a","b"]' in rendered_output.flat_text(result.out)
 
 
 @pytest.mark.parametrize(
