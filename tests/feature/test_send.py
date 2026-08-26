@@ -2,11 +2,12 @@ import datetime
 
 import pytest
 
-from reporting.cli.commands.send import SEND_QUESTION
+from reporting.cli.views.view_message import SEND_QUESTION
 from reporting.database.models import Report
 from reporting.services.jira import jira_service
 from reporting.services.qatestlab_portal import qatestlab_portal_service
 from reporting.services.report import report_service
+from tests import rendered_output
 from tests.conftest import ReportingConfigFixture
 from tests.factories import ReportFactory
 from tests.fixtures.cli import RunCli
@@ -18,8 +19,12 @@ def current_date_text() -> str:
     return datetime.datetime.now(datetime.UTC).strftime("%d.%m.%Y")
 
 
-def question_text() -> str:
-    return f"Report date: 20.08.2026\nCurrent date: {current_date_text()}\n"
+def empty_target_cells(title: str) -> list[list[str]]:
+    return [[title], ["No tasks to send"]]
+
+
+def mismatch_cells() -> list[list[str]]:
+    return [["Report date", "20.08.2026"], ["Current date", current_date_text()]]
 
 
 def test_send_asks_one_question_for_both_targets(
@@ -55,7 +60,9 @@ def test_send_asks_one_question_for_both_targets(
     assert questions == [SEND_QUESTION]
     assert sent_by == ["jira", "portal"]
     assert result.exit_code == 0
-    assert result.out == question_text() + "Jira\n\nQATestLab Portal\n"
+    assert rendered_output.cells(result.out) == (
+        mismatch_cells() + empty_target_cells("Jira") + empty_target_cells("QATestLab Portal")
+    )
 
 
 def test_send_stops_when_the_question_is_declined(
@@ -79,7 +86,7 @@ def test_send_stops_when_the_question_is_declined(
 
     assert sent_reports == []
     assert result.exit_code == 0
-    assert result.out == question_text()
+    assert rendered_output.cells(result.out) == mismatch_cells()
 
 
 def test_send_does_not_ask_for_a_report_of_today(
@@ -103,7 +110,7 @@ def test_send_does_not_ask_for_a_report_of_today(
 
     assert questions == []
     assert result.exit_code == 0
-    assert result.out == "Jira\n\nQATestLab Portal\n"
+    assert rendered_output.cells(result.out) == empty_target_cells("Jira") + empty_target_cells("QATestLab Portal")
 
 
 def test_send_without_a_report_fails(
@@ -153,7 +160,7 @@ def test_send_stops_when_the_report_changed_while_answering(
     failure = run_cli("send", "20.08.2026", "--jira")
 
     assert failure.exit_code == 1
-    assert failure.out == question_text()
+    assert rendered_output.cells(failure.out) == mismatch_cells()
     assert failure.err == "Report changed, nothing was sent\n"
 
 

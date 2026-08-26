@@ -624,6 +624,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "python-dateutil" },
     { name = "requests" },
+    { name = "rich" },
     { name = "sqlalchemy" },
     { name = "typer" },
 ]
@@ -650,6 +651,7 @@ requires-dist = [
     { name = "pydantic", specifier = "==2.*" },
     { name = "python-dateutil", specifier = "==2.9.*" },
     { name = "requests", specifier = "==2.32.*" },
+    { name = "rich", specifier = ">=13.8.0" },
     { name = "sqlalchemy", specifier = "==2.0.*" },
     { name = "typer", specifier = ">=0.15.0" },
 ]

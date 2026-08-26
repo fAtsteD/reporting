@@ -4,6 +4,7 @@ import pytest
 
 from reporting import config
 from reporting.config import config_access, config_file
+from tests import rendered_output
 from tests.conftest import ReportingConfigFixture
 from tests.fixtures.cli import RunCli
 
@@ -15,12 +16,14 @@ def test_list_shows_config_file_path(
     config_path = config_file.config_path()
 
     missing = run_cli("config", "list")
-    assert missing.out.startswith(f"Config file: {config_path} (does not exist, every value is a default)\n")
+    assert f"{config_path} (does not exist, every value is a default)" in rendered_output.flat_text(missing.out)
 
     reporting_config()
 
     existing = run_cli("config", "list")
-    assert existing.out.startswith(f"Config file: {config_path}\n")
+    existing_rendered = rendered_output.flat_text(existing.out)
+    assert str(config_path) in existing_rendered
+    assert "does not exist" not in existing_rendered
 
 
 def test_list_shows_every_setting_with_description(
@@ -31,10 +34,15 @@ def test_list_shows_every_setting_with_description(
 
     result = run_cli("config", "list")
 
+    rendered = rendered_output.flat_text(result.out)
+
     for key, _, description in config_access.iterate_values(config.current):
-        assert key in result.out
+        section, _, name = key.partition(".")
+
+        assert f"{section}.*" in rendered
+        assert name in rendered
         assert description, f"{key} does not have a description"
-        assert description in result.out
+        assert description in rendered
 
 
 @pytest.mark.parametrize(
@@ -160,7 +168,7 @@ def test_command_fails_with_message(
 
     assert failure.exit_code == 1
     assert failure.out == ""
-    assert expected_message in failure.err
+    assert expected_message in rendered_output.flat_text(failure.err)
 
 
 def test_malformed_config_file_fails_with_one_line(
@@ -174,6 +182,7 @@ def test_malformed_config_file_fails_with_one_line(
 
     assert failure.exit_code == 1
     assert failure.out == ""
-    assert failure.err.startswith("Error: Config file ")
-    assert "app.minute-round-to: " in failure.err
-    assert failure.err.count("\n") == 2
+    rendered = rendered_output.flat_text(failure.err)
+    assert rendered.startswith("Error Config file ")
+    assert "app.minute-round-to: " in rendered
+    assert len(rendered_output.lines(failure.err)) == 3

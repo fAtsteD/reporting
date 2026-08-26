@@ -4,7 +4,8 @@ import typer
 from pydantic import ValidationError
 
 from reporting import config
-from reporting.cli import views
+from reporting.cli import output
+from reporting.cli.views import view_config, view_message
 from reporting.config import config_access, config_file, validation_message
 from reporting.config.exceptions import ConfigError
 from reporting.config.models import RootConfig
@@ -16,20 +17,16 @@ app = typer.Typer(help="View and change configuration")
 def get(
     key: str = typer.Argument(..., help="Configuration key, for example jira.server"),
 ) -> None:
-    print(config_access.format_value(config_access.get_value(config.current, key)))
+    value = config_access.get_value(config.current, key)
+    output.print_result(view_message.render_notice(config_access.format_value(value)))
 
 
 @app.command("list", help="Print the config file location and every setting with its value")
 def list_values() -> None:
     config_file_path = config_file.config_path()
-    values = [
-        (key, config_access.format_value(value), description)
-        for key, value, description in config_access.iterate_values(config.current)
-    ]
+    values = config_access.iterate_values(config.current)
 
-    print(views.render_config_file_path(config_file_path, config_file_path.is_file()))
-    print()
-    print(views.render_config_values(values))
+    output.print_result(view_config.render(config_file_path, config_file_path.is_file(), values))
 
 
 @app.command(
@@ -69,4 +66,6 @@ def _save(data: dict[str, Any], key: str) -> None:
 
     config_file.write_data(data)
     config.reload()
-    print(f"{key} = {config_access.format_value(config_access.get_value(root, key))}")
+    output.print_result(
+        view_message.render_setting(key, config_access.format_value(config_access.get_value(root, key)))
+    )

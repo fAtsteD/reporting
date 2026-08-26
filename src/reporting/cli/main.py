@@ -1,12 +1,11 @@
-import sys
-
 import typer
 from typer import rich_utils
 from typer._click import ClickException
 
 from reporting import config
-from reporting.cli import views
+from reporting.cli import output
 from reporting.cli.app import app
+from reporting.cli.views import view_message
 from reporting.exceptions import ReportingError
 
 ERROR_EXIT_CODE = 1
@@ -26,7 +25,7 @@ def run(cli_args: list[str] | None = None) -> None:
     except KeyboardInterrupt as error:
         raise SystemExit(INTERRUPT_EXIT_CODE) from error
     except ReportingError as error:
-        print(views.render_error(error), file=sys.stderr)
+        output.print_diagnostic(view_message.render_error(error))
         raise SystemExit(ERROR_EXIT_CODE) from error
 
     if exit_code:

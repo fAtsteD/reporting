@@ -1,6 +1,7 @@
 import typer
 
-from reporting.cli import views
+from reporting.cli import output
+from reporting.cli.views import view_kind
 from reporting.database import db_connection
 from reporting.services.kind import kind_service
 
@@ -13,10 +14,10 @@ def add(
     name: str = typer.Argument(..., help="Kind name"),
 ) -> None:
     with db_connection.session_scope() as session:
-        print(views.render_kinds(kind_service.save_kind(session, alias, name)))
+        output.print_result(view_kind.render(kind_service.save_kind(session, alias, name)))
 
 
 @app.command("list")
 def list_kinds() -> None:
     with db_connection.session_scope() as session:
-        print(views.render_kinds(kind_service.list_kinds(session)))
+        output.print_result(view_kind.render(kind_service.list_kinds(session)))

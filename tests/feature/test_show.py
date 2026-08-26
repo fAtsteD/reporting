@@ -3,6 +3,7 @@ import datetime
 import pytest
 
 from reporting.database.models import Kind, Project, Report
+from tests import rendered_output
 from tests.conftest import ReportingConfigFixture
 from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
 from tests.fixtures.cli import RunCli
@@ -46,8 +47,12 @@ def current_date_text() -> str:
     return datetime.datetime.now(datetime.UTC).strftime("%d.%m.%Y")
 
 
-def report_header(report_date_text: str) -> str:
-    return f"{report_date_text} ({current_date_text()})\n"
+def report_subtitle(total_clock: str) -> list[str]:
+    return [f"total {total_clock} \u00b7 today {current_date_text()}"]
+
+
+def report_title(report_date_text: str) -> list[str]:
+    return [f"Report {report_date_text}"]
 
 
 def test_show_by_date_selects_that_report(
@@ -61,7 +66,7 @@ def test_show_by_date_selects_that_report(
 
     result = run_cli("show", "19.08.2026")
 
-    assert result.out.splitlines()[0] == f"19.08.2026 ({current_date_text()})"
+    assert rendered_output.cells(result.out)[0] == report_title("19.08.2026")
 
 
 def test_show_without_a_date_selects_the_latest_report(
@@ -75,7 +80,7 @@ def test_show_without_a_date_selects_the_latest_report(
 
     result = run_cli("show")
 
-    assert result.out.splitlines()[0] == f"20.08.2026 ({current_date_text()})"
+    assert rendered_output.cells(result.out)[0] == report_title("20.08.2026")
 
 
 def test_show_groups_tasks_by_kind_name_not_by_kind_id(
@@ -93,15 +98,15 @@ def test_show_groups_tasks_by_kind_name_not_by_kind_id(
 
     result = run_cli("show", "20.08.2026")
 
-    assert result.out == (
-        report_header("20.08.2026") + "Summary time: 10:35\n"
-        "Tasks:\n"
-        "  Alpha:\n"
-        "    09:05 - gamma task - My Project\n"
-        "  Zeta:\n"
-        "    00:30 - alpha task - My Project\n"
-        "    01:00 - beta task - My Project\n"
-    )
+    assert rendered_output.cells(result.out) == [
+        report_title("20.08.2026"),
+        ["Alpha"],
+        ["09:05", "gamma task", "My Project"],
+        ["Zeta"],
+        ["00:30", "alpha task", "My Project"],
+        ["01:00", "beta task", "My Project"],
+        report_subtitle("10:35"),
+    ]
 
 
 def test_show_merges_two_kinds_with_the_same_name_into_one_group(
@@ -120,15 +125,15 @@ def test_show_merges_two_kinds_with_the_same_name_into_one_group(
 
     result = run_cli("show", "20.08.2026")
 
-    assert result.out == (
-        report_header("20.08.2026") + "Summary time: 03:00\n"
-        "Tasks:\n"
-        "  Analysis:\n"
-        "    01:00 - second task - My Project\n"
-        "  Develop:\n"
-        "    01:00 - first task - My Project\n"
-        "    01:00 - third task - My Project\n"
-    )
+    assert rendered_output.cells(result.out) == [
+        report_title("20.08.2026"),
+        ["Analysis"],
+        ["01:00", "second task", "My Project"],
+        ["Develop"],
+        ["01:00", "first task", "My Project"],
+        ["01:00", "third task", "My Project"],
+        report_subtitle("03:00"),
+    ]
 
 
 def test_show_renders_a_report_without_tasks(
@@ -140,7 +145,11 @@ def test_show_renders_a_report_without_tasks(
 
     result = run_cli("show", "20.08.2026")
 
-    assert result.out == report_header("20.08.2026") + "Summary time: 00:00\nReport does not have tasks\n"
+    assert rendered_output.cells(result.out) == [
+        report_title("20.08.2026"),
+        ["Report does not have tasks"],
+        report_subtitle("00:00"),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -167,12 +176,12 @@ def test_show_pads_clock_values(
 
     result = run_cli("show", "20.08.2026")
 
-    assert result.out == (
-        report_header("20.08.2026") + f"Summary time: {expected_clock}\n"
-        "Tasks:\n"
-        "  Develop:\n"
-        f"    {expected_clock} - only task - My Project\n"
-    )
+    assert rendered_output.cells(result.out) == [
+        report_title("20.08.2026"),
+        ["Develop"],
+        [expected_clock, "only task", "My Project"],
+        report_subtitle(expected_clock),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -202,3 +211,23 @@ def test_show_rejects_a_date_that_is_not_a_date(run_cli: RunCli) -> None:
     assert failure.exit_code == 2
     assert failure.out == ""
     assert '"bogus" is not a date (DD.MM.YYYY) or "last"' in failure.err
+
+
+def test_show_renders_the_report_as_a_panel(
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+) -> None:
+    reporting_config(REPORT_CONFIG)
+    project = create_project()
+    report = create_report(1, datetime.date(2026, 8, 20))
+    kind = create_kind(1, "Develop")
+    create_task(1, kind, project, report, "only task", 60 * 60)
+
+    result = run_cli("show", "20.08.2026")
+
+    assert result.out == (
+        "\u256d\u2500 Report 20.08.2026 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n"
+        "\u2502        Develop                   \u2502\n"
+        "\u2502 01:00  only task  My Project     \u2502\n"
+        f"\u2570\u2500 total 01:00 \u00b7 today {current_date_text()} \u2500\u256f\n"
+    )

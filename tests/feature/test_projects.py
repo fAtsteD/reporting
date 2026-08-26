@@ -2,6 +2,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from reporting.database.models import Project
+from tests import rendered_output
 from tests.conftest import ReportingConfigFixture
 from tests.factories import ProjectFactory
 from tests.fixtures.cli import RunCli
@@ -16,7 +17,10 @@ def test_add_project(
 
     result = run_cli("project", "add", "wide-eyed-tip", "Product Mobility Consultant")
 
-    assert result.out == "Projects:\nwide-eyed-tip - Product Mobility Consultant\n"
+    assert rendered_output.cells(result.out) == [
+        ["Projects"],
+        ["wide-eyed-tip", "Product Mobility Consultant"],
+    ]
 
     saved_project = database_session.scalars(sa.select(Project)).first()
     assert saved_project is not None
@@ -35,7 +39,12 @@ def test_show_projects(
 
     result = run_cli("project", "list")
 
-    assert result.out == "Projects:\np1 - Alpha\np2 - Beta\np3 - Gamma\n"
+    assert rendered_output.cells(result.out) == [
+        ["Projects"],
+        ["p1", "Alpha"],
+        ["p2", "Beta"],
+        ["p3", "Gamma"],
+    ]
 
 
 def test_show_projects_empty(
@@ -46,7 +55,7 @@ def test_show_projects_empty(
 
     result = run_cli("project", "list")
 
-    assert result.out == "Projects:\n"
+    assert rendered_output.cells(result.out) == [["Projects"], ["No projects yet"]]
 
 
 def test_update_project(
@@ -60,7 +69,7 @@ def test_update_project(
     result = run_cli("project", "add", "p1", "New Name")
     database_session.expire_all()
 
-    assert result.out == "Projects:\np1 - New Name\n"
+    assert rendered_output.cells(result.out) == [["Projects"], ["p1", "New Name"]]
 
     saved_project = database_session.scalars(sa.select(Project)).first()
     assert saved_project is not None

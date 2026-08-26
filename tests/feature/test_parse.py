@@ -8,6 +8,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from reporting.database.models import Report, Task
+from tests import rendered_output
 from tests.conftest import ReportingConfigFixture
 from tests.factories import KindFactory, ProjectFactory, ReportFactory
 from tests.fixtures.cli import RunCli
@@ -374,8 +375,7 @@ def test_parse_fails_on_an_unknown_alias(
 
     assert failure.exit_code == 1
     assert failure.out == ""
-    assert expected_message in failure.err
-    assert failure.err.count("\n") == 1
+    assert rendered_output.lines(failure.err) == ["Error", expected_message]
     assert database_session.scalar(sa.select(sa.func.count()).select_from(Task)) == 0
 
 
@@ -407,12 +407,11 @@ def test_parse_prints_every_report_when_fewer_than_ten(
     result = run_cli("parse", "0")
     current_date_text = datetime.datetime.now(datetime.UTC).strftime("%d.%m.%Y")
 
-    assert result.out == (
-        "Parsed 1\n"
-        f"20.08.2026 ({current_date_text})\n"
-        "Summary time: 01:30\n"
-        "Tasks:\n"
-        "  Develop:\n"
-        "    01:30 - alpha task - My Project\n"
-        "    00:00 - beta task - My Project\n"
-    )
+    assert rendered_output.cells(result.out) == [
+        ["Parsed 1"],
+        ["Report 20.08.2026"],
+        ["Develop"],
+        ["01:30", "alpha task", "My Project"],
+        ["00:00", "beta task", "My Project"],
+        [f"total 01:30 \u00b7 today {current_date_text}"],
+    ]

@@ -3,7 +3,8 @@ import datetime
 import typer
 
 from reporting import config
-from reporting.cli import parsers, views
+from reporting.cli import output, parsers
+from reporting.cli.views import view_message, view_report
 from reporting.database import db_connection
 from reporting.services.report import report_service
 
@@ -18,8 +19,8 @@ def show(
         report = report_service.find_by_date_or_last(session, report_date)
 
         if report is not None:
-            print(views.render_report(report, current_date))
+            output.print_result(view_report.render(report, current_date))
             return
 
-    typer.echo(views.REPORT_NOT_FOUND_MESSAGE, err=True)
+    output.print_diagnostic(view_message.render_notice(view_message.REPORT_NOT_FOUND_MESSAGE))
     raise typer.Exit(code=1)

@@ -6,6 +6,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Session
 
 from reporting.database.models import Kind, Project
+from tests import rendered_output
 from tests.conftest import ReportingConfigFixture
 from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
 from tests.fixtures.cli import RunCli
@@ -168,9 +169,9 @@ def test_send_report(
 
     result = run_cli("send", "--portal")
 
-    assert result.out == "QATestLab Portal\n" + "".join(
-        f"[+] 01:00 - {summary} - My Project\n" for summary in TASK_SUMMARIES
-    )
+    assert rendered_output.cells(result.out) == [["QATestLab Portal"]] + [
+        ["\u2713", "01:00", summary, "My Project"] for summary in TASK_SUMMARIES
+    ]
 
 
 @pytest.mark.parametrize(
@@ -322,7 +323,8 @@ def test_send_portal_empty_required_data(
 
     assert failure.exit_code == 1
     assert failure.err == f"Failed tasks: {len(TASK_SUMMARIES)}\n"
-    assert failure.out.startswith("QATestLab Portal\n")
+    sent_cells = rendered_output.cells(failure.out)
+    assert sent_cells[0] == ["QATestLab Portal"]
 
     for summary in TASK_SUMMARIES:
-        assert f"[-] 01:00 - {summary} - My Project\n" in failure.out
+        assert ["\u2717", "01:00", summary, "My Project"] in sent_cells

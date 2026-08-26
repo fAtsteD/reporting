@@ -5,6 +5,7 @@ import jira.exceptions
 import pytest
 
 from reporting.database.models import Task
+from tests import rendered_output
 from tests.conftest import ReportingConfigFixture
 from tests.factories import KindFactory, ProjectFactory, ReportFactory, TaskFactory
 from tests.fixtures.cli import RunCli
@@ -123,15 +124,18 @@ def test_send_jira_report_with_jira_issues(
     assert [key for key, _ in worklog_calls] == expected_logged
     assert [time_spent for _, time_spent in worklog_calls] == ["1h 0m"] * len(expected_logged)
 
-    expected_lines = ["Jira"]
+    expected_cells = [["Jira"]]
 
     for jira_key, summary in zip(jira_keys, summaries):
         if jira_key.startswith(EXIST_JIRA_KEY):
-            expected_lines.append(f"[+] 01:00 - {summary} - My Project")
+            expected_cells.append(["\u2713", "01:00", summary, "My Project"])
         elif jira_key.startswith(MISSING_JIRA_KEY):
-            expected_lines.append(f"[-] 01:00 - {summary} - My Project")
+            expected_cells.append(["\u2717", "01:00", summary, "My Project"])
 
-    assert result.out == "\n".join(expected_lines) + "\n\n"
+    if len(expected_cells) == 1:
+        expected_cells.append(["No tasks to send"])
+
+    assert rendered_output.cells(result.out) == expected_cells
 
 
 def test_send_jira_shows_the_failure_reason(
@@ -178,4 +182,8 @@ def test_send_jira_shows_the_failure_reason(
 
     assert failure.exit_code == 1
     assert failure.err == "Failed tasks: 1\n"
-    assert failure.out == "Jira\n[-] 01:00 - TEST-1: task 0 - My Project\n  Issue does not exist\n\n"
+    assert rendered_output.cells(failure.out) == [
+        ["Jira"],
+        ["\u2717", "01:00", "TEST-1: task 0", "My Project"],
+        ["Issue does not exist"],
+    ]
