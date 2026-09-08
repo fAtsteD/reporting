@@ -73,7 +73,7 @@ def _send_to_jira(report: Report) -> int:
     results = jira_service.set_worklog(report)
     output.print_result(view_send.render_jira_results(results))
 
-    return len([result for result in results if result.status is JiraTaskStatus.FAILED])
+    return sum(len(result.merged_task.tasks) for result in results if result.status is JiraTaskStatus.FAILED)
 
 
 def _send_to_portal(report: Report) -> int:
@@ -81,4 +81,4 @@ def _send_to_portal(report: Report) -> int:
     results = qatestlab_portal_service.send_tasks(report)
     output.print_result(view_send.render_portal_results(results))
 
-    return len([result for result in results if result.status is PortalTaskStatus.FAILED])
+    return sum(len(result.merged_task.tasks) for result in results if result.status is PortalTaskStatus.FAILED)

@@ -21,6 +21,7 @@ class PortalFixture(Protocol):
         report: dict | list | None = None,
         report_put: bool = False,
         time_records_post: bool = False,
+        time_records_sent: list | None = None,
     ) -> None: ...
 
 
@@ -43,6 +44,7 @@ def portal_mock(
         report: dict | list | None = None,
         report_put: bool = False,
         time_records_post: bool = False,
+        time_records_sent: list | None = None,
     ) -> None:
         responses.assert_all_requests_are_fired = False
         base_url = base_url.rstrip("/") + "/reporting/api"
@@ -151,6 +153,10 @@ def portal_mock(
 
             def time_records_post_callback(request):
                 request_body = json.loads(request.body)
+
+                if time_records_sent is not None:
+                    time_records_sent.extend(request_body)
+
                 for time_record in request_body:
                     time_record["id"] = (
                         time_record["id"]

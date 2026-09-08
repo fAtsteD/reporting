@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from reporting import config
-from reporting.database.models import Project
+from reporting.database.models import Project, Task
 from tests.factories import KindFactory, ReportFactory, TaskFactory
 
 
@@ -53,3 +53,35 @@ def test_task_logged_rounded(monkeypatch: pytest.MonkeyPatch) -> None:
 
     task.logged_timedelta(datetime.timedelta(hours=1, minutes=40))
     assert task.logged_rounded == 2 * 60 * 60
+
+
+@pytest.mark.parametrize(
+    "summary",
+    [
+        pytest.param("TEST-12345:", id="nothing after the double dots"),
+        pytest.param("lunch: with a colleague", id="left part without a number"),
+        pytest.param("some words 123: with a number", id="left part with a space"),
+        pytest.param("without double dots", id="summary without double dots"),
+    ],
+)
+def test_task_keeps_a_summary_without_a_key_as_the_text(summary: str) -> None:
+    task = Task(summary=summary)
+
+    assert task.summary_key == ""
+    assert task.summary_text == summary
+
+
+@pytest.mark.parametrize(
+    "summary, key, text",
+    [
+        pytest.param("TEST-12345: I have done something", "TEST-12345", "I have done something", id="key and text"),
+        pytest.param("TEST-12345:I have done something", "TEST-12345", "I have done something", id="without a space"),
+        pytest.param("0123456: Do something", "0123456", "Do something", id="key of numbers only"),
+        pytest.param("TEST-12345:   ", "TEST-12345", "", id="text of spaces only"),
+    ],
+)
+def test_task_splits_a_summary_that_begins_with_a_key(summary: str, key: str, text: str) -> None:
+    task = Task(summary=summary)
+
+    assert task.summary_key == key
+    assert task.summary_text == text

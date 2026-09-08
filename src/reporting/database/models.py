@@ -1,10 +1,13 @@
 import datetime
+import re
 
 import sqlalchemy as sa
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.types import DateTime, TypeDecorator
 
 from reporting import config
+
+_SUMMARY_KEY_PATTERN = re.compile(r"^([^\s:]*[0-9][^\s:]*):\s*(.+)$")
 
 
 class DBDatetimeType(TypeDecorator[datetime.datetime]):
@@ -146,6 +149,24 @@ class Task(Base):
 
         seconds: int = int(hours * 60 * 60 + minutes * 60)
         return seconds if seconds > 0 else config.app.minute_round_to * 60
+
+    @property
+    def summary_key(self) -> str:
+        matched_summary = _SUMMARY_KEY_PATTERN.match(self.summary)
+
+        if matched_summary is None:
+            return ""
+
+        return matched_summary.group(1)
+
+    @property
+    def summary_text(self) -> str:
+        matched_summary = _SUMMARY_KEY_PATTERN.match(self.summary)
+
+        if matched_summary is None:
+            return self.summary
+
+        return matched_summary.group(2).strip()
 
     def logged_timedelta(self, logged_time: datetime.timedelta):
         """

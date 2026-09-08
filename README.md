@@ -76,9 +76,15 @@ Jira requires the server address, login and password in the configuration.
 
 Issue key searches by concatenate one of the configured issue key prefixes and any number before double dots. All other information for setting worklog does not need.
 
+Tasks with the same issue key become one worklog. Their texts after double dots become the comment, a list when there are several. A text that repeats the summary of the issue is omitted.
+
 ## QATestLab Portal
 
 Add requests through API.
 Firstly do requests for data then it can do what you need.
 
 New requests can be added in the api then used in the portal.
+
+### Time records
+
+Tasks with the same key before double dots, the same type and the same project become one time record. The key is written once and the texts follow it, a list when there are several.

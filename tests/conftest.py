@@ -19,6 +19,7 @@ FAKER_SEED_VARIABLE = "REPORTING_TEST_FAKER_SEED"
 
 pytest_plugins = [
     "tests.fixtures.cli",
+    "tests.fixtures.jira",
     "tests.fixtures.portal",
 ]
 

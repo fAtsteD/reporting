@@ -6,9 +6,8 @@ from rich.table import Table
 from rich.text import Text
 
 from reporting.cli.views import formatting, layout, theme
-from reporting.database.models import Task
-from reporting.services.jira.models import JiraTaskResult, JiraTaskStatus
-from reporting.services.qatestlab_portal.models import PortalTaskResult, PortalTaskStatus
+from reporting.services.jira.models import JiraMergedTask, JiraTaskResult, JiraTaskStatus
+from reporting.services.qatestlab_portal.models import PortalMergedTask, PortalTaskResult, PortalTaskStatus
 
 CURRENT_DATE_LABEL = "Current date"
 EMPTY_MESSAGE = "No tasks to send"
@@ -29,18 +28,18 @@ def render_date_mismatch(report_date: datetime.date, current_date: datetime.date
 
 
 def render_jira_results(results: Sequence[JiraTaskResult]) -> Panel:
-    rows = [(result.status is JiraTaskStatus.SENT, result.task, result.reason) for result in results]
+    rows = [(result.status is JiraTaskStatus.SENT, result.merged_task, result.reason) for result in results]
 
     return _render(JIRA_TITLE, rows)
 
 
 def render_portal_results(results: Sequence[PortalTaskResult]) -> Panel:
-    rows = [(result.status is PortalTaskStatus.SENT, result.task, result.reason) for result in results]
+    rows = [(result.status is PortalTaskStatus.SENT, result.merged_task, result.reason) for result in results]
 
     return _render(PORTAL_TITLE, rows)
 
 
-def _render(title: str, rows: Sequence[tuple[bool, Task, str]]) -> Panel:
+def _render(title: str, rows: Sequence[tuple[bool, JiraMergedTask | PortalMergedTask, str]]) -> Panel:
     if not rows:
         return layout.panel(Text(EMPTY_MESSAGE, style=theme.STYLE_HINT), title)
 
@@ -50,12 +49,12 @@ def _render(title: str, rows: Sequence[tuple[bool, Task, str]]) -> Panel:
     table.add_column(overflow="fold")
     table.add_column(no_wrap=True, style=theme.STYLE_HINT)
 
-    for is_sent, task, reason in rows:
+    for is_sent, merged_task, reason in rows:
         table.add_row(
             _render_mark(is_sent),
-            formatting.format_clock_time(task.logged_rounded),
-            task.summary,
-            task.project.name,
+            formatting.format_clock_time(merged_task.logged_rounded),
+            merged_task.description,
+            merged_task.project_names,
         )
 
         if reason:
