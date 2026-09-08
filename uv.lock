@@ -577,6 +577,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-spec"
+version = "6.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/1b/b6375805e7201f1b865e59ce978d16ce067a36a7862e6f266f6f9ac65216/pytest_spec-6.1.0.tar.gz", hash = "sha256:0168ebebd8ef2050d94876698204066d491d1b46c2408b588a898421d533d573", size = 1195289, upload-time = "2026-05-17T20:46:15.911Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/79/978f3a60e35d9ef9393912c18ef3d881b62685b6576c5451e816285fb236/pytest_spec-6.1.0-py3-none-any.whl", hash = "sha256:1b29dde53b5a17b311329ff9bb7bb5c7591a4688e52c518f1ea0197bba544c37", size = 15879, upload-time = "2026-05-17T20:46:14.365Z" },
+]
+
+[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -638,6 +647,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-responses" },
+    { name = "pytest-spec" },
     { name = "responses" },
     { name = "ruff" },
     { name = "types-python-dateutil" },
@@ -665,6 +675,7 @@ dev = [
     { name = "pytest", specifier = ">=8.4.0" },
     { name = "pytest-cov", specifier = ">=6.1.1" },
     { name = "pytest-responses", specifier = ">=0.5.1" },
+    { name = "pytest-spec", specifier = ">=6.1.0" },
     { name = "responses", specifier = ">=0.25.7" },
     { name = "ruff", specifier = ">=0.16.1" },
     { name = "types-python-dateutil", specifier = ">=2.9.0.20250516" },

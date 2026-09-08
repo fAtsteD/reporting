@@ -12,5 +12,3 @@ This is custom tool to tracking time of working. The tool collect tasks and save
 The project is src-layout python project. It uses `uv`.
 
 You can find helpful commands in [Makefile](./Makefile).
-
-The project has tests. It requires mostly feature tests for full project testing instead of unit tests.
