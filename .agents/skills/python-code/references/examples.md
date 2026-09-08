@@ -548,3 +548,163 @@ def reserve_stock(item_id: str, quantity: int) -> Reservation:
 ```python
 value = compute()  # type: ignore[no-untyped-call]
 ```
+
+## Tests — layout
+
+One project's shape — an illustration, not a rule. Follow whatever the project and its framework already do:
+
+```text
+tests/
+├── unit/
+│   └── billing/
+│       └── test_invoice.py                     # mirrors src/billing/invoice.py
+├── integration/
+│   └── billing/                                # grouped by the area it exercises
+│       └── test_invoice_settlement.py
+├── feature/
+│   ├── api/v1/orders/
+│   │   └── test_create_order.py                # mirrors POST /api/v1/orders
+│   ├── commands/
+│   │   └── test_reconcile_payouts.py           # mirrors the scheduled command
+│   └── checkout/
+│       └── test_checkout.py                    # a flow across endpoints, under the area that owns it
+├── fixtures/
+│   └── gateway/charge_declined.json
+├── factories/
+│   └── invoice_factory.py
+└── conftest.py
+```
+
+The same suite looks different elsewhere, and the project wins: a Django project usually keeps a `tests/` package inside each app, and a suite split by marker instead of by folder needs no level folders at all.
+
+## Tests — names
+
+**Incorrect** — names the function, tests the implementation, says nothing on failure:
+
+```python
+def test_transfer():
+    service = TransferService(repository)
+    assert hasattr(service, "_validate_balance")
+    service.transfer(1, 2, 100)
+```
+
+**Correct** — the name is the promise, the assertion is the promise:
+
+```python
+def test_rejects_transfer_when_balance_is_insufficient(transfers: TransferService) -> None:
+    account = account_factory.with_balance(50)
+
+    result = transfers.send(account.id, other_account_id, amount=100)
+
+    assert result.status is TransferStatus.REJECTED
+```
+
+## Tests — every value in the body matters
+
+**Incorrect** — six values in the body, one of them matters:
+
+```python
+def test_marks_invoice_overdue_after_due_date() -> None:
+    customer = Customer(name="Jane Doe", email="jane@example.com", country="NL", currency="EUR")
+    invoice = Invoice(customer=customer, amount=12000, currency="EUR", due_on=date(2024, 1, 1))
+
+    assert invoice.is_overdue_on(date(2024, 2, 1))
+```
+
+**Correct** — only the due date is written down; the rest are factory defaults:
+
+```python
+def test_marks_invoice_overdue_after_due_date() -> None:
+    invoice = invoice_factory.due_on(date(2024, 1, 1))
+
+    assert invoice.is_overdue_on(date(2024, 2, 1))
+```
+
+## Tests — DAMP, not DRY
+
+**Incorrect** — a loop hides which case failed:
+
+```python
+def test_vat_rates(vat: VatCalculator) -> None:
+    for country, rate in [("NL", 0.21), ("DE", 0.19), ("LU", 0.17)]:
+        assert vat.rate_for(country) == rate
+```
+
+**Correct** — one case per run, each one named in the report:
+
+```python
+@pytest.mark.parametrize(
+    ("country", "expected_rate"),
+    [("NL", 0.21), ("DE", 0.19), ("LU", 0.17)],
+)
+def test_applies_the_country_vat_rate(vat: VatCalculator, country: str, expected_rate: float) -> None:
+    assert vat.rate_for(country) == expected_rate
+```
+
+## Tests — assertions
+
+**Incorrect** — asserts on internals and on collaborators the behavior does not promise:
+
+```python
+def test_cancels_order(orders: OrderService, repository: Mock, logger: Mock) -> None:
+    orders.cancel(order.id)
+
+    repository.save.assert_called_once()
+    assert logger.write.call_count == 1
+```
+
+**Correct** — the order's state, plus the boundary call that is itself the behavior:
+
+```python
+def test_refunds_the_payment_when_an_order_is_cancelled(
+    orders: OrderService, payment_gateway: FakePaymentGateway
+) -> None:
+    order = order_factory.paid(amount=2500)
+
+    orders.cancel(order.id)
+
+    assert orders.find(order.id).status is OrderStatus.CANCELLED
+    assert payment_gateway.refunded_amounts == [2500]
+```
+
+## Tests — fakes
+
+**Incorrect** — patches the project's own module, so a broken query still passes:
+
+```python
+mocker.patch("billing.repository.find_unpaid", return_value=[invoice])
+```
+
+**Correct** — the real repository against the test database; fake only what leaves the process:
+
+```python
+@pytest.fixture
+def payment_gateway(frozen_clock: Clock) -> FakePaymentGateway:
+    charge_declined = json.loads((FIXTURES / "gateway" / "charge_declined.json").read_text())
+    return FakePaymentGateway(response=charge_declined)
+```
+
+## Tests — duplication
+
+```python
+# tests/feature/checkout/test_checkout.py — one path through the whole flow
+def test_charges_the_customer_and_sends_a_receipt() -> None: ...
+
+
+# tests/unit/billing/test_vat.py — kept: covers the matrix the feature test never walks
+@pytest.mark.parametrize(("country", "expected_rate"), [...])
+def test_applies_the_country_vat_rate(country: str, expected_rate: float) -> None: ...
+
+
+# tests/unit/checkout/test_checkout_service.py — deleted: restates the feature test with mocks
+def test_charges_the_customer() -> None: ...
+```
+
+## Tests — lifetime
+
+Written to drive the removal of a setting; it describes the history of the code, not a promise the application makes. Delete it with the change:
+
+```python
+def test_legacy_payment_flag_is_no_longer_in_config() -> None:
+    assert "use_legacy_payments" not in load_billing_config()
+```
