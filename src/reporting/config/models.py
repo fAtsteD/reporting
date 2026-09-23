@@ -129,7 +129,7 @@ class QATestLabPortalConfig(BaseConfig):
     )
     projects: dict[str, str] = Field(
         default_factory=dict,
-        description="Project alias to the project name in the portal",
+        description="Project alias to the project name in the portal. Unmapped projects are sent without a project",
     )
     url: str = Field(default="", description="Address of the portal api")
 

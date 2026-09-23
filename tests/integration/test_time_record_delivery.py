@@ -30,7 +30,6 @@ def test_describes_a_key_without_any_text_as_the_key_alone(
     project = ProjectFactory.create(name=_PROJECT_NAME)
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="TEST-1:   ")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
 
     qatestlab_portal_service.send_tasks(report)
 
@@ -47,7 +46,6 @@ def test_describes_a_task_without_a_key_or_text_as_an_empty_description(
     project = ProjectFactory.create(name=_PROJECT_NAME)
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
 
     qatestlab_portal_service.send_tasks(report)
 
@@ -59,7 +57,6 @@ def test_fails_a_task_when_no_category_is_bound_to_the_corp_struct_item(
     portal_api: PortalApiFake,
     portal_config: None,
 ) -> None:
-    portal_api.add_project(_PROJECT_NAME)
     report = ReportFactory.create(date=_REPORT_DATE)
     kind = KindFactory.create(name=_CATEGORY_NAME)
     project = ProjectFactory.create(name=_PROJECT_NAME)
@@ -78,7 +75,6 @@ def test_fails_a_task_when_the_category_is_deleted(
     portal_config: None,
 ) -> None:
     portal_api.add_category(_CATEGORY_NAME, deleted=True)
-    portal_api.add_project(_PROJECT_NAME)
     report = ReportFactory.create(date=_REPORT_DATE)
     kind = KindFactory.create(name=_CATEGORY_NAME)
     project = ProjectFactory.create(name=_PROJECT_NAME)
@@ -107,7 +103,6 @@ def test_fails_a_task_when_the_configured_corp_struct_item_is_not_on_the_portal(
     project = ProjectFactory.create(alias="mp", name=_PROJECT_NAME)
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
 
     results = qatestlab_portal_service.send_tasks(report)
 
@@ -116,15 +111,40 @@ def test_fails_a_task_when_the_configured_corp_struct_item_is_not_on_the_portal(
     ]
 
 
-def test_fails_a_task_when_the_portal_does_not_have_the_project(
+def test_fails_a_task_when_the_mapped_project_is_inactive(
     database_session: Session,
     portal_api: PortalApiFake,
-    portal_config: None,
+    reporting_config: ReportingConfigFixture,
 ) -> None:
+    reporting_config(
+        PORTAL_CONFIG | {"qatestlab-portal": PORTAL_CONFIG["qatestlab-portal"] | {"projects": {"mp": _PROJECT_NAME}}}
+    )
+    portal_api.add_category(_CATEGORY_NAME)
+    portal_api.add_project(_PROJECT_NAME, active=False)
+    report = ReportFactory.create(date=_REPORT_DATE)
+    kind = KindFactory.create(name=_CATEGORY_NAME)
+    project = ProjectFactory.create(alias="mp", name=_PROJECT_NAME)
+    TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
+
+    results = qatestlab_portal_service.send_tasks(report)
+
+    assert [(result.status, result.reason) for result in results] == [
+        (PortalTaskStatus.FAILED, f"Project not found for {_PROJECT_NAME}")
+    ]
+
+
+def test_fails_a_task_when_the_mapped_project_is_not_on_the_portal(
+    database_session: Session,
+    portal_api: PortalApiFake,
+    reporting_config: ReportingConfigFixture,
+) -> None:
+    reporting_config(
+        PORTAL_CONFIG | {"qatestlab-portal": PORTAL_CONFIG["qatestlab-portal"] | {"projects": {"mp": _PROJECT_NAME}}}
+    )
     portal_api.add_category(_CATEGORY_NAME)
     report = ReportFactory.create(date=_REPORT_DATE)
     kind = KindFactory.create(name=_CATEGORY_NAME)
-    project = ProjectFactory.create(name=_PROJECT_NAME)
+    project = ProjectFactory.create(alias="mp", name=_PROJECT_NAME)
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
 
     results = qatestlab_portal_service.send_tasks(report)
@@ -144,7 +164,6 @@ def test_fails_a_task_when_the_portal_has_no_corp_struct_item(
     project = ProjectFactory.create(name=_PROJECT_NAME)
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
     portal_api.forget_corp_struct_items()
 
     results = qatestlab_portal_service.send_tasks(report)
@@ -153,25 +172,6 @@ def test_fails_a_task_when_the_portal_has_no_corp_struct_item(
         (PortalTaskStatus.FAILED, "Corp struct item not found")
     ]
     assert portal_api.sent_time_records == []
-
-
-def test_fails_a_task_when_the_portal_project_is_inactive(
-    database_session: Session,
-    portal_api: PortalApiFake,
-    portal_config: None,
-) -> None:
-    portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME, active=False)
-    report = ReportFactory.create(date=_REPORT_DATE)
-    kind = KindFactory.create(name=_CATEGORY_NAME)
-    project = ProjectFactory.create(name=_PROJECT_NAME)
-    TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
-
-    results = qatestlab_portal_service.send_tasks(report)
-
-    assert [(result.status, result.reason) for result in results] == [
-        (PortalTaskStatus.FAILED, f"Project not found for {_PROJECT_NAME}")
-    ]
 
 
 def test_fails_when_the_employee_does_not_have_a_main_position(
@@ -184,7 +184,6 @@ def test_fails_when_the_employee_does_not_have_a_main_position(
     project = ProjectFactory.create(name=_PROJECT_NAME)
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
     portal_api.forget_employee_positions()
 
     with pytest.raises(QATestLabPortalError, match="Employee does not have a main position"):
@@ -208,7 +207,6 @@ def test_fails_when_the_report_cannot_be_created(
     project = ProjectFactory.create(name=_PROJECT_NAME)
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
     portal_api.fail_report_save()
 
     with pytest.raises(QATestLabPortalError, match="Failed create/load report"):
@@ -229,7 +227,6 @@ def test_keeps_a_task_without_a_key_as_its_own_time_record(
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="without a key")
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="another one")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
 
     qatestlab_portal_service.send_tasks(report)
 
@@ -258,7 +255,6 @@ def test_keeps_the_same_key_in_another_kind_as_a_separate_time_record(
         kind=other_kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="TEST-1: text b"
     )
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
 
     qatestlab_portal_service.send_tasks(report)
 
@@ -288,7 +284,6 @@ def test_merges_tasks_with_the_same_key_into_one_time_record(
         kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="TEST-2: text c"
     )
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
 
     qatestlab_portal_service.send_tasks(report)
 
@@ -311,29 +306,51 @@ def test_numbers_the_time_records_in_order(
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 1")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
 
     qatestlab_portal_service.send_tasks(report)
 
     assert [time_record["orderNumber"] for time_record in portal_api.sent_time_records] == [1, 2]
 
 
+@pytest.mark.parametrize(
+    "no_tasks",
+    [
+        pytest.param(False, id="the portal report has the no-tasks flag"),
+        pytest.param(None, id="the portal report leaves the no-tasks flag empty"),
+    ],
+)
 def test_reuses_the_existing_portal_report_for_the_day(
     database_session: Session,
+    no_tasks: bool | None,
     portal_api: PortalApiFake,
     portal_config: None,
 ) -> None:
-    existing_report = portal_api.add_report(_REPORT_DATE)
+    existing_report = portal_api.add_report(_REPORT_DATE, no_tasks=no_tasks)
     report = ReportFactory.create(date=_REPORT_DATE)
     kind = KindFactory.create(name=_CATEGORY_NAME)
     project = ProjectFactory.create(name=_PROJECT_NAME)
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
     portal_api.add_category(_CATEGORY_NAME)
-    portal_api.add_project(_PROJECT_NAME)
 
     qatestlab_portal_service.send_tasks(report)
 
     assert [saved["id"] for saved in portal_api.saved_reports] == [existing_report.id]
+
+
+def test_sends_a_task_with_no_project_id_when_the_project_is_not_mapped(
+    database_session: Session,
+    portal_api: PortalApiFake,
+    portal_config: None,
+) -> None:
+    report = ReportFactory.create(date=_REPORT_DATE)
+    kind = KindFactory.create(name=_CATEGORY_NAME)
+    project = ProjectFactory.create(name=_PROJECT_NAME)
+    TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
+    portal_api.add_category(_CATEGORY_NAME)
+
+    qatestlab_portal_service.send_tasks(report)
+
+    portal_api.assert_time_records_sent([{"description": "task 0", "projectId": None}])
 
 
 def test_sends_one_time_record_per_task(
@@ -347,7 +364,6 @@ def test_sends_one_time_record_per_task(
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
     TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 1")
     category = portal_api.add_category(_CATEGORY_NAME)
-    portal_project = portal_api.add_project(_PROJECT_NAME)
 
     results = qatestlab_portal_service.send_tasks(report)
 
@@ -355,10 +371,31 @@ def test_sends_one_time_record_per_task(
     assert [result.merged_task.project_names for result in results] == [_PROJECT_NAME, _PROJECT_NAME]
     portal_api.assert_time_records_sent(
         [
-            {"categoryId": category.id, "description": "task 0", "hours": _PORTAL_HOUR, "projectId": portal_project.id},
-            {"categoryId": category.id, "description": "task 1", "hours": _PORTAL_HOUR, "projectId": portal_project.id},
+            {"categoryId": category.id, "description": "task 0", "hours": _PORTAL_HOUR},
+            {"categoryId": category.id, "description": "task 1", "hours": _PORTAL_HOUR},
         ]
     )
+
+
+def test_sends_the_portal_project_mapped_to_the_project(
+    database_session: Session,
+    portal_api: PortalApiFake,
+    reporting_config: ReportingConfigFixture,
+) -> None:
+    reporting_config(
+        PORTAL_CONFIG | {"qatestlab-portal": PORTAL_CONFIG["qatestlab-portal"] | {"projects": {"mp": "Portal Project"}}}
+    )
+    report = ReportFactory.create(date=_REPORT_DATE)
+    kind = KindFactory.create(name=_CATEGORY_NAME)
+    project = ProjectFactory.create(alias="mp", name=_PROJECT_NAME)
+    TaskFactory.create(kind=kind, logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="task 0")
+    portal_api.add_category(_CATEGORY_NAME)
+    portal_api.add_project(_PROJECT_NAME)
+    portal_project = portal_api.add_project("Portal Project")
+
+    qatestlab_portal_service.send_tasks(report)
+
+    portal_api.assert_time_records_sent([{"projectId": portal_project.id}])
 
 
 def test_sends_to_the_corp_struct_item_configured_for_the_project(
@@ -374,7 +411,6 @@ def test_sends_to_the_corp_struct_item_configured_for_the_project(
         }
     )
     portal_api.add_category(_CATEGORY_NAME, corp_struct_item=other_corp_struct_item)
-    portal_api.add_project(_PROJECT_NAME)
     report = ReportFactory.create(date=_REPORT_DATE)
     kind = KindFactory.create(name=_CATEGORY_NAME)
     project = ProjectFactory.create(alias="mp", name=_PROJECT_NAME)

@@ -116,7 +116,6 @@ def test_send_portal_prints_every_result(
         summary="wrote the parser",
     )
     portal_api.add_category("Develop")
-    portal_api.add_project("My Project")
 
     result = run_cli("send", "--portal")
 

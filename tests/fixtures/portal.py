@@ -112,8 +112,8 @@ class PortalApiFake:
 
         return project
 
-    def add_report(self, date: datetime.date) -> Report:
-        report = PortalReportFactory.build(date=date, employee_id=self.employee.id)
+    def add_report(self, date: datetime.date, no_tasks: bool | None = False) -> Report:
+        report = PortalReportFactory.build(date=date, employee_id=self.employee.id, no_tasks=no_tasks)
         self.reports.append(report)
 
         return report

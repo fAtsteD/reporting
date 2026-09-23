@@ -125,12 +125,17 @@ def _send_report_tasks(portal: QATestLabPortal, report: Report) -> list[PortalTa
             results.append(_failed(merged_task, f"Category not found for {task.kind.name}"))
             continue
 
-        project_name = config.qatestlab_portal.projects.get(task.project.alias, task.project.name)
-        project = portal.provider_collection.get_project_by_name(project_name)
+        project_id: int | None = None
 
-        if not project or not project.active:
-            results.append(_failed(merged_task, f"Project not found for {task.project.name}"))
-            continue
+        if task.project.alias in config.qatestlab_portal.projects:
+            project_name = config.qatestlab_portal.projects[task.project.alias]
+            project = portal.provider_collection.get_project_by_name(project_name)
+
+            if not project or not project.active:
+                results.append(_failed(merged_task, f"Project not found for {task.project.name}"))
+                continue
+
+            project_id = project.id
 
         time_records.append(
             TimeRecord(
@@ -141,7 +146,7 @@ def _send_report_tasks(portal: QATestLabPortal, report: Report) -> list[PortalTa
                 hours=convert_seconds_to_portal_hours(merged_task.logged_rounded),
                 invoiceHours=0,
                 orderNumber=time_record_index,
-                projectId=project.id,
+                projectId=project_id,
                 reportId=portal_report.id,
                 salaryCoefficient=category.salary_coefficient,
                 salaryCoefficientType=0,

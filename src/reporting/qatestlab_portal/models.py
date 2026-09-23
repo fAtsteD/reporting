@@ -173,7 +173,7 @@ class Report(PortalBaseModel):
     date: datetime.date
     employee_id: int = Field(alias="employeeId")
     have_problems: bool | None = Field(alias="haveProblems")
-    no_tasks: bool = Field(alias="noTasks")
+    no_tasks: bool | None = Field(alias="noTasks")
     problems: str | None
     time_records: list[TimeRecord] = Field(default_factory=list, alias="timeRecords")
     id: int | None = None
