@@ -140,10 +140,6 @@ class Task(Base):
 
         if frac >= int(config.app.minute_round_to / 2) + 1:
             minutes = (minutes // config.app.minute_round_to + 1) * config.app.minute_round_to
-
-            if minutes == 100:
-                hours += 1
-                minutes = 0
         else:
             minutes = minutes // config.app.minute_round_to * config.app.minute_round_to
 

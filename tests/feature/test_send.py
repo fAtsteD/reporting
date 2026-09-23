@@ -1,123 +1,61 @@
 import datetime
 
-import pytest
+import sqlalchemy as sa
+from sqlalchemy.orm import Session
 
 from reporting.cli.views.view_message import SEND_QUESTION
 from reporting.database.models import Report
-from reporting.services.jira import jira_service
-from reporting.services.qatestlab_portal import qatestlab_portal_service
-from reporting.services.report import report_service
-from tests import rendered_output
-from tests.conftest import ReportingConfigFixture
-from tests.factories import ReportFactory
-from tests.fixtures.cli import RunCli
+from tests.assertions import cli_output
+from tests.factories.database import KindFactory, ProjectFactory, ReportFactory, TaskFactory
+from tests.fixtures.cli import ConfirmationFake, RunCli
+from tests.fixtures.jira import JIRA_CONFIG, JiraApiFake
+from tests.fixtures.portal import PORTAL_CONFIG, PortalApiFake
+from tests.fixtures.reporting_config import ReportingConfigFixture
 
-REPORT_DATE = datetime.date(2026, 8, 20)
-
-
-def current_date_text() -> str:
-    return datetime.datetime.now(datetime.UTC).strftime("%d.%m.%Y")
-
-
-def empty_target_cells(title: str) -> list[list[str]]:
-    return [[title], ["No tasks to send"]]
-
-
-def mismatch_cells() -> list[list[str]]:
-    return [["Report date", "20.08.2026"], ["Current date", current_date_text()]]
+_HOUR_SECONDS = 60 * 60
+_PAST_DATE = datetime.date(2026, 8, 20)
 
 
 def test_send_asks_one_question_for_both_targets(
-    monkeypatch: pytest.MonkeyPatch,
+    confirmation: ConfirmationFake,
+    jira_api: JiraApiFake,
+    portal_api: PortalApiFake,
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
 ) -> None:
-    reporting_config({"app": {"timezone": "UTC"}})
-    report = ReportFactory.create(date=REPORT_DATE, id=1, tasks=[])
-    questions: list[str] = []
-    sent_by: list[str] = []
-
-    def answer(question: str) -> str:
-        questions.append(question)
-        return "y"
-
-    def send_to_jira(sent_report: Report) -> list:
-        assert sent_report.id == report.id
-        sent_by.append("jira")
-        return []
-
-    def send_to_portal(sent_report: Report) -> list:
-        assert sent_report.id == report.id
-        sent_by.append("portal")
-        return []
-
-    monkeypatch.setattr("builtins.input", answer)
-    monkeypatch.setattr(jira_service, "set_worklog", send_to_jira)
-    monkeypatch.setattr(qatestlab_portal_service, "send_tasks", send_to_portal)
+    reporting_config(_both_targets_config())
+    ReportFactory.create(date=_PAST_DATE)
+    confirmation.answer("y")
 
     result = run_cli("send", "20.08.2026", "--jira", "--portal")
 
-    assert questions == [SEND_QUESTION]
-    assert sent_by == ["jira", "portal"]
+    assert confirmation.questions == [SEND_QUESTION]
     assert result.exit_code == 0
-    assert rendered_output.cells(result.out) == (
-        mismatch_cells() + empty_target_cells("Jira") + empty_target_cells("QATestLab Portal")
-    )
-
-
-def test_send_stops_when_the_question_is_declined(
-    monkeypatch: pytest.MonkeyPatch,
-    reporting_config: ReportingConfigFixture,
-    run_cli: RunCli,
-) -> None:
-    reporting_config({"app": {"timezone": "UTC"}})
-    ReportFactory.create(date=REPORT_DATE, id=1, tasks=[])
-    sent_reports: list[Report] = []
-
-    def record_send(report: Report) -> list:
-        sent_reports.append(report)
-        return []
-
-    monkeypatch.setattr("builtins.input", lambda question: "n")
-    monkeypatch.setattr(jira_service, "set_worklog", record_send)
-    monkeypatch.setattr(qatestlab_portal_service, "send_tasks", record_send)
-
-    result = run_cli("send", "20.08.2026", "--jira", "--portal")
-
-    assert sent_reports == []
-    assert result.exit_code == 0
-    assert rendered_output.cells(result.out) == mismatch_cells()
+    assert "No tasks to send" in cli_output.flat_text(result.out)
 
 
 def test_send_does_not_ask_for_a_report_of_today(
-    monkeypatch: pytest.MonkeyPatch,
+    confirmation: ConfirmationFake,
+    jira_api: JiraApiFake,
+    portal_api: PortalApiFake,
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
+    today: datetime.date,
 ) -> None:
-    reporting_config({"app": {"timezone": "UTC"}})
-    ReportFactory.create(date=datetime.datetime.now(datetime.UTC).date(), id=1, tasks=[])
-    questions: list[str] = []
-
-    def answer(question: str) -> str:
-        questions.append(question)
-        return "y"
-
-    monkeypatch.setattr("builtins.input", answer)
-    monkeypatch.setattr(jira_service, "set_worklog", lambda report: [])
-    monkeypatch.setattr(qatestlab_portal_service, "send_tasks", lambda report: [])
+    reporting_config(_both_targets_config())
+    ReportFactory.create(date=today)
 
     result = run_cli("send", "--jira", "--portal")
 
-    assert questions == []
+    assert confirmation.questions == []
     assert result.exit_code == 0
-    assert rendered_output.cells(result.out) == empty_target_cells("Jira") + empty_target_cells("QATestLab Portal")
 
 
-def test_send_without_a_report_fails(
+def test_send_fails_when_no_report_exists(
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
 ) -> None:
-    reporting_config({"app": {"timezone": "UTC"}})
+    reporting_config(_both_targets_config())
 
     failure = run_cli("send", "--jira", "--portal")
 
@@ -126,7 +64,7 @@ def test_send_without_a_report_fails(
     assert failure.err == "Report does not exist\n"
 
 
-def test_send_without_a_target_fails(run_cli: RunCli) -> None:
+def test_send_fails_when_no_target_is_given(run_cli: RunCli) -> None:
     failure = run_cli("send")
 
     assert failure.exit_code == 1
@@ -134,54 +72,131 @@ def test_send_without_a_target_fails(run_cli: RunCli) -> None:
     assert "Specify at least one target" in failure.err
 
 
-@pytest.mark.parametrize(
-    "replacement_date",
-    [
-        pytest.param(None, id="report is gone"),
-        pytest.param(datetime.date(2026, 1, 1), id="id belongs to another report"),
-    ],
-)
-def test_send_stops_when_the_report_changed_while_answering(
-    monkeypatch: pytest.MonkeyPatch,
-    replacement_date: datetime.date | None,
+def test_send_jira_prints_every_result_and_exits_with_one_when_a_task_failed(
+    jira_api: JiraApiFake,
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+    today: datetime.date,
+) -> None:
+    reporting_config(JIRA_CONFIG)
+    report = ReportFactory.create(date=today)
+    project = ProjectFactory.create(name="My Project")
+    TaskFactory.create(logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="TEST-1: wrote the parser")
+    TaskFactory.create(logged_seconds=_HOUR_SECONDS, project=project, report=report, summary="TEST-404: wrote the docs")
+    jira_api.add_issue("TEST-1", "Summary of the issue")
+    jira_api.fail_issue("TEST-404", status_code=404, text="Issue does not exist")
+
+    failure = run_cli("send", "--jira")
+
+    assert failure.exit_code == 1
+    assert failure.err == "Failed tasks: 1\n"
+    cli_output.assert_lines(
+        failure.out,
+        [
+            "Jira",
+            "✓ 01:00 TEST-1: wrote the parser My Project",
+            "✗ 01:00 TEST-404: wrote the docs My Project",
+            "Issue does not exist",
+        ],
+    )
+
+
+def test_send_portal_prints_every_result(
+    portal_api: PortalApiFake,
+    portal_config: None,
+    run_cli: RunCli,
+    today: datetime.date,
+) -> None:
+    report = ReportFactory.create(date=today)
+    TaskFactory.create(
+        kind=KindFactory.create(name="Develop"),
+        logged_seconds=_HOUR_SECONDS,
+        project=ProjectFactory.create(name="My Project"),
+        report=report,
+        summary="wrote the parser",
+    )
+    portal_api.add_category("Develop")
+    portal_api.add_project("My Project")
+
+    result = run_cli("send", "--portal")
+
+    assert result.exit_code == 0
+    cli_output.assert_lines(result.out, ["QATestLab Portal", "✓ 01:00 wrote the parser My Project"])
+
+
+def test_send_stops_when_the_question_is_declined(
+    confirmation: ConfirmationFake,
+    jira_api: JiraApiFake,
+    portal_api: PortalApiFake,
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
 ) -> None:
-    reporting_config({"app": {"timezone": "UTC"}})
-    ReportFactory.create(date=REPORT_DATE, id=1, tasks=[])
-    replacement = None
+    reporting_config(_both_targets_config())
+    report = ReportFactory.create(date=_PAST_DATE)
+    TaskFactory.create(logged_seconds=_HOUR_SECONDS, report=report, summary="TEST-1: a task")
+    jira_api.add_issue("TEST-1", "Summary of the issue")
+    confirmation.answer("n")
 
-    if replacement_date is not None:
-        replacement = ReportFactory.create(date=replacement_date, id=2, tasks=[])
+    result = run_cli("send", "20.08.2026", "--jira", "--portal")
 
-    monkeypatch.setattr("builtins.input", lambda question: "y")
-    monkeypatch.setattr(report_service, "find_by_id", lambda session, report_id: replacement)
+    assert result.exit_code == 0
+    assert jira_api.worklogs == []
+    assert portal_api.sent_time_records == []
+
+
+def test_send_stops_when_the_report_date_changed_while_answering(
+    confirmation: ConfirmationFake,
+    database_session: Session,
+    jira_api: JiraApiFake,
+    reporting_config: ReportingConfigFixture,
+    run_cli: RunCli,
+) -> None:
+    reporting_config(_both_targets_config())
+    report = ReportFactory.create(date=_PAST_DATE)
+
+    def move_the_report(question: str) -> str:
+        database_session.execute(sa.update(Report).where(Report.id == report.id).values(date=datetime.date(2026, 1, 1)))
+        database_session.commit()
+
+        return "y"
+
+    confirmation.answer_with(move_the_report)
 
     failure = run_cli("send", "20.08.2026", "--jira")
 
     assert failure.exit_code == 1
-    assert rendered_output.cells(failure.out) == mismatch_cells()
     assert failure.err == "Report changed, nothing was sent\n"
+    assert jira_api.worklogs == []
 
 
-def test_send_reloads_the_confirmed_report_by_id(
-    monkeypatch: pytest.MonkeyPatch,
+def test_send_stops_when_the_report_is_gone_while_answering(
+    confirmation: ConfirmationFake,
+    database_session: Session,
+    jira_api: JiraApiFake,
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
 ) -> None:
-    reporting_config({"app": {"timezone": "UTC"}})
-    ReportFactory.create(date=datetime.date(2026, 1, 1), id=1, tasks=[])
-    ReportFactory.create(date=REPORT_DATE, id=2, tasks=[])
-    sent_ids: list[int] = []
+    reporting_config(_both_targets_config())
+    report = ReportFactory.create(date=_PAST_DATE)
 
-    def send_to_jira(sent_report: Report) -> list:
-        sent_ids.append(sent_report.id)
-        return []
+    def delete_the_report(question: str) -> str:
+        database_session.execute(sa.delete(Report).where(Report.id == report.id))
+        database_session.commit()
 
-    monkeypatch.setattr("builtins.input", lambda question: "y")
-    monkeypatch.setattr(jira_service, "set_worklog", send_to_jira)
+        return "y"
 
-    result = run_cli("send", "20.08.2026", "--jira")
+    confirmation.answer_with(delete_the_report)
 
-    assert result.exit_code == 0
-    assert sent_ids == [2]
+    failure = run_cli("send", "20.08.2026", "--jira")
+
+    assert failure.exit_code == 1
+    assert failure.err == "Report changed, nothing was sent\n"
+    assert jira_api.worklogs == []
+
+
+def _both_targets_config() -> dict:
+    return {
+        "app": {"timezone": "UTC"},
+        "jira": JIRA_CONFIG["jira"],
+        "qatestlab-portal": PORTAL_CONFIG["qatestlab-portal"],
+    }

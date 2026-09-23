@@ -36,6 +36,12 @@ dev = [
 [project.scripts]
 reporting = "reporting.cli.main:run"
 
+[tool.coverage.report]
+fail_under = 97
+
+[tool.coverage.run]
+branch = true
+
 [tool.mypy]
 files = ["src", "tests"]
 

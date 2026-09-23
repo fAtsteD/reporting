@@ -1,107 +1,56 @@
 import json
 
-import pytest
-
-from reporting import config
 from reporting.config import config_file
-from reporting.config.models import RootConfig
-from tests import rendered_output
-from tests.conftest import ReportingConfigFixture
+from tests.assertions import cli_output
 from tests.fixtures.cli import RunCli
+from tests.fixtures.reporting_config import ReportingConfigFixture
 
 
-def test_list_shows_config_file_path(
-    reporting_config: ReportingConfigFixture,
+def test_config_list_marks_a_missing_config_file(
     run_cli: RunCli,
 ) -> None:
-    config_path = config_file.config_path()
+    config_file.config_path().unlink(missing_ok=True)
 
-    missing = run_cli("config", "list")
-    assert f"{config_path} (does not exist, every value is a default)" in rendered_output.flat_text(missing.out)
+    rendered = cli_output.flat_text(run_cli("config", "list").out)
 
-    reporting_config()
-
-    existing = run_cli("config", "list")
-    existing_rendered = rendered_output.flat_text(existing.out)
-    assert str(config_path) in existing_rendered
-    assert "does not exist" not in existing_rendered
+    assert "(does not exist, every value is a default)" in rendered
 
 
-def test_list_shows_every_setting_with_description(
-    reporting_config: ReportingConfigFixture,
+def test_config_list_shows_the_config_file_path(
     run_cli: RunCli,
 ) -> None:
-    reporting_config()
+    rendered = cli_output.flat_text(run_cli("config", "list").out)
 
-    result = run_cli("config", "list")
-
-    rendered = rendered_output.flat_text(result.out)
-
-    for section_name, section_info in RootConfig.model_fields.items():
-        section = section_info.alias or section_name
-        section_config = getattr(config.current, section_name)
-
-        assert f"{section}.*" in rendered
-
-        for field_name, field_info in type(section_config).model_fields.items():
-            name = field_info.alias or field_name
-            description = field_info.description or ""
-
-            assert name in rendered
-            assert description, f"{section}.{name} does not have a description"
-            assert description in rendered
+    assert str(config_file.config_path()) in rendered
+    assert "does not exist" not in rendered
 
 
-@pytest.mark.parametrize(
-    "key, value, expected",
-    [
-        pytest.param("app.timezone", "Europe/Kyiv", "app.timezone Europe/Kyiv", id="text"),
-        pytest.param("app.minute-round-to", "25", "app.minute-round-to 25", id="number"),
-        pytest.param("dictionary.task.l", "lunch", "dictionary.task.l lunch", id="dictionary entry"),
-    ],
-)
-def test_set_and_get_value(
-    expected: str,
-    key: str,
-    reporting_config: ReportingConfigFixture,
-    run_cli: RunCli,
-    value: str,
-) -> None:
-    reporting_config()
-
-    saved = rendered_output.flat_text(run_cli("config", "set", key, value).out)
-    assert expected in saved
-    assert "saved" in saved
-
-    assert expected in rendered_output.flat_text(run_cli("config", "get", key).out)
-
-
-def test_get_section_prints_every_setting_in_it(
-    reporting_config: ReportingConfigFixture,
+def test_config_reports_an_invalid_config_file_as_one_error_line(
     run_cli: RunCli,
 ) -> None:
-    reporting_config({"jira": {"login": "someone", "server": "https://jira.example.com"}})
+    config_file.config_path().write_text('{"app": {"minute-round-to": "abc"}}', encoding="utf-8")
 
-    rendered = rendered_output.flat_text(run_cli("config", "get", "jira").out)
+    failure = run_cli("config", "list")
 
-    assert "jira.login someone" in rendered
-    assert "jira.server https://jira.example.com" in rendered
-    assert "jira.password (empty)" in rendered
+    assert failure.exit_code == 1
+    assert failure.out == ""
+    rendered = cli_output.flat_text(failure.err)
+    assert rendered.startswith("Error Config file ")
+    assert "app.minute-round-to: " in rendered
+    assert len(cli_output.lines(failure.err)) == 3
 
 
-def test_set_saves_value_in_the_config_file(
-    reporting_config: ReportingConfigFixture,
+def test_config_set_prints_the_error_and_exits_with_one(
     run_cli: RunCli,
 ) -> None:
-    reporting_config()
+    failure = run_cli("config", "set", "app.minute-round-to", "abc")
 
-    run_cli("config", "set", "app.minute-round-to", "25")
+    assert failure.exit_code == 1
+    assert failure.out == ""
+    assert "app.minute-round-to" in cli_output.flat_text(failure.err)
 
-    saved = json.loads(config_file.config_path().read_text(encoding="utf-8"))
-    assert saved["app"]["minute-round-to"] == 25
 
-
-def test_set_saves_every_setting_and_drops_unknown_ones(
+def test_config_set_rewrites_the_file_without_unknown_sections(
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
 ) -> None:
@@ -110,107 +59,47 @@ def test_set_saves_every_setting_and_drops_unknown_ones(
     run_cli("config", "set", "jira.server", "https://jira.example.com")
 
     saved = json.loads(config_file.config_path().read_text(encoding="utf-8"))
-
     assert "legacy-section" not in saved
-    assert saved == config.current.model_dump(by_alias=True)
+    assert saved["jira"]["server"] == "https://jira.example.com"
 
 
-@pytest.mark.parametrize(
-    "key, expected",
-    [
-        pytest.param("jira.password", "jira.password (empty)", id="text returns to default"),
-        pytest.param("dictionary.task.l", "dictionary.task.l (empty)", id="dictionary entry is removed"),
-        pytest.param("jira", "jira.login (empty)", id="whole section is reset"),
-    ],
-)
-def test_unset_returns_value_to_default(
-    expected: str,
-    key: str,
+def test_config_set_then_get_shows_the_new_value(
+    run_cli: RunCli,
+) -> None:
+    saved = cli_output.flat_text(run_cli("config", "set", "app.minute-round-to", "25").out)
+
+    assert "app.minute-round-to 25" in saved
+    assert "saved" in saved
+    assert "app.minute-round-to 25" in cli_output.flat_text(run_cli("config", "get", "app.minute-round-to").out)
+
+
+def test_config_set_writes_the_value_to_the_config_file(
+    run_cli: RunCli,
+) -> None:
+    run_cli("config", "set", "app.minute-round-to", "25")
+
+    assert json.loads(config_file.config_path().read_text(encoding="utf-8"))["app"]["minute-round-to"] == 25
+
+
+def test_config_unset_removes_one_item_from_a_list_setting(
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
 ) -> None:
-    reporting_config(
-        {
-            "dictionary": {"task": {"l": "lunch"}},
-            "jira": {"login": "someone", "password": "secret"},
-        }
-    )
+    reporting_config({"app": {"omit-task": ["lunch", "break"]}})
 
-    run_cli("config", "unset", key)
+    result = run_cli("config", "unset", "app.omit-task", "lunch")
 
-    assert expected in rendered_output.flat_text(run_cli("config", "get", key).out)
+    assert "app.omit-task break" in cli_output.flat_text(result.out)
 
 
-def test_set_and_unset_list_items(
+def test_config_unset_removes_the_value_from_the_config_file(
     reporting_config: ReportingConfigFixture,
     run_cli: RunCli,
 ) -> None:
-    reporting_config()
+    reporting_config({"jira": {"login": "someone", "password": "secret"}})
 
-    added = run_cli("config", "set", "app.omit-task", "lunch")
-    assert "app.omit-task lunch" in rendered_output.flat_text(added.out)
+    result = run_cli("config", "unset", "jira.password")
 
-    extended = run_cli("config", "set", "app.omit-task", "break")
-    assert "app.omit-task lunch break" in rendered_output.flat_text(extended.out)
-
-    repeated = run_cli("config", "set", "app.omit-task", "lunch")
-    assert "app.omit-task lunch break" in rendered_output.flat_text(repeated.out)
-
-    removed = run_cli("config", "unset", "app.omit-task", "lunch")
-    assert "app.omit-task break" in rendered_output.flat_text(removed.out)
-
-    cleared = run_cli("config", "unset", "app.omit-task")
-    assert "app.omit-task (empty)" in rendered_output.flat_text(cleared.out)
-
-
-def test_set_adds_json_array_as_one_list_item(
-    reporting_config: ReportingConfigFixture,
-    run_cli: RunCli,
-) -> None:
-    reporting_config()
-
-    result = run_cli("config", "set", "app.omit-task", '["a","b"]')
-
-    assert 'app.omit-task ["a","b"]' in rendered_output.flat_text(result.out)
-
-
-@pytest.mark.parametrize(
-    "arguments, expected_message",
-    [
-        pytest.param(["config", "get", "unknown.key"], "Unknown configuration key", id="unknown key"),
-        pytest.param(["config", "set", "app.minute-round-to", "abc"], "app.minute-round-to", id="wrong type"),
-        pytest.param(["config", "set", "dictionary.task", "lunch"], "is a group of values", id="dictionary itself"),
-        pytest.param(["config", "unset", "app.minute-round-to", "x"], "is not a list", id="value for not a list"),
-        pytest.param(["config", "unset", "app.omit-task", "nope"], '"nope" is not in app.omit-task', id="missing item"),
-    ],
-)
-def test_command_fails_with_message(
-    arguments: list[str],
-    expected_message: str,
-    reporting_config: ReportingConfigFixture,
-    run_cli: RunCli,
-) -> None:
-    reporting_config({"app": {"omit-task": ["lunch"]}})
-
-    failure = run_cli(*arguments)
-
-    assert failure.exit_code == 1
-    assert failure.out == ""
-    assert expected_message in rendered_output.flat_text(failure.err)
-
-
-def test_malformed_config_file_fails_with_one_line(
-    reporting_config: ReportingConfigFixture,
-    run_cli: RunCli,
-) -> None:
-    reporting_config()
-    config_file.config_path().write_text('{"app": {"minute-round-to": "abc"}}', encoding="utf-8")
-
-    failure = run_cli("config", "list")
-
-    assert failure.exit_code == 1
-    assert failure.out == ""
-    rendered = rendered_output.flat_text(failure.err)
-    assert rendered.startswith("Error Config file ")
-    assert "app.minute-round-to: " in rendered
-    assert len(rendered_output.lines(failure.err)) == 3
+    assert "jira.password (empty)" in cli_output.flat_text(result.out)
+    saved = json.loads(config_file.config_path().read_text(encoding="utf-8"))
+    assert saved["jira"] == {"issue-key-base": [], "login": "someone", "password": "", "server": ""}

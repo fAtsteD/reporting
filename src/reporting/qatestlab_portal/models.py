@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from reporting.qatestlab_portal.exceptions import PortalError
+
 
 class PortalBaseModel(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
@@ -78,20 +80,29 @@ class Employee(PortalBaseModel):
     id: int
     last_name: str = Field(alias="lastName")
 
-    @property
-    def full_name(self) -> str:
-        return f"{self.first_name} {self.last_name}"
-
     @classmethod
     def from_init(cls, data: dict[str, Any]) -> "Employee":
-        user = data["currentUser"]["user"]
+        user = cls._current_user(data)
 
-        return cls(
-            email=user["email"],
-            firstName=user["firstName"],
-            id=user["employeeId"],
-            lastName=user["lastName"],
-        )
+        try:
+            return cls(
+                email=user["email"],
+                firstName=user["firstName"],
+                id=user["employeeId"],
+                lastName=user["lastName"],
+            )
+        except KeyError as error:
+            raise PortalError(f"Portal reporting API init user does not have the field {error}") from error
+
+    @staticmethod
+    def _current_user(data: dict[str, Any]) -> dict[str, Any]:
+        current_user = data.get("currentUser") if isinstance(data, dict) else None
+        user = current_user.get("user") if isinstance(current_user, dict) else None
+
+        if not isinstance(user, dict):
+            raise PortalError("Portal reporting API init does not have the current user")
+
+        return user
 
 
 class EmployeePosition(PortalBaseModel):
@@ -133,13 +144,6 @@ class Project(PortalBaseModel):
 class ProviderCollection(PortalBaseModel):
     clients: list[Client]
     projects: list[Project]
-
-    def get_client_by_name(self, name: str) -> Client | None:
-        for client in self.clients:
-            if client.name == name:
-                return client
-
-        return None
 
     def get_project_by_name(self, name: str) -> Project | None:
         for project in self.projects:

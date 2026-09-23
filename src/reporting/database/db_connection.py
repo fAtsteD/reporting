@@ -62,12 +62,12 @@ def run_migrations() -> None:
 
 @contextlib.contextmanager
 def session_scope() -> Generator[Session]:
-    if session_factory is None:
+    if not session_factory:
         reconnect()
 
     current_factory = session_factory
 
-    if current_factory is None:
+    if not current_factory:
         raise RuntimeError("Database connection is not initialized")
 
     session = current_factory()

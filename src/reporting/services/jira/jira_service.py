@@ -10,7 +10,9 @@ from reporting.services.jira.models import JiraMergedTask, JiraTaskResult, JiraT
 
 
 def convert_time_to_jira_time(seconds: int) -> str:
-    return f"{round((seconds / 60) // 60)}h {round((seconds / 60) % 60)}m"
+    hours, minutes = divmod(round(seconds / 60), 60)
+
+    return f"{hours}h {minutes}m"
 
 
 def set_worklog(report: Report) -> list[JiraTaskResult]:

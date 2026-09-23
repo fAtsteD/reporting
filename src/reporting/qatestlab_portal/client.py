@@ -3,6 +3,7 @@ from types import TracebackType
 from typing import Any, Self
 
 from reporting.qatestlab_portal.base import BaseApi
+from reporting.qatestlab_portal.exceptions import PortalError
 from reporting.qatestlab_portal.models import (
     Category,
     CategoryBinding,
@@ -141,6 +142,9 @@ class QATestLabPortal(BaseApi):
     def providers(self) -> tuple[list[Client], list[Project]]:
         self._ensure_authorized()
         response_data = self._get("providers")
+
+        if not isinstance(response_data, dict) or "clients" not in response_data or "projects" not in response_data:
+            raise PortalError("Portal reporting API providers has unexpected body")
 
         return (
             [Client.model_validate(client) for client in response_data["clients"]],

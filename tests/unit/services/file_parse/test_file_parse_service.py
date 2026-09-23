@@ -7,8 +7,8 @@ from reporting.config.models import AppConfig
 from reporting.services.file_parse.file_parse_service import parse_task
 from reporting.services.file_parse.models import TaskLine
 
-DEFAULT_APP_CONFIG = AppConfig()
-REPORT_DATE = datetime.date(2026, 8, 2)
+_DEFAULT_APP_CONFIG = AppConfig()
+_REPORT_DATE = datetime.date(2026, 8, 2)
 
 
 @pytest.mark.parametrize(
@@ -17,45 +17,45 @@ REPORT_DATE = datetime.date(2026, 8, 2)
         (
             "09 00",
             TaskLine(
-                kind=DEFAULT_APP_CONFIG.default_kind,
-                project=DEFAULT_APP_CONFIG.default_project,
-                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(9, 0)),
+                kind=_DEFAULT_APP_CONFIG.default_kind,
+                project=_DEFAULT_APP_CONFIG.default_project,
+                time_begin=datetime.datetime.combine(_REPORT_DATE, datetime.time(9, 0)),
             ),
         ),
         (
             "09 10 - Harum beatae\\-molestiae.",
             TaskLine(
-                kind=DEFAULT_APP_CONFIG.default_kind,
-                project=DEFAULT_APP_CONFIG.default_project,
+                kind=_DEFAULT_APP_CONFIG.default_kind,
+                project=_DEFAULT_APP_CONFIG.default_project,
                 summary="Harum beatae-molestiae.",
-                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(9, 10)),
+                time_begin=datetime.datetime.combine(_REPORT_DATE, datetime.time(9, 10)),
             ),
         ),
         (
             "09 10 - inventore \\- modi quia",
             TaskLine(
-                kind=DEFAULT_APP_CONFIG.default_kind,
-                project=DEFAULT_APP_CONFIG.default_project,
+                kind=_DEFAULT_APP_CONFIG.default_kind,
+                project=_DEFAULT_APP_CONFIG.default_project,
                 summary="inventore - modi quia",
-                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(9, 10)),
+                time_begin=datetime.datetime.combine(_REPORT_DATE, datetime.time(9, 10)),
             ),
         ),
         (
             "10 30 - Non hic repellendus facere architecto reprehenderit aut dolore est quaerat.",
             TaskLine(
-                kind=DEFAULT_APP_CONFIG.default_kind,
-                project=DEFAULT_APP_CONFIG.default_project,
+                kind=_DEFAULT_APP_CONFIG.default_kind,
+                project=_DEFAULT_APP_CONFIG.default_project,
                 summary="Non hic repellendus facere architecto reprehenderit aut dolore est quaerat.",
-                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(10, 30)),
+                time_begin=datetime.datetime.combine(_REPORT_DATE, datetime.time(10, 30)),
             ),
         ),
         (
             "11 45 - Incidunt non omnis ut porro ut nostrum. - eum",
             TaskLine(
                 kind="eum",
-                project=DEFAULT_APP_CONFIG.default_project,
+                project=_DEFAULT_APP_CONFIG.default_project,
                 summary="Incidunt non omnis ut porro ut nostrum.",
-                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(11, 45)),
+                time_begin=datetime.datetime.combine(_REPORT_DATE, datetime.time(11, 45)),
             ),
         ),
         (
@@ -64,7 +64,7 @@ REPORT_DATE = datetime.date(2026, 8, 2)
                 kind="quasi",
                 project="Dynamic Response Associate",
                 summary="debitis autem ipsa",
-                time_begin=datetime.datetime.combine(REPORT_DATE, datetime.time(12, 0)),
+                time_begin=datetime.datetime.combine(_REPORT_DATE, datetime.time(12, 0)),
             ),
         ),
     ],
@@ -79,6 +79,6 @@ REPORT_DATE = datetime.date(2026, 8, 2)
 )
 def test_parse_line(monkeypatch: pytest.MonkeyPatch, line: str, expected: TaskLine) -> None:
     monkeypatch.setattr(config, "app", AppConfig.model_validate({"timezone": "Europe/Kyiv"}))
-    task_line = parse_task(line, REPORT_DATE)
+    task_line = parse_task(line, _REPORT_DATE)
     expected.time_begin = expected.time_begin.replace(tzinfo=config.app.timezone)
     assert task_line == expected

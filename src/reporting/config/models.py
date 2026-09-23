@@ -131,12 +131,6 @@ class QATestLabPortalConfig(BaseConfig):
         default_factory=dict,
         description="Project alias to the project name in the portal",
     )
-    safe_send_report_days: int = Field(
-        default=0,
-        ge=0,
-        alias="safe-send-report-days",
-        description="Send a report without an additional question for this number of days",
-    )
     url: str = Field(default="", description="Address of the portal api")
 
     @property

@@ -3,6 +3,8 @@ from enum import StrEnum
 
 from reporting.database.models import Task
 
+_PROJECT_SEPARATOR = ", "
+
 
 @dataclass(frozen=True)
 class PortalMergedTask:
@@ -17,7 +19,7 @@ class PortalMergedTask:
 
     @property
     def project_names(self) -> str:
-        return self.tasks[0].project.name
+        return _PROJECT_SEPARATOR.join(dict.fromkeys(task.project.name for task in self.tasks))
 
 
 class PortalTaskStatus(StrEnum):

@@ -1,4 +1,3 @@
-import typer
 from typer import rich_utils
 from typer._click import ClickException
 
@@ -19,9 +18,6 @@ def run(cli_args: list[str] | None = None) -> None:
     except ClickException as error:
         rich_utils.rich_format_error(error)
         raise SystemExit(error.exit_code) from error
-    except typer.Abort as error:
-        rich_utils.rich_abort_error()
-        raise SystemExit(ERROR_EXIT_CODE) from error
     except KeyboardInterrupt as error:
         raise SystemExit(INTERRUPT_EXIT_CODE) from error
     except ReportingError as error:
